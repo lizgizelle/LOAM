@@ -1,12 +1,83 @@
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
-import EventCard from '@/components/EventCard';
-import { mockEvents } from '@/data/events';
 import { useAppStore } from '@/store/appStore';
-import { Calendar } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronRight } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
+
+interface ApprovedEvent {
+  id: string;
+  name: string;
+  start_date: string;
+  location: string | null;
+  status: string;
+  participationStatus: 'pending' | 'approved';
+}
 
 const MyEvents = () => {
-  const { signedUpEvents } = useAppStore();
-  const userEvents = mockEvents.filter(e => signedUpEvents.includes(e.id));
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { eventParticipations } = useAppStore();
+  const [approvedEvents, setApprovedEvents] = useState<ApprovedEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchMyEvents = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        // Fetch user's event participations
+        const { data: participations } = await supabase
+          .from('event_participants')
+          .select('event_id, status')
+          .eq('user_id', user.id);
+
+        if (participations && participations.length > 0) {
+          const eventIds = participations.map(p => p.event_id);
+          
+          const { data: events } = await supabase
+            .from('events')
+            .select('id, name, start_date, location, status')
+            .in('id', eventIds);
+
+          if (events) {
+            const eventsWithStatus = events.map(event => {
+              const participation = participations.find(p => p.event_id === event.id);
+              return {
+                ...event,
+                participationStatus: participation?.status === 'approved' ? 'approved' : 'pending'
+              } as ApprovedEvent;
+            });
+            setApprovedEvents(eventsWithStatus);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching events:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMyEvents();
+  }, [user?.id]);
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  // Filter to only show approved events in My Gatherings
+  const myApprovedEvents = approvedEvents.filter(e => e.participationStatus === 'approved');
 
   return (
     <div className="min-h-screen bg-background pb-24">
@@ -19,16 +90,45 @@ const MyEvents = () => {
 
       {/* Events list */}
       <div className="px-6">
-        {userEvents.length > 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <div className="animate-pulse text-muted-foreground">Loading...</div>
+          </div>
+        ) : myApprovedEvents.length > 0 ? (
           <div className="space-y-4">
-            {userEvents.map((event, index) => (
-              <div 
-                key={event.id} 
-                className="animate-fade-in-up"
+            {myApprovedEvents.map((event, index) => (
+              <button
+                key={event.id}
+                onClick={() => navigate(`/event/${event.id}?source=my-gatherings`)}
+                className="w-full bg-popover rounded-2xl shadow-loam p-4 text-left hover:bg-secondary/30 transition-colors animate-fade-in-up"
                 style={{ animationDelay: `${0.1 * (index + 1)}s` }}
               >
-                <EventCard event={event} isCompact />
-              </div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
+                      <Badge variant="secondary" className="bg-green-100 text-green-800 text-xs shrink-0">
+                        Confirmed
+                      </Badge>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 text-primary shrink-0" />
+                        <span>{formatDate(event.start_date)}</span>
+                        <Clock className="w-4 h-4 text-primary shrink-0 ml-2" />
+                        <span>{formatTime(event.start_date)}</span>
+                      </div>
+                      {event.location && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <MapPin className="w-4 h-4 text-primary shrink-0" />
+                          <span className="truncate">{event.location}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
+                </div>
+              </button>
             ))}
           </div>
         ) : (
@@ -40,7 +140,7 @@ const MyEvents = () => {
               No gatherings yet
             </h2>
             <p className="text-muted-foreground text-center max-w-xs">
-              When you request to join a gathering, it will appear here
+              When you're approved for a gathering, it will appear here
             </p>
           </div>
         )}
