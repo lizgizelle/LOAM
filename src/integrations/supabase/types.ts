@@ -195,6 +195,7 @@ export type Database = {
           question_type: string
           scale_label_high: string | null
           scale_label_low: string | null
+          survey_id: string
           updated_at: string
         }
         Insert: {
@@ -207,6 +208,7 @@ export type Database = {
           question_type: string
           scale_label_high?: string | null
           scale_label_low?: string | null
+          survey_id: string
           updated_at?: string
         }
         Update: {
@@ -219,9 +221,18 @@ export type Database = {
           question_type?: string
           scale_label_high?: string | null
           scale_label_low?: string | null
+          survey_id?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "survey_questions_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       survey_responses: {
         Row: {
@@ -231,6 +242,8 @@ export type Database = {
           question_id: string
           question_text_snapshot: string
           question_type_snapshot: string
+          survey_id: string | null
+          survey_title_snapshot: string | null
           user_id: string
         }
         Insert: {
@@ -240,6 +253,8 @@ export type Database = {
           question_id: string
           question_text_snapshot: string
           question_type_snapshot: string
+          survey_id?: string | null
+          survey_title_snapshot?: string | null
           user_id: string
         }
         Update: {
@@ -249,6 +264,8 @@ export type Database = {
           question_id?: string
           question_text_snapshot?: string
           question_type_snapshot?: string
+          survey_id?: string | null
+          survey_title_snapshot?: string | null
           user_id?: string
         }
         Relationships: [
@@ -259,7 +276,38 @@ export type Database = {
             referencedRelation: "survey_questions"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "survey_responses_survey_id_fkey"
+            columns: ["survey_id"]
+            isOneToOne: false
+            referencedRelation: "surveys"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      surveys: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
