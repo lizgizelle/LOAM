@@ -10,6 +10,7 @@ import { ArrowLeft, Calendar, MapPin, Users, Pencil, Check, X } from 'lucide-rea
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { getDefaultAvatar } from '@/lib/avatars';
 
 interface Event {
   id: string;
@@ -141,8 +142,8 @@ export default function AdminEventDetail() {
     <div className="flex items-center justify-between py-3 border-b last:border-0">
       <div className="flex items-center gap-3">
         <Avatar>
-          <AvatarImage src={participant.profile?.avatar_url || undefined} />
-          <AvatarFallback>
+          <AvatarImage src={participant.profile?.avatar_url || getDefaultAvatar(participant.user_id)} />
+          <AvatarFallback className="bg-primary/10 text-primary">
             {participant.profile?.first_name?.[0]?.toUpperCase() || '?'}
           </AvatarFallback>
         </Avatar>
