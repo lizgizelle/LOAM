@@ -32,6 +32,7 @@ export default function AdminEventEdit() {
     capacity: '',
     visibility: 'public',
     status: 'draft',
+    show_participants: false,
   });
 
   useEffect(() => {
@@ -70,6 +71,7 @@ export default function AdminEventEdit() {
         capacity: data.capacity?.toString() || '',
         visibility: data.visibility,
         status: data.status,
+        show_participants: data.show_participants,
       });
     } catch (error) {
       console.error('Error fetching event:', error);
@@ -110,6 +112,7 @@ export default function AdminEventEdit() {
           capacity: formData.is_unlimited_capacity ? null : parseInt(formData.capacity) || null,
           visibility: formData.visibility,
           status: formData.status,
+          show_participants: formData.show_participants,
         })
         .eq('id', id);
 
@@ -310,6 +313,19 @@ export default function AdminEventEdit() {
                   />
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Participant List Visibility</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show approved participants to other attendees
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.show_participants}
+                  onCheckedChange={(checked) => updateForm('show_participants', checked)}
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label>Visibility</Label>
