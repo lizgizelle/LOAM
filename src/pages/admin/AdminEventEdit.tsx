@@ -23,6 +23,7 @@ export default function AdminEventEdit() {
     description: '',
     cover_image_url: '',
     location: '',
+    hide_location_until_approved: true,
     start_date: '',
     start_time: '',
     end_date: '',
@@ -62,6 +63,7 @@ export default function AdminEventEdit() {
         description: data.description || '',
         cover_image_url: data.cover_image_url || '',
         location: data.location || '',
+        hide_location_until_approved: data.hide_location_until_approved ?? true,
         start_date: format(startDate, 'yyyy-MM-dd'),
         start_time: format(startDate, 'HH:mm'),
         end_date: endDate ? format(endDate, 'yyyy-MM-dd') : '',
@@ -105,6 +107,7 @@ export default function AdminEventEdit() {
           description: formData.description || null,
           cover_image_url: formData.cover_image_url || null,
           location: formData.location || null,
+          hide_location_until_approved: formData.hide_location_until_approved,
           start_date: startDate.toISOString(),
           end_date: endDate?.toISOString() || null,
           requires_approval: formData.requires_approval,
@@ -179,17 +182,11 @@ export default function AdminEventEdit() {
               ) : (
                 <div className="border-2 border-dashed rounded-lg p-8 text-center">
                   <ImageIcon className="h-10 w-10 mx-auto text-muted-foreground mb-3" />
-                  <Label className="text-sm text-muted-foreground">
-                    Enter image URL below
-                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    No cover image set
+                  </p>
                 </div>
               )}
-              <Input
-                placeholder="https://example.com/image.jpg"
-                value={formData.cover_image_url}
-                onChange={(e) => updateForm('cover_image_url', e.target.value)}
-                className="mt-3"
-              />
             </CardContent>
           </Card>
 
@@ -258,6 +255,17 @@ export default function AdminEventEdit() {
                 />
               </div>
 
+              <div className="flex items-center gap-3 pl-1">
+                <Switch
+                  id="hide_location"
+                  checked={formData.hide_location_until_approved}
+                  onCheckedChange={(checked) => updateForm('hide_location_until_approved', checked)}
+                />
+                <Label htmlFor="hide_location" className="text-sm font-normal cursor-pointer">
+                  Location will be shared only after participants are approved
+                </Label>
+              </div>
+
               <div className="space-y-2">
                 <Label htmlFor="description">Description</Label>
                 <Textarea
@@ -316,9 +324,11 @@ export default function AdminEventEdit() {
 
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Participant List Visibility</Label>
+                  <Label>Show Participants</Label>
                   <p className="text-sm text-muted-foreground">
-                    Show approved participants to other attendees
+                    {formData.show_participants 
+                      ? 'Users can see who else is attending' 
+                      : 'Participant list is hidden from attendees'}
                   </p>
                 </div>
                 <Switch
