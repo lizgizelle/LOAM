@@ -3,12 +3,25 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { mockEvents } from '@/data/events';
 import { useAppStore } from '@/store/appStore';
-import { ArrowLeft, MapPin, Clock, Calendar, Users, Info } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Calendar, Users, Info, Share2, MessageCircle, MoreHorizontal, ExternalLink, Flag } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getDefaultAvatar } from '@/lib/avatars';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 interface Participant {
   id: string;
@@ -25,6 +38,7 @@ interface EventDetails {
   end_date: string | null;
   show_participants: boolean;
   requires_approval: boolean;
+  host_id: string | null;
 }
 
 const EventDetail = () => {
@@ -45,6 +59,9 @@ const EventDetail = () => {
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(signedUpEvents.includes(id || ''));
+  const [moreSheetOpen, setMoreSheetOpen] = useState(false);
+  const [reportDialogOpen, setReportDialogOpen] = useState(false);
+  const [reportSubmitted, setReportSubmitted] = useState(false);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -54,7 +71,7 @@ const EventDetail = () => {
         // Fetch event details from Supabase
         const { data: eventData } = await supabase
           .from('events')
-          .select('id, name, description, location, start_date, end_date, show_participants, requires_approval')
+          .select('id, name, description, location, start_date, end_date, show_participants, requires_approval, host_id')
           .eq('id', id)
           .maybeSingle();
 
@@ -154,6 +171,68 @@ const EventDetail = () => {
     }
   };
 
+  const handleShare = async () => {
+    const eventUrl = window.location.href;
+    const shareData = {
+      title: event.name,
+      text: `${event.name} - ${displayDate} at ${displayTime}`,
+      url: eventUrl,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        // User cancelled or share failed
+        if ((error as Error).name !== 'AbortError') {
+          // Fallback to clipboard
+          await navigator.clipboard.writeText(eventUrl);
+          toast.success('Link copied to clipboard');
+        }
+      }
+    } else {
+      // Fallback for browsers without native share
+      await navigator.clipboard.writeText(eventUrl);
+      toast.success('Link copied to clipboard');
+    }
+  };
+
+  const handleContact = () => {
+    // Navigate to chat with event host
+    if (supabaseEvent?.host_id) {
+      navigate(`/chat?eventId=${id}&hostId=${supabaseEvent.host_id}`);
+    } else {
+      toast.info('Chat with organiser coming soon');
+    }
+  };
+
+  const handleOpenInBrowser = () => {
+    setMoreSheetOpen(false);
+    window.open(window.location.href, '_blank');
+  };
+
+  const handleReportEvent = async () => {
+    setMoreSheetOpen(false);
+    
+    if (!user?.id || !id) {
+      toast.error('Please log in to report an event');
+      return;
+    }
+
+    try {
+      await supabase.from('event_reports').insert({
+        user_id: user.id,
+        event_id: id,
+      });
+      
+      setReportSubmitted(true);
+      setReportDialogOpen(true);
+    } catch (error) {
+      console.error('Error reporting event:', error);
+      toast.error('Could not submit report. Please try again.');
+    }
+  };
+
   // Format dates for Supabase events
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -171,6 +250,16 @@ const EventDetail = () => {
   const displayDescription = supabaseEvent?.description || mockEvent?.description;
   const isPast = mockEvent?.isPast;
   const spotsLeft = mockEvent?.spotsLeft;
+
+  // Button states
+  const getRegisterButtonText = () => {
+    if (isPast) return 'This gathering has passed';
+    if (isApproved) return 'You\'re confirmed!';
+    if (isSignedUp) return 'Pending approval';
+    return 'Register';
+  };
+
+  const isRegisterDisabled = isPast || isSignedUp;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -208,6 +297,43 @@ const EventDetail = () => {
               <MapPin className="w-5 h-5 text-primary" />
               <span>{displayLocation}</span>
             </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex flex-wrap gap-2 mb-6">
+            <Button
+              variant="loam"
+              size="sm"
+              className="flex-1 min-w-[120px]"
+              disabled={isRegisterDisabled}
+              onClick={handleSignUp}
+            >
+              {getRegisterButtonText()}
+            </Button>
+            <Button
+              variant="loam-outline"
+              size="sm"
+              onClick={handleShare}
+            >
+              <Share2 className="w-4 h-4 mr-2" />
+              Share
+            </Button>
+            <Button
+              variant="loam-outline"
+              size="sm"
+              onClick={handleContact}
+              disabled={!isApproved && !user}
+            >
+              <MessageCircle className="w-4 h-4 mr-2" />
+              Contact
+            </Button>
+            <Button
+              variant="loam-outline"
+              size="sm"
+              onClick={() => setMoreSheetOpen(true)}
+            >
+              <MoreHorizontal className="w-4 h-4" />
+            </Button>
           </div>
 
           {spotsLeft && !isPast && (
@@ -278,25 +404,49 @@ const EventDetail = () => {
         </div>
       </div>
 
-      {/* Sticky CTA */}
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-background border-t border-border safe-area-bottom">
-        <Button 
-          variant="loam" 
-          size="lg" 
-          className="w-full"
-          disabled={isPast || isSignedUp}
-          onClick={handleSignUp}
-        >
-          {isPast 
-            ? 'This gathering has passed' 
-            : isApproved
-              ? 'You\'re confirmed!'
-              : isSignedUp 
-                ? 'Request sent' 
-                : 'Request to join'
-          }
-        </Button>
-      </div>
+      {/* More Options Sheet */}
+      <Sheet open={moreSheetOpen} onOpenChange={setMoreSheetOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl">
+          <SheetHeader className="text-left mb-4">
+            <SheetTitle>More options</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-2">
+            <button
+              onClick={handleOpenInBrowser}
+              className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-muted transition-colors text-left"
+            >
+              <ExternalLink className="w-5 h-5 text-muted-foreground" />
+              <span>Open in browser</span>
+            </button>
+            <button
+              onClick={handleReportEvent}
+              className="w-full flex items-center gap-3 p-4 rounded-xl hover:bg-muted transition-colors text-left text-destructive"
+            >
+              <Flag className="w-5 h-5" />
+              <span>Report event</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Report Confirmation Dialog */}
+      <Dialog open={reportDialogOpen} onOpenChange={setReportDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Thanks for letting us know</DialogTitle>
+            <DialogDescription>
+              Our team will review this event.
+            </DialogDescription>
+          </DialogHeader>
+          <Button
+            variant="loam"
+            onClick={() => setReportDialogOpen(false)}
+            className="mt-4"
+          >
+            Done
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
