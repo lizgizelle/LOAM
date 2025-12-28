@@ -8,7 +8,8 @@ import { getDefaultAvatar } from '@/lib/avatars';
 const Home = () => {
   const navigate = useNavigate();
   const { userProfile } = useAppStore();
-  const firstName = userProfile?.firstName || 'Friend';
+  const firstName = userProfile?.firstName?.trim() || 'there';
+  const greeting = firstName ? `Hey ${firstName}` : 'Hey there';
   const upcomingEvents = mockEvents.filter(e => !e.isPast);
 
   // Get avatar - use photo if available, otherwise use default based on user identifier
@@ -17,10 +18,10 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-6 pt-14 pb-6 safe-area-top flex items-start justify-between">
+      <div className="px-6 pt-20 pb-6 safe-area-top flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground animate-fade-in">
-            Hey {firstName}
+            {greeting}
           </h1>
           <p className="text-muted-foreground mt-1 animate-fade-in" style={{ animationDelay: '0.1s' }}>
             A place to meet genuine people, in real life.
