@@ -62,6 +62,7 @@ export type Database = {
           location: string | null
           name: string
           requires_approval: boolean
+          show_participants: boolean
           start_date: string
           status: string
           updated_at: string
@@ -79,6 +80,7 @@ export type Database = {
           location?: string | null
           name: string
           requires_approval?: boolean
+          show_participants?: boolean
           start_date: string
           status?: string
           updated_at?: string
@@ -96,6 +98,7 @@ export type Database = {
           location?: string | null
           name?: string
           requires_approval?: boolean
+          show_participants?: boolean
           start_date?: string
           status?: string
           updated_at?: string

@@ -31,6 +31,7 @@ export default function AdminEventCreate() {
     capacity: '',
     visibility: 'public',
     status: 'draft',
+    show_participants: false,
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,6 +64,7 @@ export default function AdminEventCreate() {
         visibility: formData.visibility,
         status: formData.status,
         host_id: user?.id,
+        show_participants: formData.show_participants,
       });
 
       if (error) throw error;
@@ -261,6 +263,19 @@ export default function AdminEventCreate() {
                   />
                 </div>
               )}
+
+              <div className="flex items-center justify-between">
+                <div>
+                  <Label>Participant List Visibility</Label>
+                  <p className="text-sm text-muted-foreground">
+                    Show approved participants to other attendees
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.show_participants}
+                  onCheckedChange={(checked) => updateForm('show_participants', checked)}
+                />
+              </div>
 
               <div className="space-y-2">
                 <Label>Visibility</Label>
