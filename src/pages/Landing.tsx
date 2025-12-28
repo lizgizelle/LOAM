@@ -44,7 +44,7 @@ const Landing = () => {
 
         {/* Buttons */}
         <div 
-          className="space-y-4 animate-fade-in-up"
+          className="space-y-3 animate-fade-in-up"
           style={{ animationDelay: '0.3s' }}
         >
           <Button 
@@ -55,13 +55,50 @@ const Landing = () => {
           >
             Get started
           </Button>
-          <button 
-            className="w-full text-center text-white/80 hover:text-white transition-colors py-2 text-sm font-medium"
+          <Button 
+            variant="outline"
+            size="lg" 
+            className="w-full bg-background/90 border-foreground/80 text-foreground hover:bg-background"
             onClick={() => navigate('/login')}
           >
             I already have an account
-          </button>
+          </Button>
         </div>
+
+        {/* Legal footer */}
+        <p 
+          className="text-xs text-white/60 text-center mt-6 leading-relaxed animate-fade-in"
+          style={{ animationDelay: '0.4s' }}
+        >
+          By signing up, you agree to the{' '}
+          <a 
+            href="https://www.theloamcollective.com/draft" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="underline hover:text-white/80"
+          >
+            Terms of Service
+          </a>
+          ,{' '}
+          <a 
+            href="https://www.theloamcollective.com/draft" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="underline hover:text-white/80"
+          >
+            Privacy Policy
+          </a>
+          {' '}and{' '}
+          <a 
+            href="https://www.theloamcollective.com/draft" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="underline hover:text-white/80"
+          >
+            Community Guidelines
+          </a>
+          .
+        </p>
       </div>
     </div>
   );
