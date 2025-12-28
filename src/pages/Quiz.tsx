@@ -5,7 +5,7 @@ import { useAppStore } from '@/store/appStore';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-
+import { ArrowLeft } from 'lucide-react';
 interface Survey {
   id: string;
   title: string;
@@ -164,8 +164,32 @@ const Survey = () => {
 
   const currentQuestion = questions[step];
 
+  const handleBack = () => {
+    if (step > 0) {
+      setStep(step - 1);
+      // Restore scale value if previous question was scale type
+      const prevQuestion = questions[step - 1];
+      if (prevQuestion && answers[prevQuestion.id]) {
+        if (prevQuestion.question_type === 'scale_1_10') {
+          setScaleValue(parseInt(answers[prevQuestion.id]) || null);
+        }
+      }
+    } else {
+      navigate('/');
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-background flex flex-col px-6 pt-14 pb-10 safe-area-top safe-area-bottom">
+    <div className="min-h-screen bg-background flex flex-col px-6 pt-6 pb-10 safe-area-top safe-area-bottom">
+      {/* Back arrow */}
+      <button
+        onClick={handleBack}
+        className="self-start p-2 -ml-2 text-foreground/70 hover:text-foreground transition-colors mb-4"
+        aria-label="Go back"
+      >
+        <ArrowLeft className="w-6 h-6" />
+      </button>
+
       {/* Progress indicator */}
       <div className="flex gap-2 mb-8">
         {questions.map((_, i) => (
@@ -177,7 +201,6 @@ const Survey = () => {
           />
         ))}
       </div>
-
       <div className="flex-1 flex flex-col justify-center">
         <div className="animate-fade-in" key={step}>
           <h1 className="text-2xl font-bold text-foreground mb-10">
@@ -258,7 +281,7 @@ const Survey = () => {
                       <span className="w-12" />
                       <span className="w-12" />
                       <span className="w-12" />
-                      <span className="text-xs text-muted-foreground w-12 text-center">
+                      <span className="text-xs text-muted-foreground w-12 text-center whitespace-nowrap">
                         {currentQuestion.scale_label_high || ''}
                       </span>
                     </div>

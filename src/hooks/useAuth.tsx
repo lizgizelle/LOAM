@@ -14,6 +14,8 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   resendVerificationEmail: () => Promise<{ error: Error | null }>;
   refreshUser: () => Promise<void>;
+  verifyOtp: (token: string) => Promise<{ error: Error | null }>;
+  resendOtp: () => Promise<{ error: Error | null }>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -133,6 +135,39 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const verifyOtp = async (token: string) => {
+    if (!user?.email) {
+      return { error: new Error('No email found') };
+    }
+
+    const { error } = await supabase.auth.verifyOtp({
+      email: user.email,
+      token,
+      type: 'email',
+    });
+
+    if (!error) {
+      await refreshUser();
+    }
+
+    return { error: error as Error | null };
+  };
+
+  const resendOtp = async () => {
+    if (!user?.email) {
+      return { error: new Error('No email found') };
+    }
+
+    const { error } = await supabase.auth.signInWithOtp({
+      email: user.email,
+      options: {
+        shouldCreateUser: false,
+      }
+    });
+
+    return { error: error as Error | null };
+  };
+
   return (
     <AuthContext.Provider value={{ 
       user, 
@@ -145,7 +180,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       signIn,
       signOut,
       resendVerificationEmail,
-      refreshUser
+      refreshUser,
+      verifyOtp,
+      resendOtp
     }}>
       {children}
     </AuthContext.Provider>
