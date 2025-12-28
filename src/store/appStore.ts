@@ -2,12 +2,18 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { Event, UserProfile, SurveyAnswers } from '@/types';
 
+interface EventParticipation {
+  eventId: string;
+  status: 'pending' | 'approved' | 'rejected';
+}
+
 interface AppState {
   isAuthenticated: boolean;
   isOnboarded: boolean;
   surveyAnswers: SurveyAnswers;
   userProfile: UserProfile | null;
   signedUpEvents: string[];
+  eventParticipations: EventParticipation[];
   
   // Actions
   setAuthenticated: (value: boolean) => void;
@@ -15,6 +21,8 @@ interface AppState {
   setSurveyAnswers: (answers: Partial<SurveyAnswers>) => void;
   setUserProfile: (profile: Partial<UserProfile>) => void;
   signUpForEvent: (eventId: string) => void;
+  setEventParticipations: (participations: EventParticipation[]) => void;
+  updateEventStatus: (eventId: string, status: 'pending' | 'approved' | 'rejected') => void;
   logout: () => void;
 }
 
@@ -26,6 +34,7 @@ export const useAppStore = create<AppState>()(
       surveyAnswers: {},
       userProfile: null,
       signedUpEvents: [],
+      eventParticipations: [],
       
       setAuthenticated: (value) => set({ isAuthenticated: value }),
       setOnboarded: (value) => set({ isOnboarded: value }),
@@ -38,7 +47,14 @@ export const useAppStore = create<AppState>()(
           : profile as UserProfile
       })),
       signUpForEvent: (eventId) => set((state) => ({
-        signedUpEvents: [...state.signedUpEvents, eventId]
+        signedUpEvents: [...state.signedUpEvents, eventId],
+        eventParticipations: [...state.eventParticipations, { eventId, status: 'pending' }]
+      })),
+      setEventParticipations: (participations) => set({ eventParticipations: participations }),
+      updateEventStatus: (eventId, status) => set((state) => ({
+        eventParticipations: state.eventParticipations.map(p => 
+          p.eventId === eventId ? { ...p, status } : p
+        )
       })),
       logout: () => set({
         isAuthenticated: false,
@@ -46,6 +62,7 @@ export const useAppStore = create<AppState>()(
         surveyAnswers: {},
         userProfile: null,
         signedUpEvents: [],
+        eventParticipations: [],
       }),
     }),
     {

@@ -1,13 +1,14 @@
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { mockEvents } from '@/data/events';
 import { useAppStore } from '@/store/appStore';
-import { ArrowLeft, MapPin, Clock, Calendar, Users } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Calendar, Users, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getDefaultAvatar } from '@/lib/avatars';
+import { useAuth } from '@/hooks/useAuth';
 
 interface Participant {
   id: string;
@@ -15,45 +16,79 @@ interface Participant {
   avatar_url: string | null;
 }
 
+interface EventDetails {
+  id: string;
+  name: string;
+  description: string | null;
+  location: string | null;
+  start_date: string;
+  end_date: string | null;
+  show_participants: boolean;
+  requires_approval: boolean;
+}
+
 const EventDetail = () => {
   const navigate = useNavigate();
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const { user } = useAuth();
   const { signUpForEvent, signedUpEvents } = useAppStore();
   
-  const event = mockEvents.find(e => e.id === id);
-  const isSignedUp = signedUpEvents.includes(id || '');
+  const isFromMyGatherings = searchParams.get('source') === 'my-gatherings';
   
+  // Try to get event from mock data first
+  const mockEvent = mockEvents.find(e => e.id === id);
+  
+  const [supabaseEvent, setSupabaseEvent] = useState<EventDetails | null>(null);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [showParticipants, setShowParticipants] = useState(false);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [isApproved, setIsApproved] = useState(false);
+  const [isSignedUp, setIsSignedUp] = useState(signedUpEvents.includes(id || ''));
 
   useEffect(() => {
-    // Check if this is a real Supabase event and fetch participant visibility
-    const fetchEventSettings = async () => {
+    const fetchEventData = async () => {
       if (!id) return;
       
       try {
+        // Fetch event details from Supabase
         const { data: eventData } = await supabase
           .from('events')
-          .select('show_participants, requires_approval')
+          .select('id, name, description, location, start_date, end_date, show_participants, requires_approval')
           .eq('id', id)
           .maybeSingle();
 
-        if (eventData?.show_participants) {
-          setShowParticipants(true);
-          fetchParticipants(eventData.requires_approval);
+        if (eventData) {
+          setSupabaseEvent(eventData);
+          
+          if (eventData.show_participants) {
+            setShowParticipants(true);
+            fetchParticipants(eventData.requires_approval);
+          }
+        }
+
+        // Check if user is approved for this event
+        if (user?.id) {
+          const { data: participation } = await supabase
+            .from('event_participants')
+            .select('status')
+            .eq('event_id', id)
+            .eq('user_id', user.id)
+            .maybeSingle();
+
+          if (participation) {
+            setIsSignedUp(true);
+            setIsApproved(participation.status === 'approved');
+          }
         }
       } catch (error) {
-        // Event might be a mock event, ignore errors
+        console.error('Error fetching event:', error);
       }
     };
 
     const fetchParticipants = async (requiresApproval: boolean) => {
       setLoadingParticipants(true);
       try {
-        // Get approved participants (or all if no approval required)
-        const statusFilter = requiresApproval ? 'approved' : ['approved', 'pending'];
-        
         const { data: participantData } = await supabase
           .from('event_participants')
           .select('user_id')
@@ -79,8 +114,11 @@ const EventDetail = () => {
       }
     };
 
-    fetchEventSettings();
-  }, [id]);
+    fetchEventData();
+  }, [id, user?.id]);
+
+  // Use Supabase event if available, otherwise fall back to mock
+  const event = supabaseEvent || mockEvent;
 
   if (!event) {
     return (
@@ -90,14 +128,49 @@ const EventDetail = () => {
     );
   }
 
-  const handleSignUp = () => {
-    if (id) {
+  const handleSignUp = async () => {
+    if (!id) return;
+    
+    if (user?.id) {
+      try {
+        await supabase
+          .from('event_participants')
+          .insert({ event_id: id, user_id: user.id, status: 'pending' });
+        
+        setIsSignedUp(true);
+        signUpForEvent(id);
+        toast.success('Request sent!', {
+          description: `We'll confirm your spot at ${event.name}`,
+        });
+      } catch (error) {
+        console.error('Error signing up:', error);
+        toast.error('Could not send request. Please try again.');
+      }
+    } else {
       signUpForEvent(id);
       toast.success('Request sent!', {
         description: `We'll confirm your spot at ${event.name}`,
       });
     }
   };
+
+  // Format dates for Supabase events
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  };
+
+  const formatTime = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  };
+
+  const displayDate = supabaseEvent ? formatDate(supabaseEvent.start_date) : mockEvent?.date;
+  const displayTime = supabaseEvent ? formatTime(supabaseEvent.start_date) : mockEvent?.time;
+  const displayLocation = event.location;
+  const displayDescription = supabaseEvent?.description || mockEvent?.description;
+  const isPast = mockEvent?.isPast;
+  const spotsLeft = mockEvent?.spotsLeft;
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -125,21 +198,38 @@ const EventDetail = () => {
           <div className="space-y-3 mb-6">
             <div className="flex items-center gap-3 text-muted-foreground">
               <Calendar className="w-5 h-5 text-primary" />
-              <span>{event.date}</span>
+              <span>{displayDate}</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <Clock className="w-5 h-5 text-primary" />
-              <span>{event.time}</span>
+              <span>{displayTime}</span>
             </div>
             <div className="flex items-center gap-3 text-muted-foreground">
               <MapPin className="w-5 h-5 text-primary" />
-              <span>{event.location}</span>
+              <span>{displayLocation}</span>
             </div>
           </div>
 
-          {event.spotsLeft && !event.isPast && (
+          {spotsLeft && !isPast && (
             <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-              {event.spotsLeft} spots left
+              {spotsLeft} spots left
+            </div>
+          )}
+
+          {/* Private details - only shown for approved participants from My Gatherings */}
+          {isFromMyGatherings && isApproved && (
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Info className="w-4 h-4 text-green-700" />
+                <h2 className="font-semibold text-green-800">Your Gathering Details</h2>
+              </div>
+              <div className="space-y-2 text-sm text-green-700">
+                <p><strong>Meeting Point:</strong> {displayLocation}</p>
+                <p><strong>What to bring:</strong> Just yourself and an open heart!</p>
+                <p className="text-xs mt-3 text-green-600">
+                  These details are only visible to confirmed participants.
+                </p>
+              </div>
             </div>
           )}
 
@@ -182,7 +272,7 @@ const EventDetail = () => {
           <div className="border-t border-border pt-6">
             <h2 className="font-semibold text-foreground mb-3">About this gathering</h2>
             <p className="text-muted-foreground leading-relaxed">
-              {event.description}
+              {displayDescription}
             </p>
           </div>
         </div>
@@ -194,14 +284,16 @@ const EventDetail = () => {
           variant="loam" 
           size="lg" 
           className="w-full"
-          disabled={event.isPast || isSignedUp}
+          disabled={isPast || isSignedUp}
           onClick={handleSignUp}
         >
-          {event.isPast 
+          {isPast 
             ? 'This gathering has passed' 
-            : isSignedUp 
-              ? 'Request sent' 
-              : 'Request to join'
+            : isApproved
+              ? 'You\'re confirmed!'
+              : isSignedUp 
+                ? 'Request sent' 
+                : 'Request to join'
           }
         </Button>
       </div>
