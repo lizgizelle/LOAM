@@ -299,47 +299,47 @@ const EventDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons - Square Layout */}
-          <div className="grid grid-cols-4 gap-3 mb-6">
+          {/* Action Buttons - Smaller Square Layout */}
+          <div className="grid grid-cols-4 gap-2 mb-6">
             <button
               disabled={isRegisterDisabled}
               onClick={handleSignUp}
-              className={`flex flex-col items-center justify-center aspect-square rounded-xl transition-colors ${
+              className={`flex flex-col items-center justify-center aspect-square rounded-lg transition-colors ${
                 isRegisterDisabled 
                   ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                   : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
             >
-              <Calendar className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-medium">
+              <Calendar className="w-4 h-4 mb-0.5" />
+              <span className="text-[9px] font-medium leading-tight">
                 {isPast ? 'Ended' : isApproved ? 'Joined' : isSignedUp ? 'Pending' : 'Register'}
               </span>
             </button>
             <button
               onClick={handleShare}
-              className="flex flex-col items-center justify-center aspect-square rounded-xl border border-border bg-background hover:bg-muted transition-colors"
+              className="flex flex-col items-center justify-center aspect-square rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
-              <Share2 className="w-5 h-5 mb-1 text-foreground" />
-              <span className="text-[10px] font-medium text-foreground">Share</span>
+              <Share2 className="w-4 h-4 mb-0.5 text-foreground" />
+              <span className="text-[9px] font-medium text-foreground leading-tight">Share</span>
             </button>
             <button
               onClick={handleContact}
               disabled={!isApproved && !user}
-              className={`flex flex-col items-center justify-center aspect-square rounded-xl border border-border transition-colors ${
+              className={`flex flex-col items-center justify-center aspect-square rounded-lg border border-border transition-colors ${
                 !isApproved && !user 
                   ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                   : 'bg-background hover:bg-muted text-foreground'
               }`}
             >
-              <MessageCircle className="w-5 h-5 mb-1" />
-              <span className="text-[10px] font-medium">Contact</span>
+              <MessageCircle className="w-4 h-4 mb-0.5" />
+              <span className="text-[9px] font-medium leading-tight">Contact</span>
             </button>
             <button
               onClick={() => setMoreSheetOpen(true)}
-              className="flex flex-col items-center justify-center aspect-square rounded-xl border border-border bg-background hover:bg-muted transition-colors"
+              className="flex flex-col items-center justify-center aspect-square rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
-              <MoreHorizontal className="w-5 h-5 mb-1 text-foreground" />
-              <span className="text-[10px] font-medium text-foreground">More</span>
+              <MoreHorizontal className="w-4 h-4 mb-0.5 text-foreground" />
+              <span className="text-[9px] font-medium text-foreground leading-tight">More</span>
             </button>
           </div>
 
@@ -366,40 +366,35 @@ const EventDetail = () => {
             </div>
           )}
 
-          {/* Who's going section */}
-          {showParticipants && participants.length > 0 ? (
+          {/* Who's going section - Stacked avatars with link */}
+          {(showParticipants || isApproved) && participants.length > 0 && (
             <div className="border-t border-border pt-6 mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Who's going</h2>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                {participants.map((participant) => (
-                  <div key={participant.id} className="flex flex-col items-center gap-1">
-                    <Avatar className="w-10 h-10">
+              <button 
+                onClick={() => navigate(`/event/${id}/participants`)}
+                className="flex items-center gap-3 w-full text-left group"
+              >
+                {/* Stacked avatars */}
+                <div className="flex -space-x-2">
+                  {participants.slice(0, 3).map((participant, index) => (
+                    <Avatar 
+                      key={participant.id} 
+                      className="w-8 h-8 border-2 border-background"
+                      style={{ zIndex: 3 - index }}
+                    >
                       <AvatarImage src={participant.avatar_url || getDefaultAvatar(participant.first_name || participant.id)} />
-                      <AvatarFallback className="bg-primary/10 text-primary text-sm">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs">
                         {participant.first_name?.charAt(0)?.toUpperCase() || '?'}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="text-xs text-muted-foreground">
-                      {participant.first_name || 'Guest'}
-                    </span>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+                {/* Link text */}
+                <span className="text-sm text-foreground underline underline-offset-2 group-hover:text-primary transition-colors">
+                  See who's going
+                </span>
+              </button>
             </div>
-          ) : showParticipants === false && !loadingParticipants ? (
-            <div className="border-t border-border pt-6 mb-6">
-              <div className="flex items-center gap-2 mb-2">
-                <Users className="w-4 h-4 text-muted-foreground" />
-                <h2 className="font-semibold text-foreground">Who's going</h2>
-              </div>
-              <p className="text-sm text-muted-foreground">
-                Participants will be introduced at the gathering
-              </p>
-            </div>
-          ) : null}
+          )}
 
           {/* Description */}
           <div className="border-t border-border pt-6">

@@ -19,6 +19,7 @@ import MyEvents from "./pages/MyEvents";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import EventDetail from "./pages/EventDetail";
+import EventParticipants from "./pages/EventParticipants";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import LanguageSettings from "./pages/settings/LanguageSettings";
 import CitySettings from "./pages/settings/CitySettings";
@@ -183,6 +184,13 @@ const AppRoutes = () => (
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <EventDetail />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/event/:id/participants" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <EventParticipants />
         </div>
       </ProtectedRoute>
     } />
