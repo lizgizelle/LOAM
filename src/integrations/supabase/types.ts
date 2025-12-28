@@ -14,16 +14,186 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      event_participants: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_participants_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          capacity: number | null
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          end_date: string | null
+          host_id: string | null
+          id: string
+          is_unlimited_capacity: boolean
+          location: string | null
+          name: string
+          requires_approval: boolean
+          start_date: string
+          status: string
+          updated_at: string
+          visibility: string
+        }
+        Insert: {
+          capacity?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          host_id?: string | null
+          id?: string
+          is_unlimited_capacity?: boolean
+          location?: string | null
+          name: string
+          requires_approval?: boolean
+          start_date: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Update: {
+          capacity?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          end_date?: string | null
+          host_id?: string | null
+          id?: string
+          is_unlimited_capacity?: boolean
+          location?: string | null
+          name?: string
+          requires_approval?: boolean
+          start_date?: string
+          status?: string
+          updated_at?: string
+          visibility?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          admin_notes: string | null
+          avatar_url: string | null
+          children: string | null
+          country_of_birth: string | null
+          created_at: string
+          date_of_birth: string | null
+          email: string | null
+          first_name: string | null
+          gender: string | null
+          id: string
+          is_shadow_blocked: boolean
+          phone_number: string | null
+          relationship_status: string | null
+          updated_at: string
+          work_industry: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          avatar_url?: string | null
+          children?: string | null
+          country_of_birth?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id: string
+          is_shadow_blocked?: boolean
+          phone_number?: string | null
+          relationship_status?: string | null
+          updated_at?: string
+          work_industry?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          avatar_url?: string | null
+          children?: string | null
+          country_of_birth?: string | null
+          created_at?: string
+          date_of_birth?: string | null
+          email?: string | null
+          first_name?: string | null
+          gender?: string | null
+          id?: string
+          is_shadow_blocked?: boolean
+          phone_number?: string | null
+          relationship_status?: string | null
+          updated_at?: string
+          work_industry?: string | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_admin: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "super_admin" | "event_host" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +320,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["super_admin", "event_host", "user"],
+    },
   },
 } as const
