@@ -184,6 +184,83 @@ export type Database = {
         }
         Relationships: []
       }
+      survey_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          options: Json | null
+          question_text: string
+          question_type: string
+          scale_label_high: string | null
+          scale_label_low: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          options?: Json | null
+          question_text: string
+          question_type: string
+          scale_label_high?: string | null
+          scale_label_low?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          scale_label_high?: string | null
+          scale_label_low?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      survey_responses: {
+        Row: {
+          answer_value: string
+          created_at: string
+          id: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          user_id: string
+        }
+        Insert: {
+          answer_value: string
+          created_at?: string
+          id?: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          user_id: string
+        }
+        Update: {
+          answer_value?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          question_text_snapshot?: string
+          question_type_snapshot?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "survey_responses_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
