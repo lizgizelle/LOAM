@@ -15,7 +15,7 @@ interface ApprovedEvent {
   end_date: string | null;
   location: string | null;
   status: string;
-  participationStatus: 'pending' | 'approved';
+  participationStatus: 'approved';
 }
 
 const MyEvents = () => {
@@ -33,11 +33,12 @@ const MyEvents = () => {
       }
 
       try {
-        // Fetch user's event participations
+        // Fetch ONLY approved event participations at the backend level
         const { data: participations } = await supabase
           .from('event_participants')
           .select('event_id, status')
-          .eq('user_id', user.id);
+          .eq('user_id', user.id)
+          .eq('status', 'approved');
 
         if (participations && participations.length > 0) {
           const eventIds = participations.map(p => p.event_id);
@@ -48,13 +49,10 @@ const MyEvents = () => {
             .in('id', eventIds);
 
           if (events) {
-            const eventsWithStatus = events.map(event => {
-              const participation = participations.find(p => p.event_id === event.id);
-              return {
-                ...event,
-                participationStatus: participation?.status === 'approved' ? 'approved' : 'pending'
-              } as ApprovedEvent;
-            });
+            const eventsWithStatus = events.map(event => ({
+              ...event,
+              participationStatus: 'approved' as const
+            }));
             setApprovedEvents(eventsWithStatus);
           }
         }
@@ -78,17 +76,15 @@ const MyEvents = () => {
     return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
 
-  // Filter to only show approved events in My Gatherings
-  const myApprovedEvents = approvedEvents.filter(e => e.participationStatus === 'approved');
-
+  // All events are already approved from backend query
   // Separate into upcoming and past events
   const now = new Date();
-  const upcomingEvents = myApprovedEvents.filter(event => {
+  const upcomingEvents = approvedEvents.filter(event => {
     const eventEnd = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
     return eventEnd >= now;
   });
 
-  const pastEvents = myApprovedEvents.filter(event => {
+  const pastEvents = approvedEvents.filter(event => {
     const eventEnd = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
     return eventEnd < now;
   });
