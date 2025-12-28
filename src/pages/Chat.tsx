@@ -20,7 +20,7 @@ const Chat = () => {
           Coming soon
         </h2>
         <p className="text-muted-foreground text-center max-w-xs">
-          Connect with fellow community members through chat. This feature is on its way!
+          Conversations continue here after you meet.
         </p>
       </div>
 

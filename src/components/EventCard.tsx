@@ -31,6 +31,9 @@ const EventCard = ({ event, isCompact = false }: EventCardProps) => {
             <p className="text-sm text-muted-foreground">
               {event.date} · {event.time}
             </p>
+            <p className="text-xs text-muted-foreground/70 mt-1">
+              Hosted by Loam
+            </p>
             {event.spotsLeft && !event.isPast && (
               <p className="text-xs text-primary font-medium mt-2">
                 {event.spotsLeft} spots left
@@ -38,7 +41,7 @@ const EventCard = ({ event, isCompact = false }: EventCardProps) => {
             )}
             {event.isPast && (
               <p className="text-xs text-muted-foreground font-medium mt-2">
-                Event has passed
+                Past gathering
               </p>
             )}
           </div>

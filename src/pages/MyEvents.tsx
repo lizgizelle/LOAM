@@ -13,7 +13,7 @@ const MyEvents = () => {
       {/* Header */}
       <div className="px-6 pt-14 pb-6 safe-area-top">
         <h1 className="text-2xl font-bold text-foreground">
-          My Events
+          My Gatherings
         </h1>
       </div>
 
@@ -37,10 +37,10 @@ const MyEvents = () => {
               <Calendar className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              No events yet
+              No gatherings yet
             </h2>
             <p className="text-muted-foreground text-center max-w-xs">
-              When you sign up for events, they'll appear here
+              When you request to join a gathering, it will appear here
             </p>
           </div>
         )}
