@@ -14,6 +14,7 @@ export interface UserProfile {
   firstName: string;
   phone: string;
   photo?: string;
+  defaultAvatarIndex?: number; // Index for default avatar if no photo
   relationshipStatus: 'single' | 'attached';
   hasChildren: boolean;
   workIndustry: string;
