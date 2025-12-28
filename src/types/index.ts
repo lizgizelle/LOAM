@@ -1,26 +1,34 @@
 export interface Event {
   id: string;
   name: string;
+  title?: string;
+  subtitle?: string;
   date: string;
   time: string;
-  image: string;
-  description: string;
   location: string;
+  image?: string;
+  spots?: number;
+  totalSpots?: number;
+  category?: string;
+  description?: string;
   spotsLeft?: number;
   isPast?: boolean;
 }
 
 export interface UserProfile {
   firstName: string;
-  phone: string;
+  phone?: string;
   photo?: string;
-  defaultAvatarIndex?: number; // Index for default avatar if no photo
-  relationshipStatus: 'single' | 'attached';
-  hasChildren: boolean;
-  workIndustry: string;
-  countryOfBirth: string;
-  dateOfBirth: string;
-  gender: 'woman' | 'man';
+  gender?: string;
+  relationshipStatus?: string;
+  hasChildren?: boolean;
+  workIndustry?: string;
+  countryOfBirth?: string;
+  dateOfBirth?: string;
+  defaultAvatarIndex?: number;
+  notificationsEnabled?: boolean;
+  language?: string;
+  city?: string;
 }
 
 export interface SurveyAnswers {

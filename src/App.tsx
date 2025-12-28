@@ -16,6 +16,9 @@ import MyEvents from "./pages/MyEvents";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import EventDetail from "./pages/EventDetail";
+import NotificationSettings from "./pages/settings/NotificationSettings";
+import LanguageSettings from "./pages/settings/LanguageSettings";
+import CitySettings from "./pages/settings/CitySettings";
 import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
@@ -96,6 +99,21 @@ const App = () => (
             <Route path="/event/:id" element={
               <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
                 <EventDetail />
+              </div>
+            } />
+            <Route path="/settings/notifications" element={
+              <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+                <NotificationSettings />
+              </div>
+            } />
+            <Route path="/settings/language" element={
+              <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+                <LanguageSettings />
+              </div>
+            } />
+            <Route path="/settings/city" element={
+              <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+                <CitySettings />
               </div>
             } />
 
