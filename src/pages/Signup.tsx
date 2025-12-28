@@ -2,18 +2,54 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAppStore } from '@/store/appStore';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+const signupSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
 
 const Signup = () => {
   const navigate = useNavigate();
-  const { setAuthenticated } = useAppStore();
+  const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setAuthenticated(true);
-    navigate('/onboarding');
+    setErrors({});
+
+    // Validate
+    const result = signupSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === 'email') fieldErrors.email = err.message;
+        if (err.path[0] === 'password') fieldErrors.password = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await signUp(email, password);
+    setLoading(false);
+
+    if (error) {
+      if (error.message.includes('already registered')) {
+        toast.error('This email is already registered. Please log in instead.');
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    // Redirect to verification screen
+    navigate('/verify-email');
   };
 
   return (
@@ -33,7 +69,11 @@ const Signup = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className={errors.email ? 'border-destructive' : ''}
             />
+            {errors.email && (
+              <p className="text-xs text-destructive mt-1">{errors.email}</p>
+            )}
           </div>
           <div>
             <Input
@@ -41,7 +81,11 @@ const Signup = () => {
               placeholder="Create password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className={errors.password ? 'border-destructive' : ''}
             />
+            {errors.password && (
+              <p className="text-xs text-destructive mt-1">{errors.password}</p>
+            )}
           </div>
 
           <p className="text-xs text-muted-foreground">
@@ -56,8 +100,9 @@ const Signup = () => {
             variant="loam" 
             size="lg" 
             className="w-full mt-6"
+            disabled={loading}
           >
-            Continue
+            {loading ? 'Creating account...' : 'Continue'}
           </Button>
         </form>
       </div>

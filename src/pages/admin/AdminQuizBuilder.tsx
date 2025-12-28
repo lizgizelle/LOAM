@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
-interface Survey {
+interface Quiz {
   id: string;
   title: string;
   status: 'draft' | 'active' | 'archived';
@@ -20,22 +20,22 @@ interface Survey {
   updated_at: string;
 }
 
-export default function AdminSurveyBuilder() {
+export default function AdminQuizBuilder() {
   const navigate = useNavigate();
-  const [surveys, setSurveys] = useState<Survey[]>([]);
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingSurvey, setEditingSurvey] = useState<Survey | null>(null);
+  const [editingQuiz, setEditingQuiz] = useState<Quiz | null>(null);
   
   // Form state
   const [title, setTitle] = useState('');
   const [status, setStatus] = useState<'draft' | 'active' | 'archived'>('draft');
 
   useEffect(() => {
-    fetchSurveys();
+    fetchQuizzes();
   }, []);
 
-  const fetchSurveys = async () => {
+  const fetchQuizzes = async () => {
     try {
       const { data, error } = await supabase
         .from('surveys')
@@ -44,13 +44,13 @@ export default function AdminSurveyBuilder() {
 
       if (error) throw error;
       
-      setSurveys((data || []).map(s => ({
+      setQuizzes((data || []).map(s => ({
         ...s,
         status: s.status as 'draft' | 'active' | 'archived'
       })));
     } catch (error) {
-      console.error('Error fetching surveys:', error);
-      toast.error('Failed to load surveys');
+      console.error('Error fetching quizzes:', error);
+      toast.error('Failed to load quizzes');
     } finally {
       setLoading(false);
     }
@@ -59,27 +59,27 @@ export default function AdminSurveyBuilder() {
   const resetForm = () => {
     setTitle('');
     setStatus('draft');
-    setEditingSurvey(null);
+    setEditingQuiz(null);
     setShowForm(false);
   };
 
-  const handleEdit = (survey: Survey) => {
-    setEditingSurvey(survey);
-    setTitle(survey.title);
-    setStatus(survey.status);
+  const handleEdit = (quiz: Quiz) => {
+    setEditingQuiz(quiz);
+    setTitle(quiz.title);
+    setStatus(quiz.status);
     setShowForm(true);
   };
 
   const handleSave = async () => {
     if (!title.trim()) {
-      toast.error('Survey title is required');
+      toast.error('Quiz title is required');
       return;
     }
 
     try {
-      // If setting to active, archive the current active survey first
+      // If setting to active, archive the current active quiz first
       if (status === 'active') {
-        const currentActive = surveys.find(s => s.status === 'active' && s.id !== editingSurvey?.id);
+        const currentActive = quizzes.find(q => q.status === 'active' && q.id !== editingQuiz?.id);
         if (currentActive) {
           await supabase
             .from('surveys')
@@ -88,53 +88,53 @@ export default function AdminSurveyBuilder() {
         }
       }
 
-      if (editingSurvey) {
+      if (editingQuiz) {
         const { error } = await supabase
           .from('surveys')
           .update({ title: title.trim(), status })
-          .eq('id', editingSurvey.id);
+          .eq('id', editingQuiz.id);
 
         if (error) throw error;
-        toast.success('Survey updated');
+        toast.success('Quiz updated');
       } else {
         const { error } = await supabase
           .from('surveys')
           .insert({ title: title.trim(), status });
 
         if (error) throw error;
-        toast.success('Survey created');
+        toast.success('Quiz created');
       }
 
       resetForm();
-      fetchSurveys();
+      fetchQuizzes();
     } catch (error) {
-      console.error('Error saving survey:', error);
-      toast.error('Failed to save survey');
+      console.error('Error saving quiz:', error);
+      toast.error('Failed to save quiz');
     }
   };
 
-  const handleDuplicate = async (survey: Survey) => {
+  const handleDuplicate = async (quiz: Quiz) => {
     try {
-      // Create new survey
-      const { data: newSurvey, error: surveyError } = await supabase
+      // Create new quiz
+      const { data: newQuiz, error: quizError } = await supabase
         .from('surveys')
-        .insert({ title: `${survey.title} (Copy)`, status: 'draft' })
+        .insert({ title: `${quiz.title} (Copy)`, status: 'draft' })
         .select()
         .single();
 
-      if (surveyError) throw surveyError;
+      if (quizError) throw quizError;
 
       // Copy questions
       const { data: questions, error: questionsError } = await supabase
         .from('survey_questions')
         .select('*')
-        .eq('survey_id', survey.id);
+        .eq('survey_id', quiz.id);
 
       if (questionsError) throw questionsError;
 
       if (questions && questions.length > 0) {
         const newQuestions = questions.map(q => ({
-          survey_id: newSurvey.id,
+          survey_id: newQuiz.id,
           question_text: q.question_text,
           question_type: q.question_type,
           options: q.options,
@@ -147,32 +147,32 @@ export default function AdminSurveyBuilder() {
         await supabase.from('survey_questions').insert(newQuestions);
       }
 
-      toast.success('Survey duplicated');
-      fetchSurveys();
+      toast.success('Quiz duplicated');
+      fetchQuizzes();
     } catch (error) {
-      console.error('Error duplicating survey:', error);
-      toast.error('Failed to duplicate survey');
+      console.error('Error duplicating quiz:', error);
+      toast.error('Failed to duplicate quiz');
     }
   };
 
-  const handleArchive = async (survey: Survey) => {
+  const handleArchive = async (quiz: Quiz) => {
     try {
       const { error } = await supabase
         .from('surveys')
         .update({ status: 'archived' })
-        .eq('id', survey.id);
+        .eq('id', quiz.id);
 
       if (error) throw error;
-      toast.success('Survey archived');
-      fetchSurveys();
+      toast.success('Quiz archived');
+      fetchQuizzes();
     } catch (error) {
-      console.error('Error archiving survey:', error);
-      toast.error('Failed to archive survey');
+      console.error('Error archiving quiz:', error);
+      toast.error('Failed to archive quiz');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this survey and all its questions?')) return;
+    if (!confirm('Are you sure you want to delete this quiz and all its questions?')) return;
 
     try {
       const { error } = await supabase
@@ -181,16 +181,16 @@ export default function AdminSurveyBuilder() {
         .eq('id', id);
 
       if (error) throw error;
-      toast.success('Survey deleted');
-      fetchSurveys();
+      toast.success('Quiz deleted');
+      fetchQuizzes();
     } catch (error) {
-      console.error('Error deleting survey:', error);
-      toast.error('Failed to delete survey');
+      console.error('Error deleting quiz:', error);
+      toast.error('Failed to delete quiz');
     }
   };
 
-  const getStatusBadge = (surveyStatus: string) => {
-    switch (surveyStatus) {
+  const getStatusBadge = (quizStatus: string) => {
+    switch (quizStatus) {
       case 'active':
         return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>;
       case 'draft':
@@ -207,13 +207,13 @@ export default function AdminSurveyBuilder() {
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold">Survey Builder</h1>
-            <p className="text-muted-foreground mt-1">Manage survey sets and questions</p>
+            <h1 className="text-2xl font-semibold">Quiz Builder</h1>
+            <p className="text-muted-foreground mt-1">Manage quiz sets and questions</p>
           </div>
           {!showForm && (
             <Button onClick={() => setShowForm(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Create New Survey
+              Create New Quiz
             </Button>
           )}
         </div>
@@ -222,19 +222,19 @@ export default function AdminSurveyBuilder() {
         {showForm && (
           <Card>
             <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle>{editingSurvey ? 'Edit Survey' : 'Create New Survey'}</CardTitle>
+              <CardTitle>{editingQuiz ? 'Edit Quiz' : 'Create New Quiz'}</CardTitle>
               <Button variant="ghost" size="icon" onClick={resetForm}>
                 <X className="h-4 w-4" />
               </Button>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="title">Survey Title</Label>
+                <Label htmlFor="title">Quiz Title</Label>
                 <Input
                   id="title"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="January Survey"
+                  placeholder="January Quiz"
                 />
               </div>
 
@@ -251,13 +251,13 @@ export default function AdminSurveyBuilder() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
-                  Only one survey can be active at a time. Setting this to Active will archive the current active survey.
+                  Only one quiz can be active at a time. Setting this to Active will archive the current active quiz.
                 </p>
               </div>
 
               <div className="flex gap-2 pt-4">
                 <Button onClick={handleSave}>
-                  {editingSurvey ? 'Update Survey' : 'Create Survey'}
+                  {editingQuiz ? 'Update Quiz' : 'Create Quiz'}
                 </Button>
                 <Button variant="outline" onClick={resetForm}>
                   Cancel
@@ -267,59 +267,59 @@ export default function AdminSurveyBuilder() {
           </Card>
         )}
 
-        {/* Surveys List */}
+        {/* Quizzes List */}
         <Card>
           <CardHeader>
-            <CardTitle>Survey Sets ({surveys.length})</CardTitle>
+            <CardTitle>Quiz Sets ({quizzes.length})</CardTitle>
           </CardHeader>
           <CardContent>
             {loading ? (
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
-            ) : surveys.length === 0 ? (
+            ) : quizzes.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No surveys yet. Create your first survey above.
+                No quizzes yet. Create your first quiz above.
               </div>
             ) : (
               <div className="space-y-3">
-                {surveys.map((survey) => (
+                {quizzes.map((quiz) => (
                   <div
-                    key={survey.id}
+                    key={quiz.id}
                     className="flex items-center gap-4 p-4 border rounded-lg bg-card hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         <button 
-                          onClick={() => navigate(`/admin/survey-builder/${survey.id}`)}
+                          onClick={() => navigate(`/admin/quiz-builder/${quiz.id}`)}
                           className="font-medium text-foreground hover:text-primary transition-colors text-left"
                         >
-                          {survey.title}
+                          {quiz.title}
                         </button>
-                        {getStatusBadge(survey.status)}
+                        {getStatusBadge(quiz.status)}
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        Created {format(new Date(survey.created_at), 'PP')}
+                        Created {format(new Date(quiz.created_at), 'PP')}
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        onClick={() => navigate(`/admin/survey-builder/${survey.id}`)}
+                        onClick={() => navigate(`/admin/quiz-builder/${quiz.id}`)}
                       >
                         Manage Questions
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleEdit(survey)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleEdit(quiz)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
-                      <Button variant="ghost" size="icon" onClick={() => handleDuplicate(survey)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDuplicate(quiz)}>
                         <Copy className="h-4 w-4" />
                       </Button>
-                      {survey.status !== 'archived' && (
-                        <Button variant="ghost" size="icon" onClick={() => handleArchive(survey)}>
+                      {quiz.status !== 'archived' && (
+                        <Button variant="ghost" size="icon" onClick={() => handleArchive(quiz)}>
                           <Archive className="h-4 w-4" />
                         </Button>
                       )}
-                      <Button variant="ghost" size="icon" onClick={() => handleDelete(survey.id)}>
+                      <Button variant="ghost" size="icon" onClick={() => handleDelete(quiz.id)}>
                         <Trash2 className="h-4 w-4 text-destructive" />
                       </Button>
                     </div>

@@ -11,13 +11,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Badge } from '@/components/ui/badge';
 
-interface Survey {
+interface Quiz {
   id: string;
   title: string;
   status: string;
 }
 
-interface SurveyQuestion {
+interface QuizQuestion {
   id: string;
   question_text: string;
   question_type: 'multiple_choice' | 'scale_1_10';
@@ -28,14 +28,14 @@ interface SurveyQuestion {
   is_active: boolean;
 }
 
-export default function AdminSurveyQuestions() {
-  const { surveyId } = useParams<{ surveyId: string }>();
+export default function AdminQuizQuestions() {
+  const { quizId } = useParams<{ quizId: string }>();
   const navigate = useNavigate();
-  const [survey, setSurvey] = useState<Survey | null>(null);
-  const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
+  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
-  const [editingQuestion, setEditingQuestion] = useState<SurveyQuestion | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
   
   // Form state
   const [questionText, setQuestionText] = useState('');
@@ -45,28 +45,28 @@ export default function AdminSurveyQuestions() {
   const [scaleLabelHigh, setScaleLabelHigh] = useState('');
 
   useEffect(() => {
-    if (surveyId) {
-      fetchSurveyAndQuestions();
+    if (quizId) {
+      fetchQuizAndQuestions();
     }
-  }, [surveyId]);
+  }, [quizId]);
 
-  const fetchSurveyAndQuestions = async () => {
+  const fetchQuizAndQuestions = async () => {
     try {
-      // Fetch survey
-      const { data: surveyData, error: surveyError } = await supabase
+      // Fetch quiz
+      const { data: quizData, error: quizError } = await supabase
         .from('surveys')
         .select('*')
-        .eq('id', surveyId)
+        .eq('id', quizId)
         .single();
 
-      if (surveyError) throw surveyError;
-      setSurvey(surveyData);
+      if (quizError) throw quizError;
+      setQuiz(quizData);
 
       // Fetch questions
       const { data: questionsData, error: questionsError } = await supabase
         .from('survey_questions')
         .select('*')
-        .eq('survey_id', surveyId)
+        .eq('survey_id', quizId)
         .order('display_order', { ascending: true });
 
       if (questionsError) throw questionsError;
@@ -78,7 +78,7 @@ export default function AdminSurveyQuestions() {
       })));
     } catch (error) {
       console.error('Error fetching data:', error);
-      toast.error('Failed to load survey');
+      toast.error('Failed to load quiz');
     } finally {
       setLoading(false);
     }
@@ -94,7 +94,7 @@ export default function AdminSurveyQuestions() {
     setShowForm(false);
   };
 
-  const handleEdit = (question: SurveyQuestion) => {
+  const handleEdit = (question: QuizQuestion) => {
     setEditingQuestion(question);
     setQuestionText(question.question_text);
     setQuestionType(question.question_type);
@@ -120,7 +120,7 @@ export default function AdminSurveyQuestions() {
 
     try {
       const questionData = {
-        survey_id: surveyId,
+        survey_id: quizId,
         question_text: questionText.trim(),
         question_type: questionType,
         options: questionType === 'multiple_choice' ? options.filter(o => o.trim()) : null,
@@ -147,7 +147,7 @@ export default function AdminSurveyQuestions() {
       }
 
       resetForm();
-      fetchSurveyAndQuestions();
+      fetchQuizAndQuestions();
     } catch (error) {
       console.error('Error saving question:', error);
       toast.error('Failed to save question');
@@ -165,7 +165,7 @@ export default function AdminSurveyQuestions() {
 
       if (error) throw error;
       toast.success('Question deleted');
-      fetchSurveyAndQuestions();
+      fetchQuizAndQuestions();
     } catch (error) {
       console.error('Error deleting question:', error);
       toast.error('Failed to delete question');
@@ -195,10 +195,10 @@ export default function AdminSurveyQuestions() {
     );
   }
 
-  if (!survey) {
+  if (!quiz) {
     return (
       <AdminLayout>
-        <div className="text-center py-8 text-muted-foreground">Survey not found</div>
+        <div className="text-center py-8 text-muted-foreground">Quiz not found</div>
       </AdminLayout>
     );
   }
@@ -207,26 +207,26 @@ export default function AdminSurveyQuestions() {
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/survey-builder')}>
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/quiz-builder')}>
             <ChevronLeft className="h-5 w-5" />
           </Button>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-semibold">{survey.title}</h1>
+              <h1 className="text-2xl font-semibold">{quiz.title}</h1>
               <Badge 
                 className={
-                  survey.status === 'active' 
+                  quiz.status === 'active' 
                     ? 'bg-green-100 text-green-700' 
-                    : survey.status === 'draft'
+                    : quiz.status === 'draft'
                     ? ''
                     : 'text-muted-foreground'
                 }
-                variant={survey.status === 'draft' ? 'secondary' : survey.status === 'archived' ? 'outline' : 'default'}
+                variant={quiz.status === 'draft' ? 'secondary' : quiz.status === 'archived' ? 'outline' : 'default'}
               >
-                {survey.status.charAt(0).toUpperCase() + survey.status.slice(1)}
+                {quiz.status.charAt(0).toUpperCase() + quiz.status.slice(1)}
               </Badge>
             </div>
-            <p className="text-muted-foreground mt-1">Manage questions for this survey</p>
+            <p className="text-muted-foreground mt-1">Manage questions for this quiz</p>
           </div>
           {!showForm && (
             <Button onClick={() => setShowForm(true)}>

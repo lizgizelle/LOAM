@@ -7,10 +7,11 @@ import { AuthProvider, useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import Landing from "./pages/Landing";
-import Survey from "./pages/Survey";
+import Quiz from "./pages/Quiz";
 import AuthChoice from "./pages/AuthChoice";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import VerifyEmail from "./pages/VerifyEmail";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
@@ -32,15 +33,15 @@ import AdminEventDetail from "./pages/admin/AdminEventDetail";
 import AdminEventEdit from "./pages/admin/AdminEventEdit";
 import AdminRequests from "./pages/admin/AdminRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
-import AdminSurveyBuilder from "./pages/admin/AdminSurveyBuilder";
-import AdminSurveyQuestions from "./pages/admin/AdminSurveyQuestions";
-import AdminSurveyResponses from "./pages/admin/AdminSurveyResponses";
+import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
+import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
+import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
 
 const queryClient = new QueryClient();
 
-// Wrapper component to check blocked status
-const BlockedUserCheck = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
+// Wrapper component to check blocked status and email verification
+const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+  const { user, loading, isEmailVerified } = useAuth();
   const [isBlocked, setIsBlocked] = useState<boolean | null>(null);
   const [checkingBlocked, setCheckingBlocked] = useState(true);
 
@@ -57,7 +58,7 @@ const BlockedUserCheck = ({ children }: { children: React.ReactNode }) => {
           .from('profiles')
           .select('is_shadow_blocked')
           .eq('id', user.id)
-          .single();
+          .maybeSingle();
 
         setIsBlocked(profile?.is_shadow_blocked ?? false);
       } catch (error) {
@@ -80,6 +81,16 @@ const BlockedUserCheck = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
+  // If not logged in, redirect to landing
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  // If email not verified, redirect to verify screen
+  if (!isEmailVerified) {
+    return <Navigate to="/verify-email" replace />;
+  }
+
   if (isBlocked) {
     return (
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -93,17 +104,19 @@ const BlockedUserCheck = ({ children }: { children: React.ReactNode }) => {
 
 const AppRoutes = () => (
   <Routes>
-    {/* User app routes */}
+    {/* Public routes */}
     <Route path="/" element={
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
         <Landing />
       </div>
     } />
-    <Route path="/survey" element={
+    <Route path="/quiz" element={
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-        <Survey />
+        <Quiz />
       </div>
     } />
+    {/* Keep old route for backwards compatibility */}
+    <Route path="/survey" element={<Navigate to="/quiz" replace />} />
     <Route path="/auth-choice" element={
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
         <AuthChoice />
@@ -119,73 +132,80 @@ const AppRoutes = () => (
         <Signup />
       </div>
     } />
+    <Route path="/verify-email" element={
+      <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+        <VerifyEmail />
+      </div>
+    } />
     <Route path="/onboarding" element={
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
         <Onboarding />
       </div>
     } />
+    
+    {/* Protected routes */}
     <Route path="/home" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <Home />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/chat" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <Chat />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/my-events" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <MyEvents />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/profile" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <Profile />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/edit-profile" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <EditProfile />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/event/:id" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <EventDetail />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/settings/notifications" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <NotificationSettings />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/settings/language" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <LanguageSettings />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
     <Route path="/settings/city" element={
-      <BlockedUserCheck>
+      <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <CitySettings />
         </div>
-      </BlockedUserCheck>
+      </ProtectedRoute>
     } />
 
     {/* Admin routes */}
@@ -198,9 +218,12 @@ const AppRoutes = () => (
     <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
     <Route path="/admin/requests" element={<AdminRequests />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
-    <Route path="/admin/survey-builder" element={<AdminSurveyBuilder />} />
-    <Route path="/admin/survey-builder/:surveyId" element={<AdminSurveyQuestions />} />
-    <Route path="/admin/survey-responses" element={<AdminSurveyResponses />} />
+    <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
+    <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
+    <Route path="/admin/quiz-responses" element={<AdminQuizResponses />} />
+    {/* Keep old routes for backwards compatibility */}
+    <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />
+    <Route path="/admin/survey-responses" element={<Navigate to="/admin/quiz-responses" replace />} />
 
     <Route path="*" element={<NotFound />} />
   </Routes>

@@ -8,7 +8,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
 import { Badge } from '@/components/ui/badge';
 
-interface Survey {
+interface Quiz {
   id: string;
   title: string;
   status: string;
@@ -22,7 +22,7 @@ interface UserWithResponses {
   last_response_at: string | null;
 }
 
-interface SurveyResponse {
+interface QuizResponse {
   id: string;
   question_text_snapshot: string;
   question_type_snapshot: string;
@@ -31,28 +31,28 @@ interface SurveyResponse {
   survey_title_snapshot: string | null;
 }
 
-export default function AdminSurveyResponses() {
-  const [surveys, setSurveys] = useState<Survey[]>([]);
-  const [selectedSurveyId, setSelectedSurveyId] = useState<string>('all');
+export default function AdminQuizResponses() {
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [selectedQuizId, setSelectedQuizId] = useState<string>('all');
   const [users, setUsers] = useState<UserWithResponses[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [selectedUserName, setSelectedUserName] = useState<string>('');
-  const [selectedSurveyTitle, setSelectedSurveyTitle] = useState<string>('');
-  const [responses, setResponses] = useState<SurveyResponse[]>([]);
+  const [selectedQuizTitle, setSelectedQuizTitle] = useState<string>('');
+  const [responses, setResponses] = useState<QuizResponse[]>([]);
   const [loadingResponses, setLoadingResponses] = useState(false);
 
   useEffect(() => {
-    fetchSurveys();
+    fetchQuizzes();
   }, []);
 
   useEffect(() => {
-    if (surveys.length > 0) {
+    if (quizzes.length > 0) {
       fetchUsersWithResponses();
     }
-  }, [selectedSurveyId, surveys]);
+  }, [selectedQuizId, quizzes]);
 
-  const fetchSurveys = async () => {
+  const fetchQuizzes = async () => {
     try {
       const { data, error } = await supabase
         .from('surveys')
@@ -60,15 +60,15 @@ export default function AdminSurveyResponses() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSurveys(data || []);
+      setQuizzes(data || []);
 
-      // Set default to active survey if exists
-      const activeSurvey = data?.find(s => s.status === 'active');
-      if (activeSurvey) {
-        setSelectedSurveyId(activeSurvey.id);
+      // Set default to active quiz if exists
+      const activeQuiz = data?.find(q => q.status === 'active');
+      if (activeQuiz) {
+        setSelectedQuizId(activeQuiz.id);
       }
     } catch (error) {
-      console.error('Error fetching surveys:', error);
+      console.error('Error fetching quizzes:', error);
     }
   };
 
@@ -80,8 +80,8 @@ export default function AdminSurveyResponses() {
         .from('survey_responses')
         .select('user_id, created_at, survey_id');
 
-      if (selectedSurveyId !== 'all') {
-        query = query.eq('survey_id', selectedSurveyId);
+      if (selectedQuizId !== 'all') {
+        query = query.eq('survey_id', selectedQuizId);
       }
 
       const { data: responseData, error: responseError } = await query;
@@ -151,8 +151,8 @@ export default function AdminSurveyResponses() {
         .eq('user_id', userId)
         .order('created_at', { ascending: true });
 
-      if (selectedSurveyId !== 'all') {
-        query = query.eq('survey_id', selectedSurveyId);
+      if (selectedQuizId !== 'all') {
+        query = query.eq('survey_id', selectedQuizId);
       }
 
       const { data, error } = await query;
@@ -160,12 +160,12 @@ export default function AdminSurveyResponses() {
       if (error) throw error;
       setResponses(data || []);
 
-      // Get survey title
-      if (selectedSurveyId !== 'all') {
-        const survey = surveys.find(s => s.id === selectedSurveyId);
-        setSelectedSurveyTitle(survey?.title || '');
+      // Get quiz title
+      if (selectedQuizId !== 'all') {
+        const quiz = quizzes.find(q => q.id === selectedQuizId);
+        setSelectedQuizTitle(quiz?.title || '');
       } else {
-        setSelectedSurveyTitle('All Surveys');
+        setSelectedQuizTitle('All Quizzes');
       }
     } catch (error) {
       console.error('Error fetching responses:', error);
@@ -191,7 +191,7 @@ export default function AdminSurveyResponses() {
             </Button>
             <div>
               <h1 className="text-2xl font-semibold">{selectedUserName}</h1>
-              <p className="text-muted-foreground">{selectedSurveyTitle}</p>
+              <p className="text-muted-foreground">{selectedQuizTitle}</p>
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export default function AdminSurveyResponses() {
                 <div className="space-y-4">
                   {responses.map((response) => (
                     <div key={response.id} className="p-4 border rounded-lg">
-                      {response.survey_title_snapshot && selectedSurveyId === 'all' && (
+                      {response.survey_title_snapshot && selectedQuizId === 'all' && (
                         <Badge variant="outline" className="mb-2">
                           {response.survey_title_snapshot}
                         </Badge>
@@ -241,20 +241,20 @@ export default function AdminSurveyResponses() {
       <div className="space-y-6">
         <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Survey Responses</h1>
-            <p className="text-muted-foreground mt-1">View user survey answers</p>
+            <h1 className="text-2xl font-semibold">Quiz Responses</h1>
+            <p className="text-muted-foreground mt-1">View user quiz answers</p>
           </div>
           <div className="w-64">
-            <Select value={selectedSurveyId} onValueChange={setSelectedSurveyId}>
+            <Select value={selectedQuizId} onValueChange={setSelectedQuizId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select survey" />
+                <SelectValue placeholder="Select quiz" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Surveys</SelectItem>
-                {surveys.map((survey) => (
-                  <SelectItem key={survey.id} value={survey.id}>
-                    {survey.title}
-                    {survey.status === 'active' && ' (Active)'}
+                <SelectItem value="all">All Quizzes</SelectItem>
+                {quizzes.map((quiz) => (
+                  <SelectItem key={quiz.id} value={quiz.id}>
+                    {quiz.title}
+                    {quiz.status === 'active' && ' (Active)'}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -271,7 +271,7 @@ export default function AdminSurveyResponses() {
               <div className="text-center py-8 text-muted-foreground">Loading...</div>
             ) : users.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No survey responses yet
+                No quiz responses yet
               </div>
             ) : (
               <div className="space-y-2">
