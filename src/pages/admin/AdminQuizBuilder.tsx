@@ -56,11 +56,22 @@ export default function AdminQuizBuilder() {
     }
   };
 
+  const getDefaultTitle = () => {
+    return format(new Date(), 'dd/MM/yyyy');
+  };
+
   const resetForm = () => {
     setTitle('');
     setStatus('draft');
     setEditingQuiz(null);
     setShowForm(false);
+  };
+
+  const handleCreate = () => {
+    setTitle(getDefaultTitle());
+    setStatus('draft');
+    setEditingQuiz(null);
+    setShowForm(true);
   };
 
   const handleEdit = (quiz: Quiz) => {
@@ -77,15 +88,15 @@ export default function AdminQuizBuilder() {
     }
 
     try {
-      // If setting to active, archive the current active quiz first
+      // If setting to active, archive ALL other quizzes first (enforce single active rule)
       if (status === 'active') {
-        const currentActive = quizzes.find(q => q.status === 'active' && q.id !== editingQuiz?.id);
-        if (currentActive) {
-          await supabase
-            .from('surveys')
-            .update({ status: 'archived' })
-            .eq('id', currentActive.id);
-        }
+        const { error: archiveError } = await supabase
+          .from('surveys')
+          .update({ status: 'archived' })
+          .neq('id', editingQuiz?.id || '')
+          .eq('status', 'active');
+        
+        if (archiveError) throw archiveError;
       }
 
       if (editingQuiz) {
@@ -189,10 +200,14 @@ export default function AdminQuizBuilder() {
     }
   };
 
-  const getStatusBadge = (quizStatus: string) => {
+  const getStatusBadge = (quizStatus: string, isActiveQuiz: boolean) => {
     switch (quizStatus) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Active</Badge>;
+        return (
+          <Badge className="bg-green-600 text-white hover:bg-green-600 border-0">
+            ● Active
+          </Badge>
+        );
       case 'draft':
         return <Badge variant="secondary">Draft</Badge>;
       case 'archived':
@@ -211,7 +226,7 @@ export default function AdminQuizBuilder() {
             <p className="text-muted-foreground mt-1">Manage quiz sets and questions</p>
           </div>
           {!showForm && (
-            <Button onClick={() => setShowForm(true)}>
+            <Button onClick={handleCreate}>
               <Plus className="h-4 w-4 mr-2" />
               Create New Quiz
             </Button>
@@ -250,9 +265,11 @@ export default function AdminQuizBuilder() {
                     <SelectItem value="archived">Archived</SelectItem>
                   </SelectContent>
                 </Select>
-                <p className="text-xs text-muted-foreground">
-                  Only one quiz can be active at a time. Setting this to Active will archive the current active quiz.
-                </p>
+                {status === 'active' && (
+                  <p className="text-xs text-amber-600">
+                    Only one quiz can be active at a time. Activating this quiz will deactivate all others.
+                  </p>
+                )}
               </div>
 
               <div className="flex gap-2 pt-4">
@@ -294,7 +311,7 @@ export default function AdminQuizBuilder() {
                         >
                           {quiz.title}
                         </button>
-                        {getStatusBadge(quiz.status)}
+                        {getStatusBadge(quiz.status, quiz.status === 'active')}
                       </div>
                       <p className="text-sm text-muted-foreground">
                         Created {format(new Date(quiz.created_at), 'PP')}
