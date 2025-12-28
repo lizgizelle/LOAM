@@ -1,51 +1,75 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Mail, RefreshCw, LogOut } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from '@/components/ui/input-otp';
 
 const VerifyEmail = () => {
   const navigate = useNavigate();
-  const { user, isEmailVerified, resendVerificationEmail, refreshUser, signOut } = useAuth();
-  const [checking, setChecking] = useState(false);
+  const { user, isEmailVerified, signOut, verifyOtp, resendOtp } = useAuth();
+  const [otp, setOtp] = useState('');
+  const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
-  const [lastResent, setLastResent] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(0);
+  const [error, setError] = useState('');
 
-  const handleCheckVerification = async () => {
-    setChecking(true);
-    await refreshUser();
-    setChecking(false);
+  // Start countdown on mount (OTP was just sent)
+  useEffect(() => {
+    setCountdown(30);
+  }, []);
 
-    // After refresh, check if verified
-    // The component will re-render with updated isEmailVerified
-    if (isEmailVerified) {
-      toast.success('Email verified!');
-      navigate('/onboarding');
-    } else {
-      toast.error('Not verified yet. Please check your inbox.');
+  // Countdown timer
+  useEffect(() => {
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
+      return () => clearTimeout(timer);
     }
+  }, [countdown]);
+
+  const handleVerify = async () => {
+    if (otp.length !== 6) {
+      setError('Please enter the complete 6-digit code');
+      return;
+    }
+
+    setError('');
+    setVerifying(true);
+
+    const { error: verifyError } = await verifyOtp(otp);
+    setVerifying(false);
+
+    if (verifyError) {
+      setError('Invalid or expired code. Please try again.');
+      return;
+    }
+
+    toast.success('Email verified!');
+    navigate('/onboarding');
   };
 
-  const handleResendEmail = async () => {
-    // Cooldown check (60 seconds)
-    if (lastResent && Date.now() - lastResent.getTime() < 60000) {
-      const remaining = Math.ceil((60000 - (Date.now() - lastResent.getTime())) / 1000);
-      toast.error(`Please wait ${remaining} seconds before requesting another email`);
-      return;
-    }
+  const handleResendOtp = async () => {
+    if (countdown > 0) return;
 
     setResending(true);
-    const { error } = await resendVerificationEmail();
+    setError('');
+    
+    const { error: resendError } = await resendOtp();
     setResending(false);
 
-    if (error) {
-      toast.error(error.message);
+    if (resendError) {
+      toast.error(resendError.message);
       return;
     }
 
-    setLastResent(new Date());
-    toast.success('Verification email sent!');
+    setCountdown(30);
+    setOtp('');
+    toast.success('New code sent!');
   };
 
   const handleLogout = async () => {
@@ -80,43 +104,76 @@ const VerifyEmail = () => {
           className="text-muted-foreground max-w-xs mb-8 animate-fade-in"
           style={{ animationDelay: '0.2s' }}
         >
-          We sent a verification link to{' '}
-          <span className="font-medium text-foreground">{user?.email}</span>.
-          <br />
-          Please verify your email to continue.
+          Enter the 6-digit code sent to{' '}
+          <span className="font-medium text-foreground">{user?.email}</span>
         </p>
+
+        {/* OTP Input */}
+        <div 
+          className="w-full max-w-xs animate-fade-in mb-4"
+          style={{ animationDelay: '0.3s' }}
+        >
+          <InputOTP
+            maxLength={6}
+            value={otp}
+            onChange={(value) => {
+              setOtp(value);
+              setError('');
+            }}
+          >
+            <InputOTPGroup className="gap-2 justify-center w-full">
+              <InputOTPSlot index={0} className="w-12 h-14 text-xl" />
+              <InputOTPSlot index={1} className="w-12 h-14 text-xl" />
+              <InputOTPSlot index={2} className="w-12 h-14 text-xl" />
+              <InputOTPSlot index={3} className="w-12 h-14 text-xl" />
+              <InputOTPSlot index={4} className="w-12 h-14 text-xl" />
+              <InputOTPSlot index={5} className="w-12 h-14 text-xl" />
+            </InputOTPGroup>
+          </InputOTP>
+
+          {error && (
+            <p className="text-sm text-destructive mt-3">{error}</p>
+          )}
+        </div>
 
         {/* Actions */}
         <div 
           className="w-full max-w-xs space-y-4 animate-fade-in"
-          style={{ animationDelay: '0.3s' }}
+          style={{ animationDelay: '0.4s' }}
         >
           <Button 
             variant="loam" 
             size="lg" 
             className="w-full"
-            onClick={handleCheckVerification}
-            disabled={checking}
+            onClick={handleVerify}
+            disabled={verifying || otp.length !== 6}
           >
-            {checking ? (
+            {verifying ? (
               <>
                 <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                Checking...
+                Verifying...
               </>
             ) : (
-              "I've verified, continue"
+              'Verify email'
             )}
           </Button>
 
-          <Button 
-            variant="loam-outline" 
-            size="lg" 
-            className="w-full"
-            onClick={handleResendEmail}
-            disabled={resending}
+          <button
+            onClick={handleResendOtp}
+            disabled={countdown > 0 || resending}
+            className={`w-full text-center text-sm transition-colors py-2 ${
+              countdown > 0 
+                ? 'text-muted-foreground cursor-not-allowed' 
+                : 'text-primary hover:underline'
+            }`}
           >
-            {resending ? 'Sending...' : 'Resend email'}
-          </Button>
+            {resending 
+              ? 'Sending...' 
+              : countdown > 0 
+                ? `Resend available in 0:${countdown.toString().padStart(2, '0')}` 
+                : 'Resend code'
+            }
+          </button>
         </div>
       </div>
 
