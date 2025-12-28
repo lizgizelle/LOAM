@@ -15,16 +15,20 @@ const Onboarding = () => {
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState<CountryCode>(defaultCountry);
   const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
 
+  const totalSteps = 5;
+
   const handleNext = () => {
-    if (step < 4) {
+    if (step < totalSteps) {
       setStep(step + 1);
     } else {
       const fullPhone = `${countryCode.code} ${phone}`;
       setUserProfile({
-        firstName,
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
         phone: fullPhone,
         photo: photo || undefined,
         gender: surveyAnswers.gender || 'woman',
@@ -48,7 +52,7 @@ const Onboarding = () => {
     <div className="min-h-screen bg-background flex flex-col px-6 pt-20 pb-10 safe-area-top safe-area-bottom">
       {/* Progress indicator */}
       <div className="flex gap-2 mb-12">
-        {[1, 2, 3, 4].map((i) => (
+        {Array.from({ length: totalSteps }, (_, i) => i + 1).map((i) => (
           <div 
             key={i}
             className={`h-1 flex-1 rounded-full transition-all duration-300 ${
@@ -59,6 +63,7 @@ const Onboarding = () => {
       </div>
 
       <div className="flex-1 flex flex-col">
+        {/* Step 1: Phone number */}
         {step === 1 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -85,7 +90,7 @@ const Onboarding = () => {
                 size="lg" 
                 className="w-full"
                 onClick={handleNext}
-                disabled={!phone}
+                disabled={!phone.trim()}
               >
                 Next
               </Button>
@@ -93,6 +98,7 @@ const Onboarding = () => {
           </div>
         )}
 
+        {/* Step 2: First name */}
         {step === 2 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold text-foreground mb-2">
@@ -116,7 +122,7 @@ const Onboarding = () => {
                 size="lg" 
                 className="w-full"
                 onClick={handleNext}
-                disabled={!firstName}
+                disabled={!firstName.trim()}
               >
                 Next
               </Button>
@@ -124,7 +130,40 @@ const Onboarding = () => {
           </div>
         )}
 
+        {/* Step 3: Last name */}
         {step === 3 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold text-foreground mb-2">
+              What's your last name?
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              This helps us personalize your experience
+            </p>
+
+            <Input
+              type="text"
+              placeholder="Last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              className="mb-8"
+            />
+
+            <div className="mt-auto">
+              <Button 
+                variant="loam" 
+                size="lg" 
+                className="w-full"
+                onClick={handleNext}
+                disabled={!lastName.trim()}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 4: Profile photo */}
+        {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold text-foreground mb-2">
               Add a profile photo
@@ -165,7 +204,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {step === 4 && (
+        {/* Step 5: Notifications */}
+        {step === 5 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold text-foreground mb-2">
               Enable notifications

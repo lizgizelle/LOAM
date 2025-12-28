@@ -17,6 +17,7 @@ export interface Event {
 
 export interface UserProfile {
   firstName: string;
+  lastName?: string;
   phone?: string;
   photo?: string;
   gender?: string;
