@@ -30,6 +30,7 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { getDefaultAvatar } from '@/lib/avatars';
 
 interface UserProfile {
   id: string;
@@ -209,8 +210,8 @@ export default function AdminUsers() {
                     <TableCell>
                       <div className="flex items-center gap-3">
                         <Avatar className="h-9 w-9">
-                          <AvatarImage src={user.avatar_url || undefined} />
-                          <AvatarFallback>
+                          <AvatarImage src={user.avatar_url || getDefaultAvatar(user.id)} />
+                          <AvatarFallback className="bg-primary/10 text-primary">
                             {user.first_name?.[0]?.toUpperCase() || '?'}
                           </AvatarFallback>
                         </Avatar>
@@ -287,8 +288,8 @@ export default function AdminUsers() {
               <div className="space-y-4">
                 <div className="flex items-center gap-4">
                   <Avatar className="h-16 w-16">
-                    <AvatarImage src={selectedUser.avatar_url || undefined} />
-                    <AvatarFallback className="text-xl">
+                    <AvatarImage src={selectedUser.avatar_url || getDefaultAvatar(selectedUser.id)} />
+                    <AvatarFallback className="text-xl bg-primary/10 text-primary">
                       {selectedUser.first_name?.[0]?.toUpperCase() || '?'}
                     </AvatarFallback>
                   </Avatar>
