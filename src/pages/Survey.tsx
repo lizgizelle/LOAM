@@ -6,6 +6,11 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 
+interface Survey {
+  id: string;
+  title: string;
+}
+
 interface SurveyQuestion {
   id: string;
   question_text: string;
@@ -21,44 +26,65 @@ const Survey = () => {
   const { setSurveyAnswers } = useAppStore();
   const { user } = useAuth();
   const [step, setStep] = useState(0);
+  const [activeSurvey, setActiveSurvey] = useState<Survey | null>(null);
   const [questions, setQuestions] = useState<SurveyQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [scaleValue, setScaleValue] = useState<number | null>(null);
 
   useEffect(() => {
-    fetchQuestions();
+    fetchActiveSurvey();
   }, []);
 
-  const fetchQuestions = async () => {
+  const fetchActiveSurvey = async () => {
     try {
-      const { data, error } = await supabase
+      // Get the active survey
+      const { data: surveyData, error: surveyError } = await supabase
+        .from('surveys')
+        .select('id, title')
+        .eq('status', 'active')
+        .maybeSingle();
+
+      if (surveyError) throw surveyError;
+
+      if (!surveyData) {
+        setLoading(false);
+        return;
+      }
+
+      setActiveSurvey(surveyData);
+
+      // Fetch questions for the active survey
+      const { data: questionsData, error: questionsError } = await supabase
         .from('survey_questions')
         .select('*')
+        .eq('survey_id', surveyData.id)
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
-      if (error) throw error;
+      if (questionsError) throw questionsError;
       
-      setQuestions((data || []).map(q => ({
+      setQuestions((questionsData || []).map(q => ({
         ...q,
         question_type: q.question_type as 'multiple_choice' | 'scale_1_10',
         options: q.options as string[] | null
       })));
     } catch (error) {
-      console.error('Error fetching questions:', error);
+      console.error('Error fetching survey:', error);
     } finally {
       setLoading(false);
     }
   };
 
   const saveResponse = async (questionId: string, questionText: string, questionType: string, answer: string) => {
-    if (!user?.id) return;
+    if (!user?.id || !activeSurvey) return;
 
     try {
       await supabase.from('survey_responses').insert({
         user_id: user.id,
         question_id: questionId,
+        survey_id: activeSurvey.id,
+        survey_title_snapshot: activeSurvey.title,
         question_text_snapshot: questionText,
         question_type_snapshot: questionType,
         answer_value: answer,
@@ -125,10 +151,10 @@ const Survey = () => {
     );
   }
 
-  if (questions.length === 0) {
+  if (!activeSurvey || questions.length === 0) {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
-        <p className="text-muted-foreground mb-4">No survey questions available</p>
+        <p className="text-muted-foreground mb-4">No survey available</p>
         <Button variant="loam" onClick={() => navigate('/auth-choice')}>
           Continue
         </Button>
