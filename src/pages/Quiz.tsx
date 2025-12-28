@@ -225,67 +225,56 @@ const Survey = () => {
 
           {currentQuestion.question_type === 'scale_1_10' && (
             <>
-              {/* Number grid */}
-              <div className="mb-8">
-                {/* Grid rows */}
-                <div className="space-y-3">
-                  {/* Row 1: 1-5 with label above 1 */}
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-xs text-muted-foreground w-12 text-center">
-                        {currentQuestion.scale_label_low || ''}
-                      </span>
-                      <span className="w-12" />
-                      <span className="w-12" />
-                      <span className="w-12" />
-                      <span className="w-12" />
-                    </div>
-                    <div className="flex justify-between">
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <button
-                          key={num}
-                          onClick={() => setScaleValue(num)}
-                          className={cn(
-                            "w-12 h-12 rounded-xl font-medium text-lg transition-all duration-200",
-                            scaleValue === num
-                              ? "bg-primary text-primary-foreground shadow-md scale-105"
-                              : "bg-secondary text-foreground hover:bg-secondary/80"
-                          )}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  {/* Row 2: 6-10 with label below 10 */}
-                  <div>
-                    <div className="flex justify-between">
-                      {[6, 7, 8, 9, 10].map((num) => (
-                        <button
-                          key={num}
-                          onClick={() => setScaleValue(num)}
-                          className={cn(
-                            "w-12 h-12 rounded-xl font-medium text-lg transition-all duration-200",
-                            scaleValue === num
-                              ? "bg-primary text-primary-foreground shadow-md scale-105"
-                              : "bg-secondary text-foreground hover:bg-secondary/80"
-                          )}
-                        >
-                          {num}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex justify-between mt-2">
-                      <span className="w-12" />
-                      <span className="w-12" />
-                      <span className="w-12" />
-                      <span className="w-12" />
-                      <span className="text-xs text-muted-foreground w-12 text-center whitespace-nowrap">
-                        {currentQuestion.scale_label_high || ''}
-                      </span>
-                    </div>
-                  </div>
+              {/* Number grid - full width matching question text */}
+              <div className="w-full mb-8">
+                {/* Label for 1 */}
+                <div className="grid grid-cols-5 gap-3 mb-2">
+                  <span className="text-xs text-muted-foreground text-center">
+                    {currentQuestion.scale_label_low || ''}
+                  </span>
+                </div>
+                
+                {/* Row 1: 1-5 */}
+                <div className="grid grid-cols-5 gap-3 mb-3">
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setScaleValue(num)}
+                      className={cn(
+                        "aspect-square rounded-xl font-medium text-lg transition-all duration-200",
+                        scaleValue === num
+                          ? "bg-primary text-primary-foreground shadow-md scale-105"
+                          : "bg-secondary text-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Row 2: 6-10 */}
+                <div className="grid grid-cols-5 gap-3">
+                  {[6, 7, 8, 9, 10].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setScaleValue(num)}
+                      className={cn(
+                        "aspect-square rounded-xl font-medium text-lg transition-all duration-200",
+                        scaleValue === num
+                          ? "bg-primary text-primary-foreground shadow-md scale-105"
+                          : "bg-secondary text-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Label for 10 */}
+                <div className="grid grid-cols-5 gap-3 mt-2">
+                  <span className="col-start-5 text-xs text-muted-foreground text-center">
+                    {currentQuestion.scale_label_high || ''}
+                  </span>
                 </div>
               </div>
 
