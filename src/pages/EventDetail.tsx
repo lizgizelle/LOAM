@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { mockEvents } from '@/data/events';
 import { useAppStore } from '@/store/appStore';
-import { ArrowLeft, MapPin, Clock, Calendar, Users, Info, Share2, MessageCircle, MoreHorizontal, ExternalLink, Flag } from 'lucide-react';
+import { ArrowLeft, MapPin, Clock, Calendar, Users, Info, Share2, MessageCircle, MoreHorizontal, ExternalLink, Flag, Mail } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -62,6 +62,8 @@ const EventDetail = () => {
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
   const [reportSubmitted, setReportSubmitted] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -146,7 +148,9 @@ const EventDetail = () => {
   }
 
   const handleSignUp = async () => {
-    if (!id) return;
+    if (!id || isSubmitting) return;
+    
+    setIsSubmitting(true);
     
     if (user?.id) {
       try {
@@ -156,19 +160,21 @@ const EventDetail = () => {
         
         setIsSignedUp(true);
         signUpForEvent(id);
-        toast.success('Request sent!', {
-          description: `We'll confirm your spot at ${event.name}`,
-        });
+        setShowConfirmation(true);
       } catch (error) {
         console.error('Error signing up:', error);
         toast.error('Could not send request. Please try again.');
+        setIsSubmitting(false);
       }
     } else {
       signUpForEvent(id);
-      toast.success('Request sent!', {
-        description: `We'll confirm your spot at ${event.name}`,
-      });
+      setShowConfirmation(true);
     }
+  };
+
+  const handleConfirmationClose = () => {
+    setShowConfirmation(false);
+    navigate('/home');
   };
 
   const handleShare = async () => {
@@ -259,7 +265,41 @@ const EventDetail = () => {
     return 'Register';
   };
 
-  const isRegisterDisabled = isPast || isSignedUp;
+  const isRegisterDisabled = isPast || isSignedUp || isSubmitting;
+  const showStickyRegister = !isPast && !isSignedUp;
+
+  // Show confirmation screen if registration was submitted
+  if (showConfirmation) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
+        <div className="text-center max-w-sm">
+          {/* Icon */}
+          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-10 h-10 text-primary" />
+          </div>
+          
+          {/* Primary text */}
+          <h1 className="text-2xl font-bold text-foreground mb-3">
+            Your registration has been received
+          </h1>
+          
+          {/* Supporting text */}
+          <p className="text-muted-foreground mb-8">
+            Our team is reviewing your registration and will let you know once you're approved.
+          </p>
+          
+          {/* Action button */}
+          <Button
+            variant="loam"
+            className="w-full"
+            onClick={handleConfirmationClose}
+          >
+            Back to events
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-28">
@@ -299,47 +339,47 @@ const EventDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons - Smaller Square Layout */}
-          <div className="grid grid-cols-4 gap-2 mb-6">
+          {/* Action Buttons - Compact Square Layout */}
+          <div className="flex justify-start gap-2 mb-6">
             <button
               disabled={isRegisterDisabled}
               onClick={handleSignUp}
-              className={`flex flex-col items-center justify-center aspect-square rounded-lg transition-colors ${
+              className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg transition-colors ${
                 isRegisterDisabled 
                   ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                   : 'bg-primary text-primary-foreground hover:bg-primary/90'
               }`}
             >
               <Calendar className="w-4 h-4 mb-0.5" />
-              <span className="text-[9px] font-medium leading-tight">
+              <span className="text-[8px] font-medium leading-tight">
                 {isPast ? 'Ended' : isApproved ? 'Joined' : isSignedUp ? 'Pending' : 'Register'}
               </span>
             </button>
             <button
               onClick={handleShare}
-              className="flex flex-col items-center justify-center aspect-square rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              className="flex flex-col items-center justify-center w-14 h-14 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               <Share2 className="w-4 h-4 mb-0.5 text-foreground" />
-              <span className="text-[9px] font-medium text-foreground leading-tight">Share</span>
+              <span className="text-[8px] font-medium text-foreground leading-tight">Share</span>
             </button>
             <button
               onClick={handleContact}
               disabled={!isApproved && !user}
-              className={`flex flex-col items-center justify-center aspect-square rounded-lg border border-border transition-colors ${
+              className={`flex flex-col items-center justify-center w-14 h-14 rounded-lg border border-border transition-colors ${
                 !isApproved && !user 
                   ? 'bg-muted text-muted-foreground cursor-not-allowed' 
                   : 'bg-background hover:bg-muted text-foreground'
               }`}
             >
               <MessageCircle className="w-4 h-4 mb-0.5" />
-              <span className="text-[9px] font-medium leading-tight">Contact</span>
+              <span className="text-[8px] font-medium leading-tight">Contact</span>
             </button>
             <button
               onClick={() => setMoreSheetOpen(true)}
-              className="flex flex-col items-center justify-center aspect-square rounded-lg border border-border bg-background hover:bg-muted transition-colors"
+              className="flex flex-col items-center justify-center w-14 h-14 rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               <MoreHorizontal className="w-4 h-4 mb-0.5 text-foreground" />
-              <span className="text-[9px] font-medium text-foreground leading-tight">More</span>
+              <span className="text-[8px] font-medium text-foreground leading-tight">More</span>
             </button>
           </div>
 
@@ -449,6 +489,22 @@ const EventDetail = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Sticky Bottom Register Button */}
+      {showStickyRegister && (
+        <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-sm border-t border-border safe-area-bottom">
+          <div className="max-w-md mx-auto">
+            <Button
+              variant="loam"
+              className="w-full"
+              onClick={handleSignUp}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Submitting...' : 'Register'}
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
