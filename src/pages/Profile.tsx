@@ -1,12 +1,21 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useAppStore } from '@/store/appStore';
-import { ChevronRight, Bell, Globe, MapPin, LogOut } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { ChevronRight, Bell, Globe, MapPin, LogOut, Shield } from 'lucide-react';
 import { getDefaultAvatar } from '@/lib/avatars';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 const Profile = () => {
   const navigate = useNavigate();
   const { userProfile, logout } = useAppStore();
+  const { isAdmin } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -25,10 +34,29 @@ const Profile = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-6 pt-14 pb-6 safe-area-top">
+      <div className="px-6 pt-14 pb-6 safe-area-top flex items-center justify-between">
         <h1 className="text-2xl font-bold text-foreground">
           Profile
         </h1>
+        
+        {/* Admin Menu - Only visible for admins */}
+        {isAdmin && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 rounded-full hover:bg-secondary/50 transition-colors">
+                <Shield className="w-5 h-5 text-primary" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-48 bg-popover border border-border z-50">
+              <DropdownMenuItem onClick={() => navigate('/admin')} className="cursor-pointer">
+                Admin dashboard
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate('/admin/settings')} className="cursor-pointer">
+                Admin & Team
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
       </div>
 
       {/* Profile card */}
