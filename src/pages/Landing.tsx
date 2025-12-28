@@ -51,7 +51,7 @@ const Landing = () => {
             variant="loam" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/survey')}
+            onClick={() => navigate('/quiz')}
           >
             Get started
           </Button>

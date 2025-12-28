@@ -3,19 +3,54 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Apple } from 'lucide-react';
-import { useAppStore } from '@/store/appStore';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
+import { z } from 'zod';
+
+const loginSchema = z.object({
+  email: z.string().email('Please enter a valid email'),
+  password: z.string().min(1, 'Password is required'),
+});
 
 const Login = () => {
   const navigate = useNavigate();
-  const { setAuthenticated, setOnboarded } = useAppStore();
+  const { signIn, isEmailVerified } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate login
-    setAuthenticated(true);
-    setOnboarded(true);
+    setErrors({});
+
+    // Validate
+    const result = loginSchema.safeParse({ email, password });
+    if (!result.success) {
+      const fieldErrors: { email?: string; password?: string } = {};
+      result.error.errors.forEach((err) => {
+        if (err.path[0] === 'email') fieldErrors.email = err.message;
+        if (err.path[0] === 'password') fieldErrors.password = err.message;
+      });
+      setErrors(fieldErrors);
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await signIn(email, password);
+    setLoading(false);
+
+    if (error) {
+      if (error.message.includes('Invalid login credentials')) {
+        toast.error('Invalid email or password');
+      } else {
+        toast.error(error.message);
+      }
+      return;
+    }
+
+    // Check if email is verified after login
+    // The navigation will be handled by the App component based on verification status
     navigate('/home');
   };
 
@@ -36,7 +71,11 @@ const Login = () => {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              className={errors.email ? 'border-destructive' : ''}
             />
+            {errors.email && (
+              <p className="text-xs text-destructive mt-1">{errors.email}</p>
+            )}
           </div>
           <div>
             <Input
@@ -44,7 +83,11 @@ const Login = () => {
               placeholder="Password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              className={errors.password ? 'border-destructive' : ''}
             />
+            {errors.password && (
+              <p className="text-xs text-destructive mt-1">{errors.password}</p>
+            )}
           </div>
 
           <button 
@@ -59,8 +102,9 @@ const Login = () => {
             variant="loam" 
             size="lg" 
             className="w-full mt-6"
+            disabled={loading}
           >
-            Log in
+            {loading ? 'Signing in...' : 'Log in'}
           </Button>
         </form>
 
@@ -114,7 +158,7 @@ const Login = () => {
       <p className="text-center text-sm text-muted-foreground mt-8">
         Don't have an account?{' '}
         <button 
-          onClick={() => navigate('/survey')}
+          onClick={() => navigate('/quiz')}
           className="text-primary font-medium hover:underline"
         >
           Sign up
