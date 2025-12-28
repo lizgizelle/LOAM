@@ -299,41 +299,48 @@ const EventDetail = () => {
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 mb-6">
-            <Button
-              variant="loam"
-              size="sm"
-              className="flex-1 min-w-[120px]"
+          {/* Action Buttons - Square Layout */}
+          <div className="grid grid-cols-4 gap-3 mb-6">
+            <button
               disabled={isRegisterDisabled}
               onClick={handleSignUp}
+              className={`flex flex-col items-center justify-center aspect-square rounded-xl transition-colors ${
+                isRegisterDisabled 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : 'bg-primary text-primary-foreground hover:bg-primary/90'
+              }`}
             >
-              {getRegisterButtonText()}
-            </Button>
-            <Button
-              variant="loam-outline"
-              size="sm"
+              <Calendar className="w-5 h-5 mb-1" />
+              <span className="text-[10px] font-medium">
+                {isPast ? 'Ended' : isApproved ? 'Joined' : isSignedUp ? 'Pending' : 'Register'}
+              </span>
+            </button>
+            <button
               onClick={handleShare}
+              className="flex flex-col items-center justify-center aspect-square rounded-xl border border-border bg-background hover:bg-muted transition-colors"
             >
-              <Share2 className="w-4 h-4 mr-2" />
-              Share
-            </Button>
-            <Button
-              variant="loam-outline"
-              size="sm"
+              <Share2 className="w-5 h-5 mb-1 text-foreground" />
+              <span className="text-[10px] font-medium text-foreground">Share</span>
+            </button>
+            <button
               onClick={handleContact}
               disabled={!isApproved && !user}
+              className={`flex flex-col items-center justify-center aspect-square rounded-xl border border-border transition-colors ${
+                !isApproved && !user 
+                  ? 'bg-muted text-muted-foreground cursor-not-allowed' 
+                  : 'bg-background hover:bg-muted text-foreground'
+              }`}
             >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              Contact
-            </Button>
-            <Button
-              variant="loam-outline"
-              size="sm"
+              <MessageCircle className="w-5 h-5 mb-1" />
+              <span className="text-[10px] font-medium">Contact</span>
+            </button>
+            <button
               onClick={() => setMoreSheetOpen(true)}
+              className="flex flex-col items-center justify-center aspect-square rounded-xl border border-border bg-background hover:bg-muted transition-colors"
             >
-              <MoreHorizontal className="w-4 h-4" />
-            </Button>
+              <MoreHorizontal className="w-5 h-5 mb-1 text-foreground" />
+              <span className="text-[10px] font-medium text-foreground">More</span>
+            </button>
           </div>
 
           {spotsLeft && !isPast && (
