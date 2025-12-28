@@ -4,13 +4,16 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { useAppStore } from '@/store/appStore';
-import { Camera, ChevronDown } from 'lucide-react';
+import { Camera } from 'lucide-react';
+import CountryCodeSelect from '@/components/CountryCodeSelect';
+import { CountryCode, defaultCountry } from '@/lib/countryCodes';
 
 const Onboarding = () => {
   const navigate = useNavigate();
   const { setOnboarded, setUserProfile, surveyAnswers } = useAppStore();
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
+  const [countryCode, setCountryCode] = useState<CountryCode>(defaultCountry);
   const [firstName, setFirstName] = useState('');
   const [photo, setPhoto] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
@@ -19,9 +22,10 @@ const Onboarding = () => {
     if (step < 4) {
       setStep(step + 1);
     } else {
+      const fullPhone = `${countryCode.code} ${phone}`;
       setUserProfile({
         firstName,
-        phone,
+        phone: fullPhone,
         photo: photo || undefined,
         gender: surveyAnswers.gender || 'woman',
         relationshipStatus: 'single',
@@ -65,10 +69,7 @@ const Onboarding = () => {
             </p>
 
             <div className="flex gap-3 mb-8">
-              <button className="flex items-center gap-2 h-14 px-4 rounded-xl border-2 border-border bg-popover text-foreground font-medium">
-                +65
-                <ChevronDown className="w-4 h-4 text-muted-foreground" />
-              </button>
+              <CountryCodeSelect value={countryCode} onChange={setCountryCode} />
               <Input
                 type="tel"
                 placeholder="Phone number"

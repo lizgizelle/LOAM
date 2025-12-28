@@ -6,7 +6,7 @@ const BottomNav = () => {
 
   const tabs = [
     { path: '/home', icon: Home, label: 'Home' },
-    { path: '/my-events', icon: Calendar, label: 'My Gatherings' },
+    { path: '/my-events', icon: Calendar, label: 'My Events' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/profile', icon: User, label: 'Profile' },
   ];

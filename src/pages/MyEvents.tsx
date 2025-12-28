@@ -84,7 +84,7 @@ const MyEvents = () => {
       {/* Header */}
       <div className="px-6 pt-14 pb-6 safe-area-top">
         <h1 className="text-2xl font-bold text-foreground">
-          My Gatherings
+          My Events
         </h1>
       </div>
 
@@ -137,10 +137,10 @@ const MyEvents = () => {
               <Calendar className="w-10 h-10 text-primary" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-2">
-              No gatherings yet
+              No events yet
             </h2>
             <p className="text-muted-foreground text-center max-w-xs">
-              When you're approved for a gathering, it will appear here
+              When you're approved for an event, it will appear here
             </p>
           </div>
         )}

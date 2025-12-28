@@ -77,7 +77,7 @@ const Survey = () => {
             {/* Number grid */}
             <div className="mb-8">
               {/* Helper labels */}
-              <div className="flex justify-between mb-3 px-1">
+              <div className="flex justify-between mb-3">
                 <span className="text-xs text-muted-foreground">Rarely</span>
                 <span className="text-xs text-muted-foreground">Very often</span>
               </div>
@@ -85,7 +85,7 @@ const Survey = () => {
               {/* Grid rows */}
               <div className="space-y-3">
                 {/* Row 1: 1-5 */}
-                <div className="flex gap-2 justify-center">
+                <div className="flex justify-between">
                   {[1, 2, 3, 4, 5].map((num) => (
                     <button
                       key={num}
@@ -103,7 +103,7 @@ const Survey = () => {
                 </div>
                 
                 {/* Row 2: 6-10 */}
-                <div className="flex gap-2 justify-center">
+                <div className="flex justify-between">
                   {[6, 7, 8, 9, 10].map((num) => (
                     <button
                       key={num}
