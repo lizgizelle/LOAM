@@ -32,6 +32,8 @@ import AdminEventDetail from "./pages/admin/AdminEventDetail";
 import AdminEventEdit from "./pages/admin/AdminEventEdit";
 import AdminRequests from "./pages/admin/AdminRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminSurveyBuilder from "./pages/admin/AdminSurveyBuilder";
+import AdminSurveyResponses from "./pages/admin/AdminSurveyResponses";
 
 const queryClient = new QueryClient();
 
@@ -195,6 +197,8 @@ const AppRoutes = () => (
     <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
     <Route path="/admin/requests" element={<AdminRequests />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
+    <Route path="/admin/survey-builder" element={<AdminSurveyBuilder />} />
+    <Route path="/admin/survey-responses" element={<AdminSurveyResponses />} />
 
     <Route path="*" element={<NotFound />} />
   </Routes>
