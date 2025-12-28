@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useAppStore } from '@/store/appStore';
 import { ChevronRight, Bell, Globe, MapPin, LogOut } from 'lucide-react';
+import { getDefaultAvatar } from '@/lib/avatars';
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -18,6 +19,9 @@ const Profile = () => {
     { icon: MapPin, label: 'City', value: 'Singapore', action: () => {} },
   ];
 
+  // Get avatar - use photo if available, otherwise use default based on user identifier
+  const avatarSrc = userProfile?.photo || getDefaultAvatar(userProfile?.firstName || 'user');
+
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
@@ -30,8 +34,12 @@ const Profile = () => {
       {/* Profile card */}
       <div className="px-6 mb-8">
         <div className="flex items-center gap-4 p-4 bg-popover rounded-2xl shadow-loam">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-2xl font-bold text-primary">
-            {userProfile?.firstName?.[0] || 'L'}
+          <div className="w-16 h-16 rounded-full overflow-hidden bg-secondary">
+            <img 
+              src={avatarSrc} 
+              alt="Profile" 
+              className="w-full h-full object-cover"
+            />
           </div>
           <div className="flex-1">
             <h2 className="text-lg font-semibold text-foreground">

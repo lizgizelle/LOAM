@@ -2,12 +2,13 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAppStore } from '@/store/appStore';
+import { cn } from '@/lib/utils';
 
 const Survey = () => {
   const navigate = useNavigate();
   const { setSurveyAnswers, surveyAnswers } = useAppStore();
   const [step, setStep] = useState(1);
-  const [sliderValue, setSliderValue] = useState(2);
+  const [socialLevel, setSocialLevel] = useState<number | null>(null);
 
   const handlePersonalitySelect = (value: 'smart' | 'funny') => {
     setSurveyAnswers({ personality: value });
@@ -15,8 +16,10 @@ const Survey = () => {
   };
 
   const handleSocialSelect = () => {
-    setSurveyAnswers({ socialLevel: sliderValue });
-    setStep(3);
+    if (socialLevel !== null) {
+      setSurveyAnswers({ socialLevel });
+      setStep(3);
+    }
   };
 
   const handleGenderSelect = (value: 'woman' | 'man') => {
@@ -25,9 +28,9 @@ const Survey = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-6 pt-20 pb-10 safe-area-top safe-area-bottom">
+    <div className="min-h-screen bg-background flex flex-col px-6 pt-14 pb-10 safe-area-top safe-area-bottom">
       {/* Progress indicator */}
-      <div className="flex gap-2 mb-12">
+      <div className="flex gap-2 mb-8">
         {[1, 2, 3].map((i) => (
           <div 
             key={i}
@@ -38,10 +41,10 @@ const Survey = () => {
         ))}
       </div>
 
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col justify-center">
         {step === 1 && (
           <div className="animate-fade-in">
-            <h1 className="text-2xl font-bold text-foreground mb-12">
+            <h1 className="text-2xl font-bold text-foreground mb-10">
               Do you consider yourself more of a
             </h1>
             <div className="space-y-4">
@@ -67,44 +70,64 @@ const Survey = () => {
 
         {step === 2 && (
           <div className="animate-fade-in">
-            <h1 className="text-2xl font-bold text-foreground mb-12">
+            <h1 className="text-2xl font-bold text-foreground mb-10">
               I enjoy going out with friends
             </h1>
             
-            <div className="mt-8 mb-16">
-              {/* Slider track */}
-              <div className="relative h-2 bg-border rounded-full">
-                <div 
-                  className="absolute h-full bg-primary rounded-full transition-all duration-200"
-                  style={{ width: `${((sliderValue - 1) / 2) * 100}%` }}
-                />
-                {/* Slider thumb */}
-                <input
-                  type="range"
-                  min="1"
-                  max="3"
-                  value={sliderValue}
-                  onChange={(e) => setSliderValue(Number(e.target.value))}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-                <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-primary rounded-full shadow-lg transition-all duration-200 pointer-events-none"
-                  style={{ left: `calc(${((sliderValue - 1) / 2) * 100}% - 12px)` }}
-                />
+            {/* Number grid */}
+            <div className="mb-8">
+              {/* Helper labels */}
+              <div className="flex justify-between mb-3 px-1">
+                <span className="text-xs text-muted-foreground">Rarely</span>
+                <span className="text-xs text-muted-foreground">Very often</span>
               </div>
               
-              {/* Labels */}
-              <div className="flex justify-between mt-4 text-sm text-muted-foreground">
-                <span>Never</span>
-                <span>Almost always</span>
+              {/* Grid rows */}
+              <div className="space-y-3">
+                {/* Row 1: 1-5 */}
+                <div className="flex gap-2 justify-center">
+                  {[1, 2, 3, 4, 5].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setSocialLevel(num)}
+                      className={cn(
+                        "w-12 h-12 rounded-xl font-medium text-lg transition-all duration-200",
+                        socialLevel === num
+                          ? "bg-primary text-primary-foreground shadow-md scale-105"
+                          : "bg-secondary text-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+                
+                {/* Row 2: 6-10 */}
+                <div className="flex gap-2 justify-center">
+                  {[6, 7, 8, 9, 10].map((num) => (
+                    <button
+                      key={num}
+                      onClick={() => setSocialLevel(num)}
+                      className={cn(
+                        "w-12 h-12 rounded-xl font-medium text-lg transition-all duration-200",
+                        socialLevel === num
+                          ? "bg-primary text-primary-foreground shadow-md scale-105"
+                          : "bg-secondary text-foreground hover:bg-secondary/80"
+                      )}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
             <Button 
               variant="loam" 
               size="lg" 
-              className="w-full mt-auto"
+              className="w-full"
               onClick={handleSocialSelect}
+              disabled={socialLevel === null}
             >
               Continue
             </Button>
@@ -113,7 +136,7 @@ const Survey = () => {
 
         {step === 3 && (
           <div className="animate-fade-in">
-            <h1 className="text-2xl font-bold text-foreground mb-12">
+            <h1 className="text-2xl font-bold text-foreground mb-10">
               Are you a woman or a man?
             </h1>
             <div className="space-y-4">

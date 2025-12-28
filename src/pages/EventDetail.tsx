@@ -7,6 +7,7 @@ import { ArrowLeft, MapPin, Clock, Calendar, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { getDefaultAvatar } from '@/lib/avatars';
 
 interface Participant {
   id: string;
@@ -153,7 +154,7 @@ const EventDetail = () => {
                 {participants.map((participant) => (
                   <div key={participant.id} className="flex flex-col items-center gap-1">
                     <Avatar className="w-10 h-10">
-                      <AvatarImage src={participant.avatar_url || undefined} />
+                      <AvatarImage src={participant.avatar_url || getDefaultAvatar(participant.first_name || participant.id)} />
                       <AvatarFallback className="bg-primary/10 text-primary text-sm">
                         {participant.first_name?.charAt(0)?.toUpperCase() || '?'}
                       </AvatarFallback>
