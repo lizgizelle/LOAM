@@ -24,8 +24,8 @@ const EventDetail = () => {
   const handleSignUp = () => {
     if (id) {
       signUpForEvent(id);
-      toast.success('You\'re signed up!', {
-        description: `See you at ${event.name}`,
+      toast.success('Request sent!', {
+        description: `We'll confirm your spot at ${event.name}`,
       });
     }
   };
@@ -94,10 +94,10 @@ const EventDetail = () => {
           onClick={handleSignUp}
         >
           {event.isPast 
-            ? 'Event has passed' 
+            ? 'This gathering has passed' 
             : isSignedUp 
-              ? 'You\'re signed up!' 
-              : 'Sign up'
+              ? 'Request sent' 
+              : 'Request to join'
           }
         </Button>
       </div>

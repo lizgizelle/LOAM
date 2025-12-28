@@ -16,17 +16,17 @@ const Home = () => {
           Hey {firstName}
         </h1>
         <p className="text-muted-foreground mt-1 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          Genuine people, join your community in Singapore
+          A place to meet genuine people, in real life.
         </p>
       </div>
 
-      {/* Events section */}
+      {/* Gatherings section */}
       <div className="px-6">
         <h2 
           className="text-lg font-semibold text-foreground mb-4 animate-fade-in"
           style={{ animationDelay: '0.2s' }}
         >
-          Book your next event
+          Upcoming gatherings
         </h2>
 
         <div className="space-y-4">
