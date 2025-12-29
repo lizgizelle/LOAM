@@ -206,114 +206,110 @@ export default function AdminEventDetail() {
           </Button>
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {event.cover_image_url && (
-              <div className="aspect-video rounded-lg overflow-hidden">
-                <img
-                  src={event.cover_image_url}
-                  alt={event.name}
-                  className="w-full h-full object-cover"
-                />
+        <div className="flex flex-col gap-6 max-w-3xl">
+          {event.cover_image_url && (
+            <div className="aspect-video rounded-lg overflow-hidden">
+              <img
+                src={event.cover_image_url}
+                alt={event.name}
+                className="w-full h-full object-cover"
+              />
+            </div>
+          )}
+
+          <Card className="bg-[#FFF7F2] border-none shadow-none">
+            <CardHeader>
+              <CardTitle className="font-serif text-foreground">Event Details</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center gap-3 text-foreground">
+                <Calendar className="h-5 w-5" />
+                <span>{format(new Date(event.start_date), 'EEEE, MMMM d, yyyy • h:mm a')}</span>
               </div>
-            )}
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Details</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Calendar className="h-5 w-5" />
-                  <span>{format(new Date(event.start_date), 'EEEE, MMMM d, yyyy • h:mm a')}</span>
+              {event.location && (
+                <div className="flex items-center gap-3 text-foreground">
+                  <MapPin className="h-5 w-5" />
+                  <span>{event.location}</span>
                 </div>
-                {event.location && (
-                  <div className="flex items-center gap-3 text-muted-foreground">
-                    <MapPin className="h-5 w-5" />
-                    <span>{event.location}</span>
-                  </div>
-                )}
-                <div className="flex items-center gap-3 text-muted-foreground">
-                  <Users className="h-5 w-5" />
-                  <span>
-                    {approvedParticipants.length} approved
-                    {!event.is_unlimited_capacity && event.capacity && ` / ${event.capacity} capacity`}
-                  </span>
+              )}
+              <div className="flex items-center gap-3 text-foreground">
+                <Users className="h-5 w-5" />
+                <span>
+                  {approvedParticipants.length} approved
+                  {!event.is_unlimited_capacity && event.capacity && ` / ${event.capacity} capacity`}
+                </span>
+              </div>
+              {event.description && (
+                <div className="pt-4 border-t border-foreground/10">
+                  <p className="whitespace-pre-wrap text-foreground">{event.description}</p>
                 </div>
-                {event.description && (
-                  <div className="pt-4 border-t">
-                    <p className="whitespace-pre-wrap">{event.description}</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+              )}
+            </CardContent>
+          </Card>
 
-          <div>
-            <Card>
-              <CardHeader>
-                <CardTitle>Participants</CardTitle>
-              </CardHeader>
-              <CardContent className="p-0">
-                <Tabs defaultValue="pending">
-                  <TabsList className="w-full justify-start rounded-none border-b px-4">
-                    <TabsTrigger value="pending" className="relative">
-                      Pending
-                      {pendingParticipants.length > 0 && (
-                        <Badge className="ml-2 h-5 px-1.5" variant="destructive">
-                          {pendingParticipants.length}
-                        </Badge>
-                      )}
-                    </TabsTrigger>
-                    <TabsTrigger value="approved">
-                      Approved ({approvedParticipants.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="rejected">
-                      Rejected ({rejectedParticipants.length})
-                    </TabsTrigger>
-                  </TabsList>
+          <Card className="bg-[#FFF7F2] border-none shadow-none">
+            <CardHeader>
+              <CardTitle className="font-serif text-foreground">Participants</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <Tabs defaultValue="pending">
+                <TabsList className="w-full justify-start rounded-none border-b border-foreground/10 px-4 bg-transparent">
+                  <TabsTrigger value="pending" className="relative">
+                    Pending
+                    {pendingParticipants.length > 0 && (
+                      <Badge className="ml-2 h-5 px-1.5" variant="destructive">
+                        {pendingParticipants.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                  <TabsTrigger value="approved">
+                    Approved ({approvedParticipants.length})
+                  </TabsTrigger>
+                  <TabsTrigger value="rejected">
+                    Rejected ({rejectedParticipants.length})
+                  </TabsTrigger>
+                </TabsList>
 
-                  <div className="p-4">
-                    <TabsContent value="pending" className="m-0">
-                      {pendingParticipants.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No pending requests
-                        </p>
-                      ) : (
-                        pendingParticipants.map(p => (
-                          <ParticipantRow key={p.id} participant={p} showActions />
-                        ))
-                      )}
-                    </TabsContent>
+                <div className="p-4">
+                  <TabsContent value="pending" className="m-0">
+                    {pendingParticipants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No pending requests
+                      </p>
+                    ) : (
+                      pendingParticipants.map(p => (
+                        <ParticipantRow key={p.id} participant={p} showActions />
+                      ))
+                    )}
+                  </TabsContent>
 
-                    <TabsContent value="approved" className="m-0">
-                      {approvedParticipants.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No approved participants
-                        </p>
-                      ) : (
-                        approvedParticipants.map(p => (
-                          <ParticipantRow key={p.id} participant={p} />
-                        ))
-                      )}
-                    </TabsContent>
+                  <TabsContent value="approved" className="m-0">
+                    {approvedParticipants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No approved participants
+                      </p>
+                    ) : (
+                      approvedParticipants.map(p => (
+                        <ParticipantRow key={p.id} participant={p} />
+                      ))
+                    )}
+                  </TabsContent>
 
-                    <TabsContent value="rejected" className="m-0">
-                      {rejectedParticipants.length === 0 ? (
-                        <p className="text-sm text-muted-foreground text-center py-4">
-                          No rejected participants
-                        </p>
-                      ) : (
-                        rejectedParticipants.map(p => (
-                          <ParticipantRow key={p.id} participant={p} />
-                        ))
-                      )}
-                    </TabsContent>
-                  </div>
-                </Tabs>
-              </CardContent>
-            </Card>
-          </div>
+                  <TabsContent value="rejected" className="m-0">
+                    {rejectedParticipants.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        No rejected participants
+                      </p>
+                    ) : (
+                      rejectedParticipants.map(p => (
+                        <ParticipantRow key={p.id} participant={p} />
+                      ))
+                    )}
+                  </TabsContent>
+                </div>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </AdminLayout>
