@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ShieldCheck } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 import { Event } from '@/types';
 
 interface EventCardProps {
@@ -18,8 +19,18 @@ const EventCard = ({ event, isCompact = false }: EventCardProps) => {
       }`}
     >
       {!isCompact && (
-        <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+        <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
           <span className="text-4xl">✨</span>
+          {/* Requires approval badge */}
+          {event.requiresApproval && (
+            <Badge 
+              variant="secondary" 
+              className="absolute top-3 right-3 bg-background/90 text-foreground text-xs gap-1"
+            >
+              <ShieldCheck className="w-3 h-3" />
+              Requires approval
+            </Badge>
+          )}
         </div>
       )}
       <div className="p-4">
