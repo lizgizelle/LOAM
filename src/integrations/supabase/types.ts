@@ -186,6 +186,36 @@ export type Database = {
         }
         Relationships: []
       }
+      matches: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          status: string
+          updated_at: string
+          user_1_id: string
+          user_2_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_1_id: string
+          user_2_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          updated_at?: string
+          user_1_id?: string
+          user_2_id?: string
+        }
+        Relationships: []
+      }
       matchmaker_answers: {
         Row: {
           answer_value: string

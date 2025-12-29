@@ -43,6 +43,8 @@ import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
 import AdminMatchmakerBuilder from "./pages/admin/AdminMatchmakerBuilder";
 import AdminMatchmakerQuestions from "./pages/admin/AdminMatchmakerQuestions";
 import AdminMatchmakerResponses from "./pages/admin/AdminMatchmakerResponses";
+import AdminMatchmaking from "./pages/admin/AdminMatchmaking";
+import AdminMatchmakingDetail from "./pages/admin/AdminMatchmakingDetail";
 
 const queryClient = new QueryClient();
 
@@ -253,6 +255,8 @@ const AppRoutes = () => (
     <Route path="/admin/matchmaker-builder" element={<AdminMatchmakerBuilder />} />
     <Route path="/admin/matchmaker-builder/:setId" element={<AdminMatchmakerQuestions />} />
     <Route path="/admin/matchmaker-responses" element={<AdminMatchmakerResponses />} />
+    <Route path="/admin/matchmaking" element={<AdminMatchmaking />} />
+    <Route path="/admin/matchmaking/:userId" element={<AdminMatchmakingDetail />} />
     {/* Keep old routes for backwards compatibility */}
     <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />
     <Route path="/admin/survey-responses" element={<Navigate to="/admin/quiz-responses" replace />} />
