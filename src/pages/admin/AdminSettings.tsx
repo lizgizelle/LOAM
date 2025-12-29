@@ -34,11 +34,46 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [approvalRequired, setApprovalRequired] = useState(true);
   const [revealLocationAfterApproval, setRevealLocationAfterApproval] = useState(true);
+  const [quizOnboardingEnabled, setQuizOnboardingEnabled] = useState(true);
+  const [savingQuizSetting, setSavingQuizSetting] = useState(false);
 
   useEffect(() => {
     fetchAdmins();
     fetchInvites();
+    fetchQuizOnboardingSetting();
   }, []);
+
+  const fetchQuizOnboardingSetting = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'quiz_onboarding_enabled')
+      .maybeSingle();
+    
+    if (data) {
+      setQuizOnboardingEnabled(data.value === true);
+    }
+  };
+
+  const handleQuizOnboardingToggle = async (enabled: boolean) => {
+    setSavingQuizSetting(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ value: enabled })
+        .eq('key', 'quiz_onboarding_enabled');
+
+      if (error) throw error;
+      
+      setQuizOnboardingEnabled(enabled);
+      toast.success(enabled ? 'Quiz onboarding enabled' : 'Quiz onboarding disabled');
+    } catch (error) {
+      console.error('Error updating quiz setting:', error);
+      toast.error('Failed to update setting');
+    } finally {
+      setSavingQuizSetting(false);
+    }
+  };
 
   const fetchAdmins = async () => {
     const { data: roles } = await supabase
@@ -348,6 +383,28 @@ export default function AdminSettings() {
                 id="location-toggle"
                 checked={revealLocationAfterApproval}
                 onCheckedChange={setRevealLocationAfterApproval}
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Quiz Onboarding */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Quiz Onboarding</CardTitle>
+            <CardDescription>Control whether new users see the quiz during signup</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="quiz-toggle" className="font-medium">Enable Quiz Onboarding</Label>
+                <p className="text-sm text-muted-foreground">When disabled, users skip the quiz and go straight to sign up</p>
+              </div>
+              <Switch
+                id="quiz-toggle"
+                checked={quizOnboardingEnabled}
+                onCheckedChange={handleQuizOnboardingToggle}
+                disabled={savingQuizSetting}
               />
             </div>
           </CardContent>
