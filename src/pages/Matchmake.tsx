@@ -20,7 +20,7 @@ const Matchmake = () => {
               Matchmake
             </h1>
             <p className="text-muted-foreground max-w-xs mx-auto">
-              Talk to our AI matchmaker
+              Answer a few questions and we'll suggest gatherings that fit you.
             </p>
           </div>
           
@@ -28,9 +28,9 @@ const Matchmake = () => {
             variant="loam"
             size="lg"
             className="w-full max-w-xs"
-            onClick={() => navigate('/matchmake/whatsapp')}
+            onClick={() => navigate('/matchmake/chat')}
           >
-            Continue
+            Start
           </Button>
         </div>
       </div>
