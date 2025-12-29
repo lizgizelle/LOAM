@@ -13,6 +13,7 @@ export interface Event {
   description?: string;
   spotsLeft?: number;
   isPast?: boolean;
+  requiresApproval?: boolean;
 }
 
 export interface UserProfile {

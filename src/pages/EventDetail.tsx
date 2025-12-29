@@ -58,6 +58,7 @@ const EventDetail = () => {
   const [showParticipants, setShowParticipants] = useState(false);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [isApproved, setIsApproved] = useState(false);
+  const [isRejected, setIsRejected] = useState(false);
   const [isSignedUp, setIsSignedUp] = useState(signedUpEvents.includes(id || ''));
   const [moreSheetOpen, setMoreSheetOpen] = useState(false);
   const [reportDialogOpen, setReportDialogOpen] = useState(false);
@@ -98,6 +99,7 @@ const EventDetail = () => {
           if (participation) {
             setIsSignedUp(true);
             setIsApproved(participation.status === 'approved');
+            setIsRejected(participation.status === 'rejected');
           }
         }
       } catch (error) {
@@ -260,13 +262,14 @@ const EventDetail = () => {
   // Button states
   const getRegisterButtonText = () => {
     if (isPast) return 'This gathering has passed';
+    if (isRejected) return 'Not available';
     if (isApproved) return 'You\'re confirmed!';
     if (isSignedUp) return 'Pending approval';
     return 'Register';
   };
 
-  const isRegisterDisabled = isPast || isSignedUp || isSubmitting;
-  const showStickyRegister = !isPast && !isSignedUp;
+  const isRegisterDisabled = isPast || isSignedUp || isSubmitting || isRejected;
+  const showStickyRegister = !isPast && !isSignedUp && !isRejected;
 
   // Show confirmation screen if registration was submitted
   if (showConfirmation) {
@@ -352,7 +355,7 @@ const EventDetail = () => {
             >
               <Calendar className="w-4 h-4 mb-0.5" />
               <span className="text-[8px] font-medium leading-tight">
-                {isPast ? 'Ended' : isApproved ? 'Joined' : isSignedUp ? 'Pending' : 'Register'}
+                {isPast ? 'Ended' : isRejected ? 'N/A' : isApproved ? 'Joined' : isSignedUp ? 'Pending' : 'Register'}
               </span>
             </button>
             <button
@@ -383,9 +386,27 @@ const EventDetail = () => {
             </button>
           </div>
 
-          {spotsLeft && !isPast && (
+          {spotsLeft && !isPast && !isRejected && (
             <div className="inline-block px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
               {spotsLeft} spots left
+            </div>
+          )}
+
+          {/* Rejection message */}
+          {isRejected && (
+            <div className="bg-muted rounded-xl p-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                This event requires approval. You're not able to register for this event.
+              </p>
+            </div>
+          )}
+
+          {/* Requires approval notice for non-registered users */}
+          {supabaseEvent?.requires_approval && !isSignedUp && !isRejected && (
+            <div className="bg-secondary/50 rounded-xl p-4 mb-6">
+              <p className="text-sm text-muted-foreground">
+                This event requires approval. After you register, our team will review your request.
+              </p>
             </div>
           )}
 

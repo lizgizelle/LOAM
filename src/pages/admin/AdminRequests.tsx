@@ -1,202 +1,145 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Check, X, Calendar, Clock } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { Clock, Calendar, ChevronRight, ShieldCheck } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
-interface PendingRequest {
+interface EventWithRequests {
   id: string;
-  created_at: string;
-  event: {
-    id: string;
-    name: string;
-    start_date: string;
-  };
-  profile: {
-    first_name: string | null;
-    email: string | null;
-    gender: string | null;
-    avatar_url: string | null;
-  } | null;
+  name: string;
+  start_date: string;
+  cover_image_url: string | null;
+  requires_approval: boolean;
+  pendingCount: number;
 }
 
 export default function AdminRequests() {
   const navigate = useNavigate();
-  const [requests, setRequests] = useState<PendingRequest[]>([]);
+  const [events, setEvents] = useState<EventWithRequests[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchRequests();
+    fetchEventsWithRequests();
   }, []);
 
-  const fetchRequests = async () => {
+  const fetchEventsWithRequests = async () => {
     try {
-      const { data, error } = await supabase
-        .from('event_participants')
-        .select(`
-          id,
-          created_at,
-          event:events!event_participants_event_id_fkey (
-            id,
-            name,
-            start_date
-          ),
-          profile:profiles!event_participants_user_id_fkey (
-            first_name,
-            email,
-            gender,
-            avatar_url
-          )
-        `)
-        .eq('status', 'pending')
-        .order('created_at', { ascending: false });
+      // First get all events that require approval
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('id, name, start_date, cover_image_url, requires_approval')
+        .eq('requires_approval', true)
+        .order('start_date', { ascending: true });
 
-      if (error) throw error;
-      setRequests((data as unknown as PendingRequest[]) || []);
+      if (eventsError) throw eventsError;
+
+      // Then get pending counts for each event
+      const eventsWithCounts = await Promise.all(
+        (eventsData || []).map(async (event) => {
+          const { count } = await supabase
+            .from('event_participants')
+            .select('*', { count: 'exact', head: true })
+            .eq('event_id', event.id)
+            .eq('status', 'pending');
+
+          return {
+            ...event,
+            pendingCount: count || 0,
+          };
+        })
+      );
+
+      setEvents(eventsWithCounts);
     } catch (error) {
-      console.error('Error fetching requests:', error);
-      toast.error('Failed to load requests');
+      console.error('Error fetching events:', error);
+      toast.error('Failed to load events');
     } finally {
       setLoading(false);
     }
   };
 
-  const updateStatus = async (requestId: string, status: 'approved' | 'rejected') => {
-    try {
-      const { error } = await supabase
-        .from('event_participants')
-        .update({ status })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      setRequests(requests.filter(r => r.id !== requestId));
-      toast.success(`Request ${status}`);
-    } catch (error) {
-      console.error('Error updating request:', error);
-      toast.error('Failed to update request');
-    }
+  const formatDate = (dateString: string) => {
+    return format(new Date(dateString), 'EEE, d MMM');
   };
 
-  const approveAll = async () => {
-    try {
-      const ids = requests.map(r => r.id);
-      const { error } = await supabase
-        .from('event_participants')
-        .update({ status: 'approved' })
-        .in('id', ids);
-
-      if (error) throw error;
-
-      setRequests([]);
-      toast.success('All requests approved');
-    } catch (error) {
-      console.error('Error approving all:', error);
-      toast.error('Failed to approve all');
-    }
+  const formatTime = (dateString: string) => {
+    return format(new Date(dateString), 'h:mma').toLowerCase();
   };
+
+  const totalPending = events.reduce((sum, e) => sum + e.pendingCount, 0);
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold">Event Requests</h1>
-            <p className="text-muted-foreground mt-1">
-              {requests.length} pending requests
-            </p>
-          </div>
-          {requests.length > 0 && (
-            <Button onClick={approveAll} className="gap-2">
-              <Check className="h-4 w-4" />
-              Approve All
-            </Button>
-          )}
+        <div>
+          <h1 className="text-2xl font-semibold">Event Requests</h1>
+          <p className="text-muted-foreground mt-1">
+            {totalPending} pending requests across {events.length} events
+          </p>
         </div>
 
         {loading ? (
           <div className="text-center py-12 text-muted-foreground">
-            Loading requests...
+            Loading events...
           </div>
-        ) : requests.length === 0 ? (
+        ) : events.length === 0 ? (
           <Card>
             <CardContent className="py-12 text-center">
               <Clock className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-              <h3 className="font-medium text-lg">No pending requests</h3>
+              <h3 className="font-medium text-lg">No events requiring approval</h3>
               <p className="text-muted-foreground mt-1">
-                All event requests have been processed
+                Events with approval enabled will appear here
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
-            {requests.map((request) => (
-              <Card key={request.id}>
-                <CardContent className="p-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={request.profile?.avatar_url || undefined} />
-                        <AvatarFallback>
-                          {request.profile?.first_name?.[0]?.toUpperCase() || '?'}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <p className="font-medium">{request.profile?.first_name || 'Unknown'}</p>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <span>{request.profile?.email}</span>
-                          {request.profile?.gender && (
-                            <Badge variant="outline" className="text-xs capitalize">
-                              {request.profile.gender}
-                            </Badge>
-                          )}
-                        </div>
+          <div className="grid gap-4">
+            {events.map((event) => (
+              <button
+                key={event.id}
+                onClick={() => navigate(`/admin/events/${event.id}/requests`)}
+                className="w-full bg-popover rounded-2xl shadow-loam overflow-hidden text-left transition-all duration-200 hover:shadow-loam-lg active:scale-[0.99]"
+              >
+                {/* Cover image */}
+                <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
+                  <span className="text-4xl">✨</span>
+                  {/* Requires approval badge */}
+                  <Badge 
+                    variant="secondary" 
+                    className="absolute top-3 right-3 bg-background/90 text-foreground text-xs gap-1"
+                  >
+                    <ShieldCheck className="w-3 h-3" />
+                    Requires approval
+                  </Badge>
+                </div>
+                
+                {/* Content */}
+                <div className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground text-lg leading-tight mb-1">
+                        {event.name}
+                      </h3>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4" />
+                        <span>{formatDate(event.start_date)}</span>
+                        <span>·</span>
+                        <span>{formatTime(event.start_date)}</span>
                       </div>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-                      <button
-                        onClick={() => navigate(`/admin/events/${request.event.id}`)}
-                        className="text-left hover:underline"
-                      >
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-medium">{request.event.name}</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground ml-6">
-                          {format(new Date(request.event.start_date), 'MMM d, yyyy')}
+                      {event.pendingCount > 0 && (
+                        <p className="text-sm text-primary font-medium mt-2">
+                          {event.pendingCount} pending request{event.pendingCount !== 1 ? 's' : ''}
                         </p>
-                      </button>
-
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          onClick={() => updateStatus(request.id, 'approved')}
-                          className="gap-1"
-                        >
-                          <Check className="h-4 w-4" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => updateStatus(request.id, 'rejected')}
-                          className="gap-1"
-                        >
-                          <X className="h-4 w-4" />
-                          Reject
-                        </Button>
-                      </div>
+                      )}
                     </div>
+                    <ChevronRight className="w-5 h-5 text-muted-foreground mt-1 flex-shrink-0" />
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </button>
             ))}
           </div>
         )}

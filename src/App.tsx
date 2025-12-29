@@ -35,6 +35,7 @@ import AdminEventCreate from "./pages/admin/AdminEventCreate";
 import AdminEventDetail from "./pages/admin/AdminEventDetail";
 import AdminEventEdit from "./pages/admin/AdminEventEdit";
 import AdminRequests from "./pages/admin/AdminRequests";
+import AdminEventRequests from "./pages/admin/AdminEventRequests";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
@@ -241,6 +242,7 @@ const AppRoutes = () => (
     <Route path="/admin/events/:id" element={<AdminEventDetail />} />
     <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
     <Route path="/admin/requests" element={<AdminRequests />} />
+    <Route path="/admin/events/:id/requests" element={<AdminEventRequests />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
     <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
