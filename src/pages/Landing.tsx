@@ -1,9 +1,43 @@
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/integrations/supabase/client';
 import landingHero from '@/assets/landing-hero.jpg';
 
 const Landing = () => {
   const navigate = useNavigate();
+  const [quizEnabled, setQuizEnabled] = useState(true);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkQuizSetting = async () => {
+      try {
+        const { data } = await supabase
+          .from('app_settings')
+          .select('value')
+          .eq('key', 'quiz_onboarding_enabled')
+          .maybeSingle();
+        
+        if (data) {
+          setQuizEnabled(data.value === true);
+        }
+      } catch (error) {
+        console.error('Error fetching quiz setting:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkQuizSetting();
+  }, []);
+
+  const handleGetStarted = () => {
+    if (quizEnabled) {
+      navigate('/quiz');
+    } else {
+      navigate('/signup');
+    }
+  };
 
   return (
     <div className="min-h-screen relative overflow-hidden">
@@ -51,7 +85,8 @@ const Landing = () => {
             variant="loam" 
             size="lg" 
             className="w-full"
-            onClick={() => navigate('/quiz')}
+            onClick={handleGetStarted}
+            disabled={loading}
           >
             Get started
           </Button>

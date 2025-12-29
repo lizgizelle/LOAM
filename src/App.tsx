@@ -20,6 +20,8 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import EventDetail from "./pages/EventDetail";
 import EventParticipants from "./pages/EventParticipants";
+import Matchmake from "./pages/Matchmake";
+import MatchmakeWhatsApp from "./pages/MatchmakeWhatsApp";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import LanguageSettings from "./pages/settings/LanguageSettings";
 import CitySettings from "./pages/settings/CitySettings";
@@ -191,6 +193,20 @@ const AppRoutes = () => (
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <EventParticipants />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/matchmake" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <Matchmake />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/matchmake/whatsapp" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <MatchmakeWhatsApp />
         </div>
       </ProtectedRoute>
     } />

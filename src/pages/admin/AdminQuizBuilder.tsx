@@ -183,9 +183,16 @@ export default function AdminQuizBuilder() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this quiz and all its questions?')) return;
+    if (!confirm('This will remove the quiz and its questions. Past responses remain stored for export. Continue?')) return;
 
     try {
+      // First delete all questions for this quiz
+      await supabase
+        .from('survey_questions')
+        .delete()
+        .eq('survey_id', id);
+
+      // Then delete the quiz
       const { error } = await supabase
         .from('surveys')
         .delete()
