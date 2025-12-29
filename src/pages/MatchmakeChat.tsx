@@ -2,7 +2,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowLeft, Send } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { ArrowLeft, Send, Clock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
@@ -106,7 +107,7 @@ const MatchmakeChat = () => {
 
       if (sessionError && sessionError.code !== 'PGRST116') throw sessionError;
 
-      if (existingSession?.status === 'completed') {
+      if (existingSession?.status === 'completed' || existingSession?.status === 'submitted') {
         setIsCompleted(true);
         setLoading(false);
         return;
@@ -193,11 +194,11 @@ const MatchmakeChat = () => {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setFreeTextInput('');
     } else {
-      // Complete the session
+      // Complete the session - mark as submitted (waiting for admin match)
       if (sessionId) {
         await supabase
           .from('matchmaker_sessions')
-          .update({ status: 'completed', completed_at: new Date().toISOString() })
+          .update({ status: 'submitted', completed_at: new Date().toISOString() })
           .eq('id', sessionId);
       }
       setIsCompleted(true);
@@ -230,22 +231,32 @@ const MatchmakeChat = () => {
   if (isCompleted) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <div className="flex-1 flex flex-col p-4">
-          {/* Completion message */}
-          <div className="flex-1 flex flex-col justify-center items-center space-y-6">
-            <div className="bg-muted rounded-2xl rounded-tl-sm p-4 max-w-[85%]">
-              <p className="text-foreground font-serif">
-                Thanks — you're all set. We'll use this to guide your experience in Loam.
-              </p>
-            </div>
-            <Button
-              variant="loam"
-              size="lg"
-              onClick={() => navigate('/home')}
-            >
-              Done
-            </Button>
-          </div>
+        <div className="flex-1 flex flex-col items-center justify-center p-6">
+          <Card className="max-w-sm w-full border-border/50 shadow-lg">
+            <CardContent className="pt-8 pb-6 px-6 text-center space-y-6">
+              <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                <Clock className="w-7 h-7 text-primary" />
+              </div>
+              
+              <div className="space-y-3">
+                <h2 className="text-xl font-serif font-semibold text-foreground">
+                  Thanks for your input
+                </h2>
+                <p className="text-muted-foreground font-serif leading-relaxed">
+                  Give us 48 hours to review, and we'll pass you a match.
+                </p>
+              </div>
+              
+              <Button
+                variant="loam"
+                size="lg"
+                className="w-full"
+                onClick={() => navigate('/home')}
+              >
+                Done
+              </Button>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
