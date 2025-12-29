@@ -10,7 +10,8 @@ import {
   X,
   LogOut,
   FileQuestion,
-  MessageSquare
+  MessageSquare,
+  Sparkles
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -27,6 +28,8 @@ const navItems = [
   { icon: ClipboardList, label: 'Event Requests', path: '/admin/requests' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
+  { icon: Sparkles, label: 'Matchmaker', path: '/admin/matchmaker-builder' },
+  { icon: MessageSquare, label: 'Matchmaker Responses', path: '/admin/matchmaker-responses' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 

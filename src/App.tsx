@@ -21,7 +21,7 @@ import EditProfile from "./pages/EditProfile";
 import EventDetail from "./pages/EventDetail";
 import EventParticipants from "./pages/EventParticipants";
 import Matchmake from "./pages/Matchmake";
-import MatchmakeWhatsApp from "./pages/MatchmakeWhatsApp";
+import MatchmakeChat from "./pages/MatchmakeChat";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import LanguageSettings from "./pages/settings/LanguageSettings";
 import CitySettings from "./pages/settings/CitySettings";
@@ -40,6 +40,9 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
 import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
+import AdminMatchmakerBuilder from "./pages/admin/AdminMatchmakerBuilder";
+import AdminMatchmakerQuestions from "./pages/admin/AdminMatchmakerQuestions";
+import AdminMatchmakerResponses from "./pages/admin/AdminMatchmakerResponses";
 
 const queryClient = new QueryClient();
 
@@ -204,10 +207,10 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/matchmake/whatsapp" element={
+    <Route path="/matchmake/chat" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <MatchmakeWhatsApp />
+          <MatchmakeChat />
         </div>
       </ProtectedRoute>
     } />
@@ -247,6 +250,9 @@ const AppRoutes = () => (
     <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
     <Route path="/admin/quiz-responses" element={<AdminQuizResponses />} />
+    <Route path="/admin/matchmaker-builder" element={<AdminMatchmakerBuilder />} />
+    <Route path="/admin/matchmaker-builder/:setId" element={<AdminMatchmakerQuestions />} />
+    <Route path="/admin/matchmaker-responses" element={<AdminMatchmakerResponses />} />
     {/* Keep old routes for backwards compatibility */}
     <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />
     <Route path="/admin/survey-responses" element={<Navigate to="/admin/quiz-responses" replace />} />
