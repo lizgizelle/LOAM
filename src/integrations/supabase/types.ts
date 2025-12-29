@@ -186,6 +186,169 @@ export type Database = {
         }
         Relationships: []
       }
+      matchmaker_answers: {
+        Row: {
+          answer_value: string
+          created_at: string
+          id: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          session_id: string
+          user_id: string
+        }
+        Insert: {
+          answer_value: string
+          created_at?: string
+          id?: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          session_id: string
+          user_id: string
+        }
+        Update: {
+          answer_value?: string
+          created_at?: string
+          id?: string
+          question_id?: string
+          question_text_snapshot?: string
+          question_type_snapshot?: string
+          session_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaker_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "matchmaker_questions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matchmaker_answers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "matchmaker_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matchmaker_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          options: Json | null
+          question_text: string
+          question_type: string
+          scale_label_high: string | null
+          scale_label_low: string | null
+          set_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          options?: Json | null
+          question_text: string
+          question_type: string
+          scale_label_high?: string | null
+          scale_label_low?: string | null
+          set_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          scale_label_high?: string | null
+          scale_label_low?: string | null
+          set_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaker_questions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "matchmaker_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matchmaker_sessions: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          set_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          set_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          set_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "matchmaker_sessions_set_id_fkey"
+            columns: ["set_id"]
+            isOneToOne: false
+            referencedRelation: "matchmaker_sets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matchmaker_sets: {
+        Row: {
+          created_at: string
+          id: string
+          status: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          status?: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          status?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           admin_notes: string | null
