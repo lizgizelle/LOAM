@@ -7,25 +7,90 @@ import { useAppStore } from '@/store/appStore';
 import { Camera } from 'lucide-react';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
 import { CountryCode, defaultCountry } from '@/lib/countryCodes';
+import BirthdatePicker from '@/components/BirthdatePicker';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 
 const Onboarding = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { setOnboarded, setUserProfile, surveyAnswers } = useAppStore();
   const [step, setStep] = useState(1);
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState<CountryCode>(defaultCountry);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [birthdate, setBirthdate] = useState<{ day: number; month: number; year: number } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 5;
+  const totalSteps = 6;
 
-  const handleNext = () => {
+  const calculateAge = (day: number, month: number, year: number): number => {
+    const today = new Date();
+    const birthDate = new Date(year, month - 1, day);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    
+    return age;
+  };
+
+  const handleBirthdateNext = async () => {
+    if (!birthdate || !user) return;
+    
+    const age = calculateAge(birthdate.day, birthdate.month, birthdate.year);
+    
+    if (age < 21) {
+      // User is under 21 - save birthdate and redirect to blocked screen
+      setIsSubmitting(true);
+      
+      const dateString = `${birthdate.year}-${String(birthdate.month).padStart(2, '0')}-${String(birthdate.day).padStart(2, '0')}`;
+      
+      await supabase
+        .from('profiles')
+        .update({ 
+          date_of_birth: dateString,
+          is_shadow_blocked: true 
+        })
+        .eq('id', user.id);
+      
+      setIsSubmitting(false);
+      navigate('/blocked', { state: { reason: 'age' } });
+      return;
+    }
+    
+    // User is 21+, continue onboarding
+    setStep(step + 1);
+  };
+
+  const handleNext = async () => {
     if (step < totalSteps) {
       setStep(step + 1);
     } else {
+      if (!user) return;
+      
+      setIsSubmitting(true);
+      
       const fullPhone = `${countryCode.code} ${phone}`;
+      const dateString = birthdate 
+        ? `${birthdate.year}-${String(birthdate.month).padStart(2, '0')}-${String(birthdate.day).padStart(2, '0')}`
+        : '';
+      
+      // Update profile in Supabase
+      await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName.trim(),
+          phone_number: fullPhone,
+          date_of_birth: dateString,
+        })
+        .eq('id', user.id);
+      
       setUserProfile({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
@@ -36,9 +101,11 @@ const Onboarding = () => {
         hasChildren: false,
         workIndustry: '',
         countryOfBirth: '',
-        dateOfBirth: '',
+        dateOfBirth: dateString,
       });
+      
       setOnboarded(true);
+      setIsSubmitting(false);
       navigate('/home');
     }
   };
@@ -47,6 +114,8 @@ const Onboarding = () => {
     // Simulate photo upload
     setPhoto('/placeholder.svg');
   };
+
+  const isBirthdateValid = birthdate !== null;
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 pt-20 pb-10 safe-area-top safe-area-bottom">
@@ -66,7 +135,7 @@ const Onboarding = () => {
         {/* Step 1: Phone number */}
         {step === 1 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your phone number?
             </h1>
             <p className="text-muted-foreground mb-8">
@@ -101,7 +170,7 @@ const Onboarding = () => {
         {/* Step 2: First name */}
         {step === 2 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your first name?
             </h1>
             <p className="text-muted-foreground mb-8">
@@ -133,7 +202,7 @@ const Onboarding = () => {
         {/* Step 3: Last name */}
         {step === 3 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your last name?
             </h1>
             <p className="text-muted-foreground mb-8">
@@ -162,10 +231,41 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 4: Profile photo */}
+        {/* Step 4: Birthdate */}
         {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
+              What's your date of birth?
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              This helps us ensure Loam remains a safe, age-appropriate community.
+            </p>
+
+            <div className="flex-1 flex items-center justify-center">
+              <BirthdatePicker
+                value={birthdate}
+                onChange={setBirthdate}
+              />
+            </div>
+
+            <div className="mt-auto">
+              <Button 
+                variant="loam" 
+                size="lg" 
+                className="w-full"
+                onClick={handleBirthdateNext}
+                disabled={!isBirthdateValid || isSubmitting}
+              >
+                {isSubmitting ? 'Checking...' : 'Continue'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Profile photo */}
+        {step === 5 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Add a profile photo
             </h1>
             <p className="text-muted-foreground mb-8">
@@ -204,10 +304,10 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 5: Notifications */}
-        {step === 5 && (
+        {/* Step 6: Notifications */}
+        {step === 6 && (
           <div className="animate-fade-in flex-1 flex flex-col">
-            <h1 className="text-2xl font-bold text-foreground mb-2">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Enable notifications
             </h1>
             <p className="text-muted-foreground mb-8">
@@ -231,8 +331,9 @@ const Onboarding = () => {
                 size="lg" 
                 className="w-full"
                 onClick={handleNext}
+                disabled={isSubmitting}
               >
-                {notifications ? 'Enable notifications' : 'Continue without'}
+                {isSubmitting ? 'Saving...' : (notifications ? 'Enable notifications' : 'Continue without')}
               </Button>
             </div>
           </div>
