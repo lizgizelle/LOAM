@@ -20,12 +20,13 @@ const Onboarding = () => {
   const [countryCode, setCountryCode] = useState<CountryCode>(defaultCountry);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState<'male' | 'female' | null>(null);
   const [birthdate, setBirthdate] = useState<{ day: number; month: number; year: number } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 6;
+  const totalSteps = 7;
 
   const calculateAge = (day: number, month: number, year: number): number => {
     const today = new Date();
@@ -55,6 +56,7 @@ const Onboarding = () => {
         .from('profiles')
         .update({ 
           date_of_birth: dateString,
+          gender: gender,
           is_shadow_blocked: true 
         })
         .eq('id', user.id);
@@ -88,6 +90,7 @@ const Onboarding = () => {
           first_name: firstName.trim(),
           phone_number: fullPhone,
           date_of_birth: dateString,
+          gender: gender,
         })
         .eq('id', user.id);
       
@@ -96,7 +99,7 @@ const Onboarding = () => {
         lastName: lastName.trim(),
         phone: fullPhone,
         photo: photo || undefined,
-        gender: surveyAnswers.gender || 'woman',
+        gender: gender || undefined,
         relationshipStatus: 'single',
         hasChildren: false,
         workIndustry: '',
@@ -231,8 +234,48 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 4: Birthdate */}
+        {/* Step 4: Gender */}
         {step === 4 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
+              What is your gender?
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              This helps us create a better experience for you.
+            </p>
+
+            <div className="flex gap-4 mb-8">
+              {(['male', 'female'] as const).map((option) => (
+                <button
+                  key={option}
+                  onClick={() => setGender(option)}
+                  className={`flex-1 h-16 rounded-xl border-2 font-medium capitalize transition-all ${
+                    gender === option
+                      ? 'border-primary bg-primary/5 text-primary'
+                      : 'border-border text-foreground hover:border-primary/50'
+                  }`}
+                >
+                  {option === 'male' ? 'Male' : 'Female'}
+                </button>
+              ))}
+            </div>
+
+            <div className="mt-auto">
+              <Button 
+                variant="loam" 
+                size="lg" 
+                className="w-full"
+                onClick={handleNext}
+                disabled={!gender}
+              >
+                Continue
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 5: Birthdate */}
+        {step === 5 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your date of birth?
@@ -262,8 +305,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 5: Profile photo */}
-        {step === 5 && (
+        {/* Step 6: Profile photo */}
+        {step === 6 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Add a profile photo
@@ -304,8 +347,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 6: Notifications */}
-        {step === 6 && (
+        {/* Step 7: Notifications */}
+        {step === 7 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Enable notifications
