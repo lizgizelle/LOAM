@@ -10,6 +10,10 @@ import { ArrowLeft } from 'lucide-react';
 const signupSchema = z.object({
   email: z.string().email('Please enter a valid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match.',
+  path: ['confirmPassword'],
 });
 
 const Signup = () => {
@@ -17,20 +21,22 @@ const Signup = () => {
   const { signUp } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string }>({});
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
     // Validate
-    const result = signupSchema.safeParse({ email, password });
+    const result = signupSchema.safeParse({ email, password, confirmPassword });
     if (!result.success) {
-      const fieldErrors: { email?: string; password?: string } = {};
+      const fieldErrors: { email?: string; password?: string; confirmPassword?: string } = {};
       result.error.errors.forEach((err) => {
         if (err.path[0] === 'email') fieldErrors.email = err.message;
         if (err.path[0] === 'password') fieldErrors.password = err.message;
+        if (err.path[0] === 'confirmPassword') fieldErrors.confirmPassword = err.message;
       });
       setErrors(fieldErrors);
       return;
@@ -97,6 +103,18 @@ const Signup = () => {
               <p className="text-xs text-destructive mt-1">{errors.password}</p>
             )}
           </div>
+          <div>
+            <Input
+              type="password"
+              placeholder="Re-enter password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              className={errors.confirmPassword ? 'border-destructive' : ''}
+            />
+            {errors.confirmPassword && (
+              <p className="text-xs text-destructive mt-1">{errors.confirmPassword}</p>
+            )}
+          </div>
 
           <p className="text-xs text-muted-foreground">
             By continuing, you agree to our{' '}
@@ -110,7 +128,7 @@ const Signup = () => {
             variant="loam" 
             size="lg" 
             className="w-full mt-6"
-            disabled={loading}
+            disabled={loading || !email || password.length < 6 || password !== confirmPassword}
           >
             {loading ? 'Creating account...' : 'Continue'}
           </Button>
