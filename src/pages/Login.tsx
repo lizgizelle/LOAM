@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Apple, X } from 'lucide-react';
+import { Apple, ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { z } from 'zod';
@@ -56,13 +56,13 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col px-6 pt-6 pb-10 safe-area-top safe-area-bottom">
-      {/* Close button */}
+      {/* Back button */}
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate('/auth-choice')}
         className="self-start p-2 -ml-2 text-foreground/70 hover:text-foreground transition-colors"
-        aria-label="Close"
+        aria-label="Go back"
       >
-        <X className="w-6 h-6" />
+        <ArrowLeft className="w-6 h-6" />
       </button>
 
       <div className="flex-1 pt-8">
