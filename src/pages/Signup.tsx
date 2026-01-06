@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
 import { z } from 'zod';
+import { ArrowLeft } from 'lucide-react';
 
 const signupSchema = z.object({
   email: z.string().email('Please enter a valid email'),
@@ -53,8 +54,17 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col px-6 pt-20 pb-10 safe-area-top safe-area-bottom">
-      <div className="flex-1">
+    <div className="min-h-screen bg-background flex flex-col px-6 pt-6 pb-10 safe-area-top safe-area-bottom">
+      {/* Back button */}
+      <button
+        onClick={() => navigate('/auth-choice')}
+        className="self-start p-2 -ml-2 text-foreground/70 hover:text-foreground transition-colors"
+        aria-label="Go back"
+      >
+        <ArrowLeft className="w-6 h-6" />
+      </button>
+
+      <div className="flex-1 pt-8">
         <h1 className="text-3xl font-bold text-foreground mb-2 animate-fade-in">
           Create account
         </h1>
