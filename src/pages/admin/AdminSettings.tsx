@@ -36,11 +36,17 @@ export default function AdminSettings() {
   const [revealLocationAfterApproval, setRevealLocationAfterApproval] = useState(true);
   const [quizOnboardingEnabled, setQuizOnboardingEnabled] = useState(true);
   const [savingQuizSetting, setSavingQuizSetting] = useState(false);
+  
+  // Alphacode settings
+  const [alphacodeEnabled, setAlphacodeEnabled] = useState(false);
+  const [alphacodeValue, setAlphacodeValue] = useState('');
+  const [savingAlphacode, setSavingAlphacode] = useState(false);
 
   useEffect(() => {
     fetchAdmins();
     fetchInvites();
     fetchQuizOnboardingSetting();
+    fetchAlphacodeSettings();
   }, []);
 
   const fetchQuizOnboardingSetting = async () => {
@@ -72,6 +78,64 @@ export default function AdminSettings() {
       toast.error('Failed to update setting');
     } finally {
       setSavingQuizSetting(false);
+    }
+  };
+
+  const fetchAlphacodeSettings = async () => {
+    const { data } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'alphacode_settings')
+      .maybeSingle();
+    
+    if (data) {
+      const settings = data.value as { enabled: boolean; code: string };
+      setAlphacodeEnabled(settings.enabled ?? false);
+      setAlphacodeValue(settings.code ?? '');
+    }
+  };
+
+  const handleAlphacodeToggle = async (enabled: boolean) => {
+    setSavingAlphacode(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ value: { enabled, code: alphacodeValue } })
+        .eq('key', 'alphacode_settings');
+
+      if (error) throw error;
+      
+      setAlphacodeEnabled(enabled);
+      toast.success(enabled ? 'Alphacode requirement enabled' : 'Alphacode requirement disabled');
+    } catch (error) {
+      console.error('Error updating alphacode setting:', error);
+      toast.error('Failed to update setting');
+    } finally {
+      setSavingAlphacode(false);
+    }
+  };
+
+  const handleAlphacodeValueSave = async () => {
+    if (!alphacodeValue.trim()) {
+      toast.error('Please enter an access code');
+      return;
+    }
+
+    setSavingAlphacode(true);
+    try {
+      const { error } = await supabase
+        .from('app_settings')
+        .update({ value: { enabled: alphacodeEnabled, code: alphacodeValue.trim() } })
+        .eq('key', 'alphacode_settings');
+
+      if (error) throw error;
+      
+      toast.success('Access code saved');
+    } catch (error) {
+      console.error('Error saving alphacode:', error);
+      toast.error('Failed to save access code');
+    } finally {
+      setSavingAlphacode(false);
     }
   };
 
@@ -407,6 +471,53 @@ export default function AdminSettings() {
                 disabled={savingQuizSetting}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* User Onboarding */}
+        <Card>
+          <CardHeader>
+            <CardTitle>User Onboarding</CardTitle>
+            <CardDescription>Control access to account creation</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <Label htmlFor="alphacode-toggle" className="font-medium">Alphacode required</Label>
+                <p className="text-sm text-muted-foreground">Require an access code for new users to complete signup</p>
+              </div>
+              <Switch
+                id="alphacode-toggle"
+                checked={alphacodeEnabled}
+                onCheckedChange={handleAlphacodeToggle}
+                disabled={savingAlphacode}
+              />
+            </div>
+
+            {alphacodeEnabled && (
+              <div className="space-y-2 pt-2">
+                <Label htmlFor="alphacode-input" className="text-sm">Access code</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="alphacode-input"
+                    type="text"
+                    placeholder="e.g., alphatest"
+                    value={alphacodeValue}
+                    onChange={(e) => setAlphacodeValue(e.target.value)}
+                  />
+                  <Button
+                    onClick={handleAlphacodeValueSave}
+                    disabled={savingAlphacode || !alphacodeValue.trim()}
+                    className="bg-primary hover:bg-primary/90"
+                  >
+                    Save
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Users will need to enter this code after email verification to continue onboarding.
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

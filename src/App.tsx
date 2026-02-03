@@ -12,6 +12,7 @@ import AuthChoice from "./pages/AuthChoice";
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
 import VerifyEmail from "./pages/VerifyEmail";
+import AlphacodeVerify from "./pages/AlphacodeVerify";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
@@ -144,6 +145,11 @@ const AppRoutes = () => (
     <Route path="/verify-email" element={
       <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
         <VerifyEmail />
+      </div>
+    } />
+    <Route path="/alphacode" element={
+      <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+        <AlphacodeVerify />
       </div>
     } />
     <Route path="/onboarding" element={
