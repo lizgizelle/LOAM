@@ -50,7 +50,7 @@ const VerifyEmail = () => {
     }
 
     toast.success('Email verified!');
-    navigate('/onboarding');
+    navigate('/alphacode');
   };
 
   const handleResendOtp = async () => {
@@ -79,7 +79,7 @@ const VerifyEmail = () => {
 
   // If already verified, redirect
   if (isEmailVerified) {
-    navigate('/onboarding');
+    navigate('/alphacode');
     return null;
   }
 
