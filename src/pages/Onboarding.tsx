@@ -238,24 +238,24 @@ const Onboarding = () => {
         {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
-              What is your gender?
+              Are you a man or a woman?
             </h1>
             <p className="text-muted-foreground mb-8">
-              This helps us create a better experience for you.
+              This helps us create a better experience for you. This cannot be changed later.
             </p>
 
             <div className="flex gap-4 mb-8">
-              {(['male', 'female'] as const).map((option) => (
+              {([{ value: 'male', label: 'Man' }, { value: 'female', label: 'Woman' }] as const).map((option) => (
                 <button
-                  key={option}
-                  onClick={() => setGender(option)}
-                  className={`flex-1 h-16 rounded-xl border-2 font-medium capitalize transition-all ${
-                    gender === option
+                  key={option.value}
+                  onClick={() => setGender(option.value)}
+                  className={`flex-1 h-16 rounded-xl border-2 font-medium transition-all ${
+                    gender === option.value
                       ? 'border-primary bg-primary/5 text-primary'
                       : 'border-border text-foreground hover:border-primary/50'
                   }`}
                 >
-                  {option === 'male' ? 'Male' : 'Female'}
+                  {option.label}
                 </button>
               ))}
             </div>
