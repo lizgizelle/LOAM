@@ -236,7 +236,7 @@ export default function Game() {
         {/* Flashcard */}
         <div
           className={cn(
-            "w-full aspect-[3/4] rounded-3xl flex items-center justify-center p-8 shadow-xl transition-all duration-300",
+            "w-full aspect-[4/5] rounded-3xl flex items-center justify-center p-8 shadow-xl transition-all duration-300",
             animating ? "opacity-0 scale-95" : "opacity-100 scale-100"
           )}
           style={{
