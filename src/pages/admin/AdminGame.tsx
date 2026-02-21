@@ -137,8 +137,11 @@ function BucketsSection() {
     setLoading(false);
   };
 
+  const [editingBucketId, setEditingBucketId] = useState<string | null>(null);
+  const [editBucketName, setEditBucketName] = useState('');
+
   const addBucket = async () => {
-    if (!newBucketName.trim() || buckets.length >= 4) return;
+    if (!newBucketName.trim()) return;
     const { error } = await supabase
       .from('game_buckets')
       .insert({ name: newBucketName.trim(), display_order: buckets.length });
@@ -195,32 +198,29 @@ function BucketsSection() {
   return (
     <div className="space-y-6 mt-4">
       {/* Create bucket */}
-      {buckets.length < 4 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Create Bucket</CardTitle>
-            <CardDescription>You can create up to 4 buckets</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Input
-                placeholder="e.g. Bucket 1 — Introverts"
-                value={newBucketName}
-                onChange={(e) => setNewBucketName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && addBucket()}
-              />
-              <Button onClick={addBucket} disabled={!newBucketName.trim()}>
-                <Plus className="h-4 w-4 mr-2" /> Add
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      <Card>
+        <CardHeader>
+          <CardTitle>Create New Bucket</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex gap-2">
+            <Input
+              placeholder="e.g. Bucket 1 — Introverts"
+              value={newBucketName}
+              onChange={(e) => setNewBucketName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && addBucket()}
+            />
+            <Button onClick={addBucket} disabled={!newBucketName.trim()}>
+              <Plus className="h-4 w-4 mr-2" /> Add
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Bucket list */}
       <Card>
         <CardHeader>
-          <CardTitle>Buckets ({buckets.length}/4)</CardTitle>
+          <CardTitle>Buckets ({buckets.length})</CardTitle>
         </CardHeader>
         <CardContent>
           {buckets.length === 0 ? (
@@ -228,28 +228,74 @@ function BucketsSection() {
           ) : (
             <div className="space-y-2">
               {buckets.map((b) => (
-                <button
+                <div
                   key={b.id}
                   onClick={() => setSelectedBucket(b.id)}
-                  className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors ${
+                  className={`w-full flex items-center justify-between p-3 rounded-lg text-left transition-colors cursor-pointer ${
                     selectedBucket === b.id ? 'bg-primary/10 border border-primary/30' : 'bg-secondary/30 hover:bg-secondary/50'
                   }`}
                 >
-                  <div>
-                    <p className="font-medium text-foreground">{b.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {b.questionCount} questions • {b.userCount} users
-                    </p>
+                  <div className="flex-1 min-w-0">
+                    {editingBucketId === b.id ? (
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <Input
+                          value={editBucketName}
+                          onChange={(e) => setEditBucketName(e.target.value)}
+                          className="h-8 text-sm"
+                          onKeyDown={async (e) => {
+                            if (e.key === 'Enter' && editBucketName.trim()) {
+                              await supabase.from('game_buckets').update({ name: editBucketName.trim() }).eq('id', b.id);
+                              setEditingBucketId(null);
+                              fetchBuckets();
+                              toast.success('Bucket renamed');
+                            }
+                            if (e.key === 'Escape') setEditingBucketId(null);
+                          }}
+                          autoFocus
+                        />
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
+                          if (!editBucketName.trim()) return;
+                          await supabase.from('game_buckets').update({ name: editBucketName.trim() }).eq('id', b.id);
+                          setEditingBucketId(null);
+                          fetchBuckets();
+                          toast.success('Bucket renamed');
+                        }}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setEditingBucketId(null)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="font-medium text-foreground">{b.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {b.questionCount} questions • {b.userCount} users
+                        </p>
+                      </>
+                    )}
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={(e) => { e.stopPropagation(); deleteBucket(b.id); }}
-                    className="text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </Button>
-                </button>
+                  <div className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                    {editingBucketId !== b.id && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => { setEditingBucketId(b.id); setEditBucketName(b.name); }}
+                      >
+                        <Pencil className="w-4 h-4" />
+                      </Button>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => deleteBucket(b.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </div>
               ))}
             </div>
           )}
