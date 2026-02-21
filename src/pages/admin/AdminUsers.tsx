@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
+import { Separator } from '@/components/ui/separator';
 import { Search, Eye, Ban, Undo, Download, MoreHorizontal } from 'lucide-react';
 import {
   DropdownMenu,
@@ -43,6 +44,18 @@ interface UserProfile {
   is_shadow_blocked: boolean;
   admin_notes: string | null;
   created_at: string;
+  game_bucket_id: string | null;
+}
+
+interface QuizResponse {
+  question_text_snapshot: string;
+  question_type_snapshot: string;
+  answer_value: string;
+}
+
+interface GameBucket {
+  id: string;
+  name: string;
 }
 
 export default function AdminUsers() {
@@ -52,6 +65,9 @@ export default function AdminUsers() {
   const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
   const [showProfileDialog, setShowProfileDialog] = useState(false);
   const [adminNotes, setAdminNotes] = useState('');
+  const [quizResponses, setQuizResponses] = useState<QuizResponse[]>([]);
+  const [gameBucket, setGameBucket] = useState<GameBucket | null>(null);
+  const [loadingQuiz, setLoadingQuiz] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -146,10 +162,46 @@ export default function AdminUsers() {
     );
   });
 
-  const viewProfile = (user: UserProfile) => {
+  const viewProfile = async (user: UserProfile) => {
     setSelectedUser(user);
     setAdminNotes(user.admin_notes || '');
     setShowProfileDialog(true);
+    setQuizResponses([]);
+    setGameBucket(null);
+    setLoadingQuiz(true);
+
+    try {
+      // Fetch quiz responses
+      const { data: responses } = await supabase
+        .from('survey_responses')
+        .select('question_text_snapshot, question_type_snapshot, answer_value')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      setQuizResponses(responses || []);
+
+      // Fetch game bucket if assigned
+      if (user.game_bucket_id) {
+        const { data: bucket } = await supabase
+          .from('game_buckets')
+          .select('id, name')
+          .eq('id', user.game_bucket_id)
+          .single();
+
+        setGameBucket(bucket);
+      }
+    } catch (error) {
+      console.error('Error fetching quiz data:', error);
+    } finally {
+      setLoadingQuiz(false);
+    }
+  };
+
+  const formatAnswer = (response: QuizResponse) => {
+    if (response.question_type_snapshot === 'rating') {
+      return `${response.answer_value}/10`;
+    }
+    return response.answer_value;
   };
 
   return (
@@ -278,7 +330,7 @@ export default function AdminUsers() {
         </div>
 
         <Dialog open={showProfileDialog} onOpenChange={setShowProfileDialog}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>User Profile</DialogTitle>
               <DialogDescription>View and manage user details</DialogDescription>
@@ -320,6 +372,36 @@ export default function AdminUsers() {
                     <p className="font-medium">{format(new Date(selectedUser.created_at), 'MMM d, yyyy')}</p>
                   </div>
                 </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Quiz Responses</h4>
+                  
+                  {gameBucket && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-sm text-muted-foreground">Game Bucket:</span>
+                      <Badge variant="outline">{gameBucket.name}</Badge>
+                    </div>
+                  )}
+
+                  {loadingQuiz ? (
+                    <p className="text-sm text-muted-foreground">Loading quiz responses...</p>
+                  ) : quizResponses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">This user has not completed the onboarding quiz yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {quizResponses.map((r, i) => (
+                        <div key={i} className="text-sm">
+                          <p className="text-muted-foreground">Q: {r.question_text_snapshot}</p>
+                          <p className="font-medium">A: {formatAnswer(r)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
 
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Admin Notes</label>
