@@ -186,6 +186,175 @@ export type Database = {
         }
         Relationships: []
       }
+      game_access_codes: {
+        Row: {
+          code: string
+          created_at: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: []
+      }
+      game_bucket_rules: {
+        Row: {
+          answer_value: string
+          bucket_id: string
+          created_at: string
+          id: string
+          survey_question_id: string
+        }
+        Insert: {
+          answer_value: string
+          bucket_id: string
+          created_at?: string
+          id?: string
+          survey_question_id: string
+        }
+        Update: {
+          answer_value?: string
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          survey_question_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_bucket_rules_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "game_buckets"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "game_bucket_rules_survey_question_id_fkey"
+            columns: ["survey_question_id"]
+            isOneToOne: false
+            referencedRelation: "survey_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_buckets: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      game_questions: {
+        Row: {
+          bucket_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          question_text: string
+          updated_at: string
+        }
+        Insert: {
+          bucket_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_text: string
+          updated_at?: string
+        }
+        Update: {
+          bucket_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          question_text?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_questions_bucket_id_fkey"
+            columns: ["bucket_id"]
+            isOneToOne: false
+            referencedRelation: "game_buckets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_ratings: {
+        Row: {
+          created_at: string
+          id: string
+          question_id: string
+          rating: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          question_id: string
+          rating: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          question_id?: string
+          rating?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "game_ratings_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "game_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      game_unlocks: {
+        Row: {
+          id: string
+          unlocked_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          unlocked_at?: string
+          user_id: string
+        }
+        Update: {
+          id?: string
+          unlocked_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           created_at: string
@@ -389,6 +558,7 @@ export type Database = {
           date_of_birth: string | null
           email: string | null
           first_name: string | null
+          game_bucket_id: string | null
           gender: string | null
           id: string
           is_shadow_blocked: boolean
@@ -406,6 +576,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
+          game_bucket_id?: string | null
           gender?: string | null
           id: string
           is_shadow_blocked?: boolean
@@ -423,6 +594,7 @@ export type Database = {
           date_of_birth?: string | null
           email?: string | null
           first_name?: string | null
+          game_bucket_id?: string | null
           gender?: string | null
           id?: string
           is_shadow_blocked?: boolean
@@ -431,7 +603,15 @@ export type Database = {
           updated_at?: string
           work_industry?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_game_bucket_id_fkey"
+            columns: ["game_bucket_id"]
+            isOneToOne: false
+            referencedRelation: "game_buckets"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       survey_questions: {
         Row: {

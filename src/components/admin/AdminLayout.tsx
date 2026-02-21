@@ -12,7 +12,8 @@ import {
   FileQuestion,
   MessageSquare,
   Sparkles,
-  Heart
+  Heart,
+  Gamepad2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -32,6 +33,7 @@ const navItems = [
   { icon: Sparkles, label: 'Matchmaker', path: '/admin/matchmaker-builder' },
   { icon: MessageSquare, label: 'Matchmaker Responses', path: '/admin/matchmaker-responses' },
   { icon: Heart, label: 'Matchmaking', path: '/admin/matchmaking' },
+  { icon: Gamepad2, label: 'Game', path: '/admin/game' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 
