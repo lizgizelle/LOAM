@@ -21,8 +21,6 @@ import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
 import EventDetail from "./pages/EventDetail";
 import EventParticipants from "./pages/EventParticipants";
-import Matchmake from "./pages/Matchmake";
-import MatchmakeChat from "./pages/MatchmakeChat";
 import NotificationSettings from "./pages/settings/NotificationSettings";
 import LanguageSettings from "./pages/settings/LanguageSettings";
 import CitySettings from "./pages/settings/CitySettings";
@@ -41,11 +39,6 @@ import AdminSettings from "./pages/admin/AdminSettings";
 import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
 import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
-import AdminMatchmakerBuilder from "./pages/admin/AdminMatchmakerBuilder";
-import AdminMatchmakerQuestions from "./pages/admin/AdminMatchmakerQuestions";
-import AdminMatchmakerResponses from "./pages/admin/AdminMatchmakerResponses";
-import AdminMatchmaking from "./pages/admin/AdminMatchmaking";
-import AdminMatchmakingDetail from "./pages/admin/AdminMatchmakingDetail";
 import AdminGame from "./pages/admin/AdminGame";
 import Game from "./pages/Game";
 const queryClient = new QueryClient();
@@ -209,20 +202,6 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/matchmake" element={
-      <ProtectedRoute>
-        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <Matchmake />
-        </div>
-      </ProtectedRoute>
-    } />
-    <Route path="/matchmake/chat" element={
-      <ProtectedRoute>
-        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <MatchmakeChat />
-        </div>
-      </ProtectedRoute>
-    } />
     <Route path="/game" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -266,11 +245,6 @@ const AppRoutes = () => (
     <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
     <Route path="/admin/quiz-responses" element={<AdminQuizResponses />} />
-    <Route path="/admin/matchmaker-builder" element={<AdminMatchmakerBuilder />} />
-    <Route path="/admin/matchmaker-builder/:setId" element={<AdminMatchmakerQuestions />} />
-    <Route path="/admin/matchmaker-responses" element={<AdminMatchmakerResponses />} />
-    <Route path="/admin/matchmaking" element={<AdminMatchmaking />} />
-    <Route path="/admin/matchmaking/:userId" element={<AdminMatchmakingDetail />} />
     <Route path="/admin/game" element={<AdminGame />} />
     {/* Keep old routes for backwards compatibility */}
     <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />

@@ -11,8 +11,6 @@ import {
   LogOut,
   FileQuestion,
   MessageSquare,
-  Sparkles,
-  Heart,
   Gamepad2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -30,9 +28,6 @@ const navItems = [
   { icon: ClipboardList, label: 'Event Requests', path: '/admin/requests' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
-  { icon: Sparkles, label: 'Matchmaker', path: '/admin/matchmaker-builder' },
-  { icon: MessageSquare, label: 'Matchmaker Responses', path: '/admin/matchmaker-responses' },
-  { icon: Heart, label: 'Matchmaking', path: '/admin/matchmaking' },
   { icon: Gamepad2, label: 'Game', path: '/admin/game' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
