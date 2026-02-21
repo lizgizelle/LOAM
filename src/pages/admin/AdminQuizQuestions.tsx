@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,6 +36,8 @@ export default function AdminQuizQuestions() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState<QuizQuestion | null>(null);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
   
   // Form state
   const [questionText, setQuestionText] = useState('');
@@ -169,6 +171,44 @@ export default function AdminQuizQuestions() {
     } catch (error) {
       console.error('Error deleting question:', error);
       toast.error('Failed to delete question');
+    }
+  };
+
+  const handleDragStart = (index: number) => {
+    dragItem.current = index;
+  };
+
+  const handleDragEnter = (index: number) => {
+    dragOverItem.current = index;
+  };
+
+  const handleDragEnd = async () => {
+    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+      dragItem.current = null;
+      dragOverItem.current = null;
+      return;
+    }
+
+    const reordered = [...questions];
+    const [removed] = reordered.splice(dragItem.current, 1);
+    reordered.splice(dragOverItem.current, 0, removed);
+
+    // Update local state immediately
+    setQuestions(reordered);
+    dragItem.current = null;
+    dragOverItem.current = null;
+
+    // Persist new order to DB
+    try {
+      const updates = reordered.map((q, i) =>
+        supabase.from('survey_questions').update({ display_order: i + 1 }).eq('id', q.id)
+      );
+      await Promise.all(updates);
+      toast.success('Question order updated');
+    } catch (error) {
+      console.error('Error reordering:', error);
+      toast.error('Failed to save new order');
+      fetchQuizAndQuestions();
     }
   };
 
@@ -339,13 +379,19 @@ export default function AdminQuizQuestions() {
                 No questions yet. Add your first question above.
               </div>
             ) : (
-              <div className="space-y-3">
-                {questions.map((question) => (
+              <div className="space-y-1">
+                {questions.map((question, index) => (
                   <div
                     key={question.id}
-                    className="flex items-center gap-3 p-4 border rounded-lg bg-card"
+                    draggable
+                    onDragStart={() => handleDragStart(index)}
+                    onDragEnter={() => handleDragEnter(index)}
+                    onDragEnd={handleDragEnd}
+                    onDragOver={(e) => e.preventDefault()}
+                    className="flex items-center gap-3 p-4 border rounded-lg bg-card hover:bg-muted/30 transition-colors cursor-grab active:cursor-grabbing"
                   >
                     <GripVertical className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground w-6 text-center flex-shrink-0">{index + 1}</span>
                     <div className="flex-1 min-w-0">
                       <p className="font-medium truncate">{question.question_text}</p>
                       <p className="text-sm text-muted-foreground">
