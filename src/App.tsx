@@ -46,7 +46,8 @@ import AdminMatchmakerQuestions from "./pages/admin/AdminMatchmakerQuestions";
 import AdminMatchmakerResponses from "./pages/admin/AdminMatchmakerResponses";
 import AdminMatchmaking from "./pages/admin/AdminMatchmaking";
 import AdminMatchmakingDetail from "./pages/admin/AdminMatchmakingDetail";
-
+import AdminGame from "./pages/admin/AdminGame";
+import Game from "./pages/Game";
 const queryClient = new QueryClient();
 
 // Wrapper component to check blocked status and email verification
@@ -222,6 +223,13 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
+    <Route path="/game" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <Game />
+        </div>
+      </ProtectedRoute>
+    } />
     <Route path="/settings/notifications" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -263,6 +271,7 @@ const AppRoutes = () => (
     <Route path="/admin/matchmaker-responses" element={<AdminMatchmakerResponses />} />
     <Route path="/admin/matchmaking" element={<AdminMatchmaking />} />
     <Route path="/admin/matchmaking/:userId" element={<AdminMatchmakingDetail />} />
+    <Route path="/admin/game" element={<AdminGame />} />
     {/* Keep old routes for backwards compatibility */}
     <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />
     <Route path="/admin/survey-responses" element={<Navigate to="/admin/quiz-responses" replace />} />
