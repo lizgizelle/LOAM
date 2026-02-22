@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Plus, Trash2, Pencil, Check, X, FileDown, Flag, Users, Lock, LockOpen } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
@@ -685,29 +686,15 @@ function AccessSection() {
               {unlocks.map(u => (
                 <div key={u.user_id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                   <div className="flex items-center gap-3">
-                    <div className="h-8 w-8 rounded-full bg-green-500/15 flex items-center justify-center">
-                      <LockOpen className="w-4 h-4 text-green-600" />
-                    </div>
                     <div>
                       <p className="font-medium text-foreground">{u.first_name || u.email}</p>
-                      <p className="text-sm text-muted-foreground">{u.email}</p>
+                      <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm text-muted-foreground">
-                      {format(new Date(u.unlocked_at), 'PP')}
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="text-destructive border-destructive/30 hover:bg-destructive/10 hover:text-destructive gap-1.5"
-                      onClick={() => revokeUnlock(u.user_id)}
-                      title="Revoke access"
-                    >
-                      <Lock className="w-3.5 h-3.5" />
-                      Revoke
-                    </Button>
-                  </div>
+                  <Switch
+                    checked={true}
+                    onCheckedChange={() => revokeUnlock(u.user_id)}
+                  />
                 </div>
               ))}
             </div>
