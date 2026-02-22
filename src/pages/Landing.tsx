@@ -107,30 +107,21 @@ const Landing = () => {
         >
           By signing up, you agree to the{' '}
           <a 
-            href="https://www.theloamcollective.com/draft" 
+            href="https://www.theloamcollective.com/terms-and-conditions/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="underline hover:text-white/80"
           >
             Terms of Service
           </a>
-          ,{' '}
+          {' '}and{' '}
           <a 
-            href="https://www.theloamcollective.com/draft" 
+            href="https://www.theloamcollective.com/privacy-policy/" 
             target="_blank" 
             rel="noopener noreferrer"
             className="underline hover:text-white/80"
           >
             Privacy Policy
-          </a>
-          {' '}and{' '}
-          <a 
-            href="https://www.theloamcollective.com/draft" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="underline hover:text-white/80"
-          >
-            Community Guidelines
           </a>
           .
         </p>
