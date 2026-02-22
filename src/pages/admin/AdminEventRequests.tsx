@@ -115,6 +115,7 @@ export default function AdminEventRequests() {
   const pendingRequests = participants.filter(p => p.status === 'pending');
   const waitlistedRequests = participants.filter(p => p.status === 'waitlisted');
   const approvedRequests = participants.filter(p => p.status === 'approved');
+  const declinedRequests = participants.filter(p => p.status === 'rejected');
 
   const ParticipantRow = ({ participant, showActions = true }: { participant: ParticipantRequest; showActions?: boolean }) => (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-secondary/30 rounded-xl">
@@ -184,9 +185,14 @@ export default function AdminEventRequests() {
         </div>
       )}
       
-      {!showActions && (
+      {!showActions && participant.status === 'approved' && (
         <Badge variant="secondary" className="bg-green-100 text-green-800 ml-13 sm:ml-0 w-fit">
           Approved
+        </Badge>
+      )}
+      {!showActions && participant.status === 'rejected' && (
+        <Badge variant="secondary" className="bg-red-100 text-red-800 ml-13 sm:ml-0 w-fit">
+          Declined
         </Badge>
       )}
     </div>
@@ -217,11 +223,11 @@ export default function AdminEventRequests() {
       <div className="space-y-6">
         {/* Back button */}
         <button
-          onClick={() => navigate('/admin/requests')}
+          onClick={() => navigate(`/admin/events/${id}`)}
           className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Back to events</span>
+          <span>Back to event</span>
         </button>
 
         {/* Event header */}
@@ -253,7 +259,7 @@ export default function AdminEventRequests() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-primary">{pendingRequests.length}</p>
@@ -270,6 +276,12 @@ export default function AdminEventRequests() {
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-green-600">{approvedRequests.length}</p>
               <p className="text-sm text-muted-foreground">Approved</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardContent className="p-4 text-center">
+              <p className="text-2xl font-bold text-destructive">{declinedRequests.length}</p>
+              <p className="text-sm text-muted-foreground">Declined</p>
             </CardContent>
           </Card>
         </div>
@@ -330,6 +342,27 @@ export default function AdminEventRequests() {
             ) : (
               <div className="space-y-3">
                 {approvedRequests.map((participant) => (
+                  <ParticipantRow key={participant.id} participant={participant} showActions={false} />
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Declined */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <X className="w-5 h-5" />
+              Declined ({declinedRequests.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {declinedRequests.length === 0 ? (
+              <p className="text-muted-foreground text-center py-8">No declined users</p>
+            ) : (
+              <div className="space-y-3">
+                {declinedRequests.map((participant) => (
                   <ParticipantRow key={participant.id} participant={participant} showActions={false} />
                 ))}
               </div>
