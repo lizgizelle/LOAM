@@ -81,7 +81,7 @@ export default function AdminEventDetail() {
           user_id,
           status,
           created_at,
-          profile:profiles!event_participants_user_id_fkey (
+          profile:profiles!event_participants_user_id_profiles_fkey (
             first_name,
             email,
             gender,
