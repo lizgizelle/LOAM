@@ -97,6 +97,92 @@ export type Database = {
           },
         ]
       }
+      event_registration_answers: {
+        Row: {
+          answer_value: string
+          created_at: string
+          event_id: string
+          id: string
+          question_id: string
+          user_id: string
+        }
+        Insert: {
+          answer_value: string
+          created_at?: string
+          event_id: string
+          id?: string
+          question_id: string
+          user_id: string
+        }
+        Update: {
+          answer_value?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          question_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_answers_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_registration_answers_question_id_fkey"
+            columns: ["question_id"]
+            isOneToOne: false
+            referencedRelation: "event_registration_questions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_registration_questions: {
+        Row: {
+          created_at: string
+          display_order: number
+          event_id: string
+          id: string
+          is_required: boolean
+          options: Json | null
+          question_text: string
+          question_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          event_id: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          question_text: string
+          question_type?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          event_id?: string
+          id?: string
+          is_required?: boolean
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registration_questions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_reports: {
         Row: {
           created_at: string
@@ -131,6 +217,7 @@ export type Database = {
           capacity: number | null
           cover_image_url: string | null
           created_at: string
+          currency: string
           description: string | null
           end_date: string | null
           hide_location_until_approved: boolean
@@ -143,6 +230,7 @@ export type Database = {
           show_participants: boolean
           start_date: string
           status: string
+          ticket_price: number | null
           updated_at: string
           visibility: string
         }
@@ -150,6 +238,7 @@ export type Database = {
           capacity?: number | null
           cover_image_url?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           end_date?: string | null
           hide_location_until_approved?: boolean
@@ -162,6 +251,7 @@ export type Database = {
           show_participants?: boolean
           start_date: string
           status?: string
+          ticket_price?: number | null
           updated_at?: string
           visibility?: string
         }
@@ -169,6 +259,7 @@ export type Database = {
           capacity?: number | null
           cover_image_url?: string | null
           created_at?: string
+          currency?: string
           description?: string | null
           end_date?: string | null
           hide_location_until_approved?: boolean
@@ -181,6 +272,7 @@ export type Database = {
           show_participants?: boolean
           start_date?: string
           status?: string
+          ticket_price?: number | null
           updated_at?: string
           visibility?: string
         }
