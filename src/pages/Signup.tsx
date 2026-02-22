@@ -117,10 +117,10 @@ const Signup = () => {
           </div>
 
           <p className="text-xs text-muted-foreground">
-            By continuing, you agree to our{' '}
-            <button type="button" className="text-primary hover:underline">Terms of Service</button>
+            By signing up, you agree to the{' '}
+            <a href="https://www.theloamcollective.com/terms-and-conditions/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Terms of Service</a>
             {' '}and{' '}
-            <button type="button" className="text-primary hover:underline">Privacy Policy</button>
+            <a href="https://www.theloamcollective.com/privacy-policy/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Privacy Policy</a>
           </p>
 
           <Button 
