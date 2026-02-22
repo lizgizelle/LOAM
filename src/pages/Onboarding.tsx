@@ -106,6 +106,9 @@ const Onboarding = () => {
         ? `${birthdate.year}-${String(birthdate.month).padStart(2, '0')}-${String(birthdate.day).padStart(2, '0')}`
         : '';
       
+      // Auto-detect country from country code
+      const detectedCity = countryCode.code === '+60' ? 'Malaysia' : 'Singapore';
+      
       // Update profile in Supabase
       await supabase
         .from('profiles')
@@ -129,6 +132,7 @@ const Onboarding = () => {
         workIndustry: workIndustry,
         countryOfBirth: '',
         dateOfBirth: dateString,
+        city: detectedCity,
       });
       
       setOnboarded(true);

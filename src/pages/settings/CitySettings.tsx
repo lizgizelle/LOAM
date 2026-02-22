@@ -27,7 +27,7 @@ const CitySettings = () => {
           <span className="font-medium">Back</span>
         </button>
         <h1 className="text-2xl font-bold text-foreground">
-          City
+          Country
         </h1>
       </div>
 

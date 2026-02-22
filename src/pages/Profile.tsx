@@ -25,7 +25,7 @@ const Profile = () => {
   const settingsItems = [
     { icon: Bell, label: 'Notification preferences', action: () => navigate('/settings/notifications') },
     { icon: Globe, label: 'App language', value: userProfile?.language || 'English', action: () => navigate('/settings/language') },
-    { icon: MapPin, label: 'City', value: userProfile?.city || 'Singapore', action: () => navigate('/settings/city') },
+    { icon: MapPin, label: 'Country', value: userProfile?.city || 'Singapore', action: () => navigate('/settings/city') },
   ];
 
   // Get avatar - use photo if available, otherwise use default based on user identifier
