@@ -352,8 +352,16 @@ const EventDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-28">
       {/* Hero image */}
-      <div className="relative h-64 bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center">
-        <span className="text-6xl">✨</span>
+      <div className="relative h-64 bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center overflow-hidden">
+        {supabaseEvent?.cover_image_url ? (
+          <img
+            src={supabaseEvent.cover_image_url}
+            alt={supabaseEvent.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <span className="text-6xl">✨</span>
+        )}
         
         {/* Back button */}
         <button 
