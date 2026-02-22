@@ -7,6 +7,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { Json } from '@/integrations/supabase/types';
+import { CreditCard } from 'lucide-react';
 
 interface RegistrationQuestion {
   id: string;
@@ -25,9 +26,11 @@ interface EventRegistrationFormProps {
   isSubmitting: boolean;
   isPaid?: boolean;
   requiresApproval?: boolean;
+  ticketPrice?: number;
+  currency?: string;
 }
 
-const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitting, isPaid = false, requiresApproval = false }: EventRegistrationFormProps) => {
+const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitting, isPaid = false, requiresApproval = false, ticketPrice = 0, currency = 'MYR' }: EventRegistrationFormProps) => {
   const [questions, setQuestions] = useState<RegistrationQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -179,31 +182,61 @@ const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitti
             className="mt-1"
           />
           <p className="text-xs text-muted-foreground leading-relaxed">
-            This event has limited spots and operates on an approval-only basis.
-            {isPaid && ' Your card will be authorized at checkout, but your ticket is not confirmed until your registration is approved. If not approved, your payment will be automatically refunded.'}
+            This event has extremely limited spots and operates on an approval-only basis.
+            {isPaid && ' Your card will be authorized at checkout, but your ticket is not confirmed until your registration is approved. Approvals are reviewed, and spots are secured as they are confirmed. If your registration is not approved, your payment will be automatically refunded to your original method.'}
             {' '}You'll receive confirmation via email once approved.
+            {(isPaid || requiresApproval) && ' *'}
           </p>
         </div>
       )}
 
-      {/* Payment note for paid events */}
-      {isPaid && !requiresApproval && (
-        <p className="text-xs text-muted-foreground text-center pt-2">
-          You will be redirected to a secure payment page.
-        </p>
+      {/* Inline payment section for paid events */}
+      {isPaid && (
+        <div className="space-y-3 pt-4">
+          <h3 className="text-lg font-bold text-foreground">Payment</h3>
+          <div className="space-y-1.5">
+            <Label className="text-sm font-medium text-foreground">
+              Credit or Debit Card <span className="text-destructive">*</span>
+            </Label>
+            <div className="relative flex items-center h-14 rounded-xl border-2 border-border bg-popover px-4 transition-all duration-200 focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-2 focus-within:border-primary">
+              <CreditCard className="h-5 w-5 text-muted-foreground mr-3 shrink-0" />
+              <input
+                type="text"
+                inputMode="numeric"
+                placeholder="Card number"
+                className="flex-1 bg-transparent text-base font-medium text-foreground placeholder:text-muted-foreground outline-none"
+                disabled
+              />
+              <span className="text-muted-foreground text-sm font-medium ml-3 shrink-0">MM / YY</span>
+            </div>
+          </div>
+        </div>
       )}
 
-      <div className="flex gap-3 pt-2">
-        <Button type="button" variant="outline" className="flex-1" onClick={onCancel} disabled={isSubmitting}>
-          Cancel
-        </Button>
+      <div className="flex flex-col gap-3 pt-2">
         <Button
           type="submit"
-          className="flex-1 bg-primary text-primary-foreground"
+          className="w-full h-12 rounded-xl text-base font-semibold bg-primary text-primary-foreground"
           disabled={isSubmitting || (requiresApproval && !agreedToTerms)}
         >
           {getSubmitText()}
         </Button>
+
+        <Button type="button" variant="outline" className="w-full h-12 rounded-xl text-base" onClick={onCancel} disabled={isSubmitting}>
+          Cancel
+        </Button>
+
+        {/* Disclaimer text */}
+        {isPaid && requiresApproval && (
+          <p className="text-xs text-muted-foreground text-center">
+            You will not be charged until your registration is approved.
+          </p>
+        )}
+        {isPaid && !requiresApproval && (
+          <p className="text-xs text-muted-foreground text-center">
+            You will be redirected to a secure payment page.
+          </p>
+        )}
       </div>
     </form>
   );
