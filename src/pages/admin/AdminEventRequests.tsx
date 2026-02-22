@@ -226,8 +226,12 @@ export default function AdminEventRequests() {
 
         {/* Event header */}
         <div className="bg-popover rounded-2xl shadow-loam overflow-hidden">
-          <div className="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-            <span className="text-5xl">✨</span>
+          <div className="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden">
+            {event.cover_image_url ? (
+              <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-5xl">✨</span>
+            )}
           </div>
           <div className="p-6">
             <h1 className="text-2xl font-bold text-foreground mb-3">{event.name}</h1>

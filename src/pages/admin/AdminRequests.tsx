@@ -105,8 +105,12 @@ export default function AdminRequests() {
                 className="w-full bg-popover rounded-2xl shadow-loam overflow-hidden text-left transition-all duration-200 hover:shadow-loam-lg active:scale-[0.99]"
               >
                 {/* Cover image */}
-                <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative">
-                  <span className="text-4xl">✨</span>
+                <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center relative overflow-hidden">
+                  {event.cover_image_url ? (
+                    <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-4xl">✨</span>
+                  )}
                   {/* Requires approval badge */}
                   <Badge 
                     variant="secondary" 

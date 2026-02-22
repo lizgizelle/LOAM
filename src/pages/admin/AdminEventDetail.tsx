@@ -186,29 +186,15 @@ export default function AdminEventDetail() {
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" onClick={() => navigate('/admin/events')}>
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-semibold">{event.name}</h1>
-                <Badge variant={event.status === 'published' ? 'default' : 'secondary'}>
-                  {event.status}
-                </Badge>
-              </div>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button onClick={() => navigate(`/admin/events/${id}/questions`)} variant="outline" className="gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Registration Questions
-            </Button>
-            <Button onClick={() => navigate(`/admin/events/${id}/edit`)} variant="outline" className="gap-2">
-              <Pencil className="h-4 w-4" />
-              Edit
-            </Button>
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/events')}>
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-semibold">{event.name}</h1>
+            <Badge variant={event.status === 'published' ? 'default' : 'secondary'}>
+              {event.status}
+            </Badge>
           </div>
         </div>
 
@@ -222,6 +208,17 @@ export default function AdminEventDetail() {
               />
             </div>
           )}
+
+          <div className="flex gap-2">
+            <Button onClick={() => navigate(`/admin/events/${id}/questions`)} variant="outline" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Registration Questions
+            </Button>
+            <Button onClick={() => navigate(`/admin/events/${id}/edit`)} variant="outline" className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
 
           <Card className="bg-[#FFF7F2] border-none shadow-none">
             <CardHeader>
