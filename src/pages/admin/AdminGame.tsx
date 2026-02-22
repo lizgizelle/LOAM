@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Pencil, Check, X, FileDown, Flag, Users } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, FileDown, Flag, Users, Lock } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -617,6 +617,14 @@ function AccessSection() {
     fetchAll();
   };
 
+  const revokeUnlock = async (userId: string) => {
+    if (!confirm('Revoke game access for this user?')) return;
+    const { error } = await supabase.from('game_unlocks').delete().eq('user_id', userId);
+    if (error) { toast.error('Failed to revoke access'); return; }
+    toast.success('Access revoked');
+    fetchAll();
+  };
+
   if (loading) return <div className="py-8 text-center text-muted-foreground">Loading...</div>;
 
   return (
@@ -680,9 +688,20 @@ function AccessSection() {
                     <p className="font-medium text-foreground">{u.first_name || u.email}</p>
                     <p className="text-sm text-muted-foreground">{u.email}</p>
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    {format(new Date(u.unlocked_at), 'PP')}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm text-muted-foreground">
+                      {format(new Date(u.unlocked_at), 'PP')}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                      onClick={() => revokeUnlock(u.user_id)}
+                      title="Revoke access"
+                    >
+                      <Lock className="w-4 h-4" />
+                    </Button>
+                  </div>
                 </div>
               ))}
             </div>
