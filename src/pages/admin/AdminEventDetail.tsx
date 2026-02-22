@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Calendar, MapPin, Users, Pencil, Check, X } from 'lucide-react';
+import { ArrowLeft, Calendar, MapPin, Users, Pencil, Check, X, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -200,10 +200,16 @@ export default function AdminEventDetail() {
               </div>
             </div>
           </div>
-          <Button onClick={() => navigate(`/admin/events/${id}/edit`)} variant="outline" className="gap-2">
-            <Pencil className="h-4 w-4" />
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={() => navigate(`/admin/events/${id}/questions`)} variant="outline" className="gap-2">
+              <ClipboardList className="h-4 w-4" />
+              Registration Questions
+            </Button>
+            <Button onClick={() => navigate(`/admin/events/${id}/edit`)} variant="outline" className="gap-2">
+              <Pencil className="h-4 w-4" />
+              Edit
+            </Button>
+          </div>
         </div>
 
         <div className="flex flex-col gap-6 max-w-3xl">

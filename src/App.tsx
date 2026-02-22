@@ -40,6 +40,7 @@ import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
 import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
 import AdminGame from "./pages/admin/AdminGame";
+import AdminEventQuestions from "./pages/admin/AdminEventQuestions";
 import Game from "./pages/Game";
 const queryClient = new QueryClient();
 
@@ -241,6 +242,7 @@ const AppRoutes = () => (
     <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
     <Route path="/admin/requests" element={<AdminRequests />} />
     <Route path="/admin/events/:id/requests" element={<AdminEventRequests />} />
+    <Route path="/admin/events/:id/questions" element={<AdminEventQuestions />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
     <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
