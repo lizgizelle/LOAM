@@ -47,11 +47,11 @@ export default function Game() {
     if (!user?.id) return;
     const { data } = await supabase
       .from('game_unlocks')
-      .select('id')
+      .select('id, is_locked')
       .eq('user_id', user.id)
       .maybeSingle();
     
-    setIsUnlocked(!!data);
+    setIsUnlocked(!!data && !(data as any).is_locked);
     setChecking(false);
 
     if (data) {
