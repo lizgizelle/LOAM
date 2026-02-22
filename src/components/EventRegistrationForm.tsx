@@ -23,12 +23,15 @@ interface EventRegistrationFormProps {
   onSubmit: (answers: Record<string, string>) => void;
   onCancel: () => void;
   isSubmitting: boolean;
+  isPaid?: boolean;
+  requiresApproval?: boolean;
 }
 
-const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitting }: EventRegistrationFormProps) => {
+const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitting, isPaid = false, requiresApproval = false }: EventRegistrationFormProps) => {
   const [questions, setQuestions] = useState<RegistrationQuestion[]>([]);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [agreedToTerms, setAgreedToTerms] = useState(!requiresApproval);
 
   useEffect(() => {
     fetchQuestions();
@@ -60,7 +63,16 @@ const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitti
       }
     }
 
+    if (requiresApproval && !agreedToTerms) return;
+
     onSubmit(answers);
+  };
+
+  const getSubmitText = () => {
+    if (isSubmitting) return isPaid ? 'Redirecting to payment...' : 'Submitting...';
+    if (isPaid && requiresApproval) return 'Request to Join';
+    if (isPaid) return 'Proceed to Payment';
+    return 'Submit Registration';
   };
 
   const getOptions = (options: Json | null): string[] => {
@@ -158,12 +170,39 @@ const EventRegistrationForm = ({ eventId, userId, onSubmit, onCancel, isSubmitti
         </div>
       ))}
 
+      {/* Approval disclaimer */}
+      {requiresApproval && (
+        <div className="flex items-start gap-3 pt-2">
+          <Checkbox
+            checked={agreedToTerms}
+            onCheckedChange={(checked) => setAgreedToTerms(!!checked)}
+            className="mt-1"
+          />
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            This event has limited spots and operates on an approval-only basis.
+            {isPaid && ' Your card will be authorized at checkout, but your ticket is not confirmed until your registration is approved. If not approved, your payment will be automatically refunded.'}
+            {' '}You'll receive confirmation via email once approved.
+          </p>
+        </div>
+      )}
+
+      {/* Payment note for paid events */}
+      {isPaid && !requiresApproval && (
+        <p className="text-xs text-muted-foreground text-center pt-2">
+          You will be redirected to a secure payment page.
+        </p>
+      )}
+
       <div className="flex gap-3 pt-2">
         <Button type="button" variant="outline" className="flex-1" onClick={onCancel} disabled={isSubmitting}>
           Cancel
         </Button>
-        <Button type="submit" className="flex-1 bg-primary text-primary-foreground" disabled={isSubmitting}>
-          {isSubmitting ? 'Submitting...' : 'Submit Registration'}
+        <Button
+          type="submit"
+          className="flex-1 bg-primary text-primary-foreground"
+          disabled={isSubmitting || (requiresApproval && !agreedToTerms)}
+        >
+          {getSubmitText()}
         </Button>
       </div>
     </form>

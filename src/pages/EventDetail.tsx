@@ -40,6 +40,9 @@ interface EventDetails {
   show_participants: boolean;
   requires_approval: boolean;
   host_id: string | null;
+  ticket_price: number | null;
+  currency: string;
+  cover_image_url: string | null;
 }
 
 const EventDetail = () => {
@@ -48,6 +51,9 @@ const EventDetail = () => {
   const [searchParams] = useSearchParams();
   const { user } = useAuth();
   const { signUpForEvent, signedUpEvents } = useAppStore();
+
+  // Handle payment return
+  const paymentStatus = searchParams.get('payment');
   
   const isFromMyGatherings = searchParams.get('source') === 'my-gatherings';
   
@@ -69,6 +75,14 @@ const EventDetail = () => {
   const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   useEffect(() => {
+    if (paymentStatus === 'success' && id) {
+      setIsSignedUp(true);
+      signUpForEvent(id);
+      setShowConfirmation(true);
+    }
+  }, [paymentStatus, id]);
+
+  useEffect(() => {
     const fetchEventData = async () => {
       if (!id) return;
       
@@ -76,7 +90,7 @@ const EventDetail = () => {
         // Fetch event details from Supabase
         const { data: eventData } = await supabase
           .from('events')
-          .select('id, name, description, location, start_date, end_date, show_participants, requires_approval, host_id')
+          .select('id, name, description, location, start_date, end_date, show_participants, requires_approval, host_id, ticket_price, currency, cover_image_url')
           .eq('id', id)
           .maybeSingle();
 
@@ -162,12 +176,27 @@ const EventDetail = () => {
     setIsSubmitting(true);
 
     try {
-      // Insert participant
+      const isPaidEvent = supabaseEvent?.ticket_price && supabaseEvent.ticket_price > 0;
+
+      if (isPaidEvent) {
+        // For paid events, create checkout session via edge function
+        const { data, error } = await supabase.functions.invoke('create-event-payment', {
+          body: { eventId: id, answers },
+        });
+
+        if (error) throw error;
+        if (data?.url) {
+          window.location.href = data.url;
+          return;
+        }
+        throw new Error('No checkout URL returned');
+      }
+
+      // Free event flow
       await supabase
         .from('event_participants')
         .insert({ event_id: id, user_id: user.id, status: 'pending' });
 
-      // Insert answers
       if (Object.keys(answers).length > 0) {
         const rows = Object.entries(answers).map(([questionId, answerValue]) => ({
           event_id: id,
@@ -185,6 +214,7 @@ const EventDetail = () => {
     } catch (error) {
       console.error('Error signing up:', error);
       toast.error('Could not send request. Please try again.');
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -529,9 +559,37 @@ const EventDetail = () => {
       {/* Registration Form Sheet */}
       <Sheet open={showRegistrationForm} onOpenChange={setShowRegistrationForm}>
         <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
-          <SheetHeader className="text-left mb-4">
-            <SheetTitle>Register for {event.name}</SheetTitle>
+          <SheetHeader className="text-left mb-2">
+            <SheetTitle>Registration</SheetTitle>
           </SheetHeader>
+
+          {/* Event summary with price */}
+          {supabaseEvent && (
+            <div className="mb-4 pb-4 border-b border-border">
+              <div className="flex items-center gap-3 mb-3">
+                {supabaseEvent.cover_image_url && (
+                  <img
+                    src={supabaseEvent.cover_image_url}
+                    alt={supabaseEvent.name}
+                    className="w-14 h-14 rounded-lg object-cover"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-foreground text-sm truncate">{supabaseEvent.name}</p>
+                  <p className="text-xs text-muted-foreground">{formatDate(supabaseEvent.start_date)} at {formatTime(supabaseEvent.start_date)}</p>
+                </div>
+              </div>
+              {supabaseEvent.ticket_price && supabaseEvent.ticket_price > 0 && (
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Total</span>
+                  <span className="text-xl font-bold text-foreground">
+                    {supabaseEvent.currency} {supabaseEvent.ticket_price.toFixed(2)}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
           {user?.id && id && (
             <EventRegistrationForm
               eventId={id}
@@ -539,6 +597,8 @@ const EventDetail = () => {
               onSubmit={handleRegistrationSubmit}
               onCancel={() => setShowRegistrationForm(false)}
               isSubmitting={isSubmitting}
+              isPaid={!!(supabaseEvent?.ticket_price && supabaseEvent.ticket_price > 0)}
+              requiresApproval={supabaseEvent?.requires_approval ?? false}
             />
           )}
         </SheetContent>
