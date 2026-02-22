@@ -505,7 +505,7 @@ const EventDetail = () => {
           {/* Description */}
           <div className="border-t border-border pt-6">
             <h2 className="font-semibold text-foreground mb-3">About this gathering</h2>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
               {displayDescription}
             </p>
           </div>
