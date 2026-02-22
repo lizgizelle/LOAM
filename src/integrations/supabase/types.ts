@@ -340,16 +340,19 @@ export type Database = {
       game_unlocks: {
         Row: {
           id: string
+          is_locked: boolean
           unlocked_at: string
           user_id: string
         }
         Insert: {
           id?: string
+          is_locked?: boolean
           unlocked_at?: string
           user_id: string
         }
         Update: {
           id?: string
+          is_locked?: boolean
           unlocked_at?: string
           user_id?: string
         }

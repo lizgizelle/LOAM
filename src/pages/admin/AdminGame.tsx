@@ -52,6 +52,7 @@ interface AccessCode {
 interface Unlock {
   user_id: string;
   unlocked_at: string;
+  is_locked: boolean;
   email?: string;
   first_name?: string;
 }
@@ -618,11 +619,13 @@ function AccessSection() {
     fetchAll();
   };
 
-  const revokeUnlock = async (userId: string) => {
-    if (!confirm('Revoke game access for this user?')) return;
-    const { error } = await supabase.from('game_unlocks').delete().eq('user_id', userId);
-    if (error) { toast.error('Failed to revoke access'); return; }
-    toast.success('Access revoked');
+  const toggleUserLock = async (userId: string, currentlyLocked: boolean) => {
+    const { error } = await supabase
+      .from('game_unlocks')
+      .update({ is_locked: !currentlyLocked } as any)
+      .eq('user_id', userId);
+    if (error) { toast.error('Failed to update access'); return; }
+    toast.success(!currentlyLocked ? 'User locked' : 'User unlocked');
     fetchAll();
   };
 
@@ -676,25 +679,55 @@ function AccessSection() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Unlocked Users ({unlocks.length})</CardTitle>
+          <CardTitle>Unlocked Users ({unlocks.filter(u => !u.is_locked).length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {unlocks.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No users have unlocked the game yet</p>
+          {unlocks.filter(u => !u.is_locked).length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No unlocked users</p>
           ) : (
             <div className="space-y-2">
-              {unlocks.map(u => (
+              {unlocks.filter(u => !u.is_locked).map(u => (
                 <div key={u.user_id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <div>
-                      <p className="font-medium text-foreground">{u.first_name || u.email}</p>
-                      <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
-                    </div>
+                  <div>
+                    <p className="font-medium text-foreground">{u.first_name || u.email}</p>
+                    <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
                   </div>
-                  <Switch
-                    checked={true}
-                    onCheckedChange={() => revokeUnlock(u.user_id)}
-                  />
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Unlocked</span>
+                    <Switch
+                      checked={true}
+                      onCheckedChange={() => toggleUserLock(u.user_id, false)}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Locked Users ({unlocks.filter(u => u.is_locked).length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {unlocks.filter(u => u.is_locked).length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No locked users</p>
+          ) : (
+            <div className="space-y-2">
+              {unlocks.filter(u => u.is_locked).map(u => (
+                <div key={u.user_id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                  <div>
+                    <p className="font-medium text-foreground">{u.first_name || u.email}</p>
+                    <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground">Locked</span>
+                    <Switch
+                      checked={false}
+                      onCheckedChange={() => toggleUserLock(u.user_id, true)}
+                    />
+                  </div>
                 </div>
               ))}
             </div>

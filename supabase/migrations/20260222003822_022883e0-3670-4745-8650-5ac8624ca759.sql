@@ -1,0 +1,1 @@
+ALTER TABLE public.game_unlocks ADD COLUMN is_locked boolean NOT NULL DEFAULT false;
