@@ -51,7 +51,7 @@ const Landing = () => {
       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
       
       {/* Content */}
-      <div className="relative min-h-screen flex flex-col px-6 pt-20 pb-16 safe-area-top safe-area-bottom">
+      <div className="relative min-h-screen flex flex-col px-6 pt-20 pb-12 safe-area-top safe-area-bottom">
         {/* Spacer to push content down */}
         <div className="flex-1" />
         
