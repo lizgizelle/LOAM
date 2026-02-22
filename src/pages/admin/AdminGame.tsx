@@ -679,53 +679,24 @@ function AccessSection() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Unlocked Users ({unlocks.filter(u => !u.is_locked).length})</CardTitle>
+          <CardTitle>Users ({unlocks.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          {unlocks.filter(u => !u.is_locked).length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No unlocked users</p>
+          {unlocks.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">No users yet</p>
           ) : (
             <div className="space-y-2">
-              {unlocks.filter(u => !u.is_locked).map(u => (
+              {unlocks.map(u => (
                 <div key={u.user_id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                   <div>
                     <p className="font-medium text-foreground">{u.first_name || u.email}</p>
                     <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Unlocked</span>
+                    <span className="text-xs text-muted-foreground">{u.is_locked ? 'Locked' : 'Unlocked'}</span>
                     <Switch
-                      checked={true}
-                      onCheckedChange={() => toggleUserLock(u.user_id, false)}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Locked Users ({unlocks.filter(u => u.is_locked).length})</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {unlocks.filter(u => u.is_locked).length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">No locked users</p>
-          ) : (
-            <div className="space-y-2">
-              {unlocks.filter(u => u.is_locked).map(u => (
-                <div key={u.user_id} className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                  <div>
-                    <p className="font-medium text-foreground">{u.first_name || u.email}</p>
-                    <p className="text-sm text-muted-foreground">{u.email} • {format(new Date(u.unlocked_at), 'PP')}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground">Locked</span>
-                    <Switch
-                      checked={false}
-                      onCheckedChange={() => toggleUserLock(u.user_id, true)}
+                      checked={!u.is_locked}
+                      onCheckedChange={() => toggleUserLock(u.user_id, u.is_locked)}
                     />
                   </div>
                 </div>
