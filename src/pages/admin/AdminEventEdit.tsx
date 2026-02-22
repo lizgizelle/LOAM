@@ -34,6 +34,8 @@ export default function AdminEventEdit() {
     visibility: 'public',
     status: 'draft',
     show_participants: false,
+    ticket_price: '',
+    currency: 'SGD',
   });
 
   useEffect(() => {
@@ -74,6 +76,8 @@ export default function AdminEventEdit() {
         visibility: data.visibility,
         status: data.status,
         show_participants: data.show_participants,
+        ticket_price: data.ticket_price?.toString() || '',
+        currency: data.currency || 'SGD',
       });
     } catch (error) {
       console.error('Error fetching event:', error);
@@ -116,6 +120,8 @@ export default function AdminEventEdit() {
           visibility: formData.visibility,
           status: formData.status,
           show_participants: formData.show_participants,
+          ticket_price: formData.ticket_price ? parseFloat(formData.ticket_price) : null,
+          currency: formData.currency,
         })
         .eq('id', id);
 
@@ -357,6 +363,34 @@ export default function AdminEventEdit() {
                     Hidden
                   </Button>
                 </div>
+              </div>
+
+              {/* Ticket Pricing */}
+              <div className="space-y-2">
+                <Label htmlFor="ticket_price">Ticket Price</Label>
+                <div className="flex gap-2">
+                  <select
+                    className="border border-input rounded-md px-3 py-2 text-sm bg-background"
+                    value={formData.currency}
+                    onChange={(e) => updateForm('currency', e.target.value)}
+                  >
+                    <option value="SGD">SGD</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                  <Input
+                    id="ticket_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.ticket_price}
+                    onChange={(e) => updateForm('ticket_price', e.target.value)}
+                    placeholder="0 = Free"
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Leave empty or 0 for free events</p>
               </div>
 
               <div className="space-y-2">

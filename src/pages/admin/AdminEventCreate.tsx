@@ -33,6 +33,8 @@ export default function AdminEventCreate() {
     visibility: 'public',
     status: 'draft',
     show_participants: false,
+    ticket_price: '',
+    currency: 'SGD',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -67,6 +69,8 @@ export default function AdminEventCreate() {
         status: formData.status,
         host_id: user?.id,
         show_participants: formData.show_participants,
+        ticket_price: formData.ticket_price ? parseFloat(formData.ticket_price) : null,
+        currency: formData.currency,
       });
 
       if (error) throw error;
@@ -306,6 +310,34 @@ export default function AdminEventCreate() {
                     Hidden
                   </Button>
                 </div>
+              </div>
+
+              {/* Ticket Pricing */}
+              <div className="space-y-2">
+                <Label htmlFor="ticket_price">Ticket Price</Label>
+                <div className="flex gap-2">
+                  <select
+                    className="border border-input rounded-md px-3 py-2 text-sm bg-background"
+                    value={formData.currency}
+                    onChange={(e) => updateForm('currency', e.target.value)}
+                  >
+                    <option value="SGD">SGD</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                    <option value="GBP">GBP</option>
+                  </select>
+                  <Input
+                    id="ticket_price"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={formData.ticket_price}
+                    onChange={(e) => updateForm('ticket_price', e.target.value)}
+                    placeholder="0 = Free"
+                    className="flex-1"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">Leave empty or 0 for free events</p>
               </div>
 
               <div className="space-y-2">

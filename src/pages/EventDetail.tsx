@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { mockEvents } from '@/data/events';
 import { useAppStore } from '@/store/appStore';
 import { ArrowLeft, MapPin, Clock, Calendar, Users, Info, Share2, MessageCircle, MoreHorizontal, ExternalLink, Flag, Mail } from 'lucide-react';
+import EventRegistrationForm from '@/components/EventRegistrationForm';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -65,6 +66,7 @@ const EventDetail = () => {
   const [reportSubmitted, setReportSubmitted] = useState(false);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showRegistrationForm, setShowRegistrationForm] = useState(false);
 
   useEffect(() => {
     const fetchEventData = async () => {
@@ -149,28 +151,41 @@ const EventDetail = () => {
     );
   }
 
-  const handleSignUp = async () => {
+  const handleSignUp = () => {
     if (!id || isSubmitting) return;
-    
+    // Show registration form instead of immediately registering
+    setShowRegistrationForm(true);
+  };
+
+  const handleRegistrationSubmit = async (answers: Record<string, string>) => {
+    if (!id || !user?.id) return;
     setIsSubmitting(true);
-    
-    if (user?.id) {
-      try {
-        await supabase
-          .from('event_participants')
-          .insert({ event_id: id, user_id: user.id, status: 'pending' });
-        
-        setIsSignedUp(true);
-        signUpForEvent(id);
-        setShowConfirmation(true);
-      } catch (error) {
-        console.error('Error signing up:', error);
-        toast.error('Could not send request. Please try again.');
-        setIsSubmitting(false);
+
+    try {
+      // Insert participant
+      await supabase
+        .from('event_participants')
+        .insert({ event_id: id, user_id: user.id, status: 'pending' });
+
+      // Insert answers
+      if (Object.keys(answers).length > 0) {
+        const rows = Object.entries(answers).map(([questionId, answerValue]) => ({
+          event_id: id,
+          user_id: user.id,
+          question_id: questionId,
+          answer_value: answerValue,
+        }));
+        await supabase.from('event_registration_answers').insert(rows);
       }
-    } else {
+
+      setIsSignedUp(true);
       signUpForEvent(id);
+      setShowRegistrationForm(false);
       setShowConfirmation(true);
+    } catch (error) {
+      console.error('Error signing up:', error);
+      toast.error('Could not send request. Please try again.');
+      setIsSubmitting(false);
     }
   };
 
@@ -510,6 +525,24 @@ const EventDetail = () => {
           </Button>
         </DialogContent>
       </Dialog>
+
+      {/* Registration Form Sheet */}
+      <Sheet open={showRegistrationForm} onOpenChange={setShowRegistrationForm}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="text-left mb-4">
+            <SheetTitle>Register for {event.name}</SheetTitle>
+          </SheetHeader>
+          {user?.id && id && (
+            <EventRegistrationForm
+              eventId={id}
+              userId={user.id}
+              onSubmit={handleRegistrationSubmit}
+              onCancel={() => setShowRegistrationForm(false)}
+              isSubmitting={isSubmitting}
+            />
+          )}
+        </SheetContent>
+      </Sheet>
 
       {/* Sticky Bottom Register Button */}
       {showStickyRegister && (
