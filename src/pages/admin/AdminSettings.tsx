@@ -483,7 +483,7 @@ export default function AdminSettings() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div>
-                <Label htmlFor="alphacode-toggle" className="font-medium">Alphacode required</Label>
+                <Label htmlFor="alphacode-toggle" className="font-medium">Code Required</Label>
                 <p className="text-sm text-muted-foreground">Require an access code for new users to complete signup</p>
               </div>
               <Switch
