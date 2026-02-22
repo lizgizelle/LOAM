@@ -10,6 +10,28 @@ import { CountryCode, defaultCountry } from '@/lib/countryCodes';
 import BirthdatePicker from '@/components/BirthdatePicker';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const WORK_INDUSTRIES = [
+  'Technology',
+  'Finance & Banking',
+  'Healthcare',
+  'Education',
+  'Creative & Media',
+  'Legal',
+  'Real Estate',
+  'Hospitality & F&B',
+  'Government & Public Sector',
+  'Consulting',
+  'Retail & E-commerce',
+  'Other',
+];
 
 const Onboarding = () => {
   const navigate = useNavigate();
@@ -21,12 +43,13 @@ const Onboarding = () => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
+  const [workIndustry, setWorkIndustry] = useState('');
   const [birthdate, setBirthdate] = useState<{ day: number; month: number; year: number } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
   const [notifications, setNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 7;
+  const totalSteps = 8;
 
   const calculateAge = (day: number, month: number, year: number): number => {
     const today = new Date();
@@ -91,6 +114,7 @@ const Onboarding = () => {
           phone_number: fullPhone,
           date_of_birth: dateString,
           gender: gender,
+          work_industry: workIndustry,
         })
         .eq('id', user.id);
       
@@ -102,7 +126,7 @@ const Onboarding = () => {
         gender: gender || undefined,
         relationshipStatus: 'single',
         hasChildren: false,
-        workIndustry: '',
+        workIndustry: workIndustry,
         countryOfBirth: '',
         dateOfBirth: dateString,
       });
@@ -274,8 +298,45 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 5: Birthdate */}
+        {/* Step 5: Work Industry */}
         {step === 5 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
+              What industry do you work in?
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              This helps us connect you with like-minded people.
+            </p>
+
+            <Select value={workIndustry} onValueChange={setWorkIndustry}>
+              <SelectTrigger className="h-14 rounded-xl border-2">
+                <SelectValue placeholder="Select your industry" />
+              </SelectTrigger>
+              <SelectContent className="bg-popover border border-border z-50">
+                {WORK_INDUSTRIES.map((industry) => (
+                  <SelectItem key={industry} value={industry}>
+                    {industry}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <div className="mt-auto">
+              <Button 
+                variant="loam" 
+                size="lg" 
+                className="w-full"
+                onClick={handleNext}
+                disabled={!workIndustry}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 6: Birthdate */}
+        {step === 6 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your date of birth?
@@ -305,8 +366,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 6: Profile photo */}
-        {step === 6 && (
+        {/* Step 7: Profile photo */}
+        {step === 7 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Add a profile photo
@@ -347,8 +408,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 7: Notifications */}
-        {step === 7 && (
+        {/* Step 8: Notifications */}
+        {step === 8 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Enable notifications

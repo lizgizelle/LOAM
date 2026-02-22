@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAppStore } from '@/store/appStore';
 import { ChevronLeft, Check } from 'lucide-react';
 
-const cities = ['Singapore'];
+const cities = ['Singapore', 'Malaysia'];
 
 const CitySettings = () => {
   const navigate = useNavigate();
