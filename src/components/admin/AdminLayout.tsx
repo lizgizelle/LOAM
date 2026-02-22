@@ -25,7 +25,6 @@ const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
-  { icon: ClipboardList, label: 'Event Requests', path: '/admin/requests' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
   { icon: Gamepad2, label: 'Game', path: '/admin/game' },
