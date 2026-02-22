@@ -240,7 +240,7 @@ const AppRoutes = () => (
     <Route path="/admin/events/new" element={<AdminEventCreate />} />
     <Route path="/admin/events/:id" element={<AdminEventDetail />} />
     <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
-    <Route path="/admin/requests" element={<AdminRequests />} />
+    <Route path="/admin/requests" element={<Navigate to="/admin/events" replace />} />
     <Route path="/admin/events/:id/requests" element={<AdminEventRequests />} />
     <Route path="/admin/events/:id/questions" element={<AdminEventQuestions />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
