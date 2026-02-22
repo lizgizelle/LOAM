@@ -4,6 +4,28 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useAppStore } from '@/store/appStore';
 import { ArrowLeft, Camera, Lock } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const WORK_INDUSTRIES = [
+  'Technology',
+  'Finance & Banking',
+  'Healthcare',
+  'Education',
+  'Creative & Media',
+  'Legal',
+  'Real Estate',
+  'Hospitality & F&B',
+  'Government & Public Sector',
+  'Consulting',
+  'Retail & E-commerce',
+  'Other',
+];
 
 const EditProfile = () => {
   const navigate = useNavigate();
@@ -115,11 +137,18 @@ const EditProfile = () => {
 
         <div>
           <label className="text-sm font-medium text-muted-foreground mb-2 block">Work industry</label>
-          <Input
-            value={workIndustry}
-            onChange={(e) => setWorkIndustry(e.target.value)}
-            placeholder="e.g. Technology, Healthcare"
-          />
+          <Select value={workIndustry} onValueChange={setWorkIndustry}>
+            <SelectTrigger className="h-14 rounded-xl border-2">
+              <SelectValue placeholder="Select your industry" />
+            </SelectTrigger>
+            <SelectContent className="bg-popover border border-border z-50">
+              {WORK_INDUSTRIES.map((industry) => (
+                <SelectItem key={industry} value={industry}>
+                  {industry}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         <div>
