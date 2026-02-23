@@ -45,6 +45,8 @@ interface UserProfile {
   admin_notes: string | null;
   created_at: string;
   game_bucket_id: string | null;
+  accepted_community_agreement: boolean;
+  accepted_community_agreement_at: string | null;
 }
 
 interface QuizResponse {
@@ -370,6 +372,20 @@ export default function AdminUsers() {
                   <div>
                     <span className="text-muted-foreground">Joined</span>
                     <p className="font-medium">{format(new Date(selectedUser.created_at), 'MMM d, yyyy')}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div className="col-span-2">
+                    <span className="text-muted-foreground">Community Agreement</span>
+                    <p className="font-medium">
+                      {selectedUser.accepted_community_agreement ? (
+                        <span className="text-green-600">
+                          ✓ Agreed {selectedUser.accepted_community_agreement_at ? `on ${format(new Date(selectedUser.accepted_community_agreement_at), 'MMM d, yyyy')}` : ''}
+                        </span>
+                      ) : (
+                        <span className="text-destructive">✗ Not agreed</span>
+                      )}
+                    </p>
                   </div>
                 </div>
 

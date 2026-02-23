@@ -652,6 +652,8 @@ export type Database = {
       }
       profiles: {
         Row: {
+          accepted_community_agreement: boolean
+          accepted_community_agreement_at: string | null
           admin_notes: string | null
           avatar_url: string | null
           children: string | null
@@ -670,6 +672,8 @@ export type Database = {
           work_industry: string | null
         }
         Insert: {
+          accepted_community_agreement?: boolean
+          accepted_community_agreement_at?: string | null
           admin_notes?: string | null
           avatar_url?: string | null
           children?: string | null
@@ -688,6 +692,8 @@ export type Database = {
           work_industry?: string | null
         }
         Update: {
+          accepted_community_agreement?: boolean
+          accepted_community_agreement_at?: string | null
           admin_notes?: string | null
           avatar_url?: string | null
           children?: string | null
