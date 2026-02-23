@@ -749,6 +749,7 @@ export type Database = {
           gender: string | null
           id: string
           is_shadow_blocked: boolean
+          last_name: string | null
           phone_number: string | null
           relationship_status: string | null
           updated_at: string
@@ -769,6 +770,7 @@ export type Database = {
           gender?: string | null
           id: string
           is_shadow_blocked?: boolean
+          last_name?: string | null
           phone_number?: string | null
           relationship_status?: string | null
           updated_at?: string
@@ -789,6 +791,7 @@ export type Database = {
           gender?: string | null
           id?: string
           is_shadow_blocked?: boolean
+          last_name?: string | null
           phone_number?: string | null
           relationship_status?: string | null
           updated_at?: string

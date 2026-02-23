@@ -61,10 +61,10 @@ export default function AdminReports() {
       const reporterIds = [...new Set((reportsData || []).map(r => r.reporter_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, first_name, phone_number')
+        .select('id, first_name, last_name, phone_number')
         .in('id', reporterIds);
 
-      const profileMap = new Map((profiles || []).map(p => [p.id, { name: p.first_name || 'Unknown', phone: p.phone_number || '' }]));
+      const profileMap = new Map((profiles || []).map(p => [p.id, { name: [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown', phone: p.phone_number || '' }]));
 
       // Count reports per person (by first name + court)
       const countMap = new Map<string, number>();

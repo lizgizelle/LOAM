@@ -88,11 +88,11 @@ export default function AdminReportDetail() {
       // Fetch reporter profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name, phone_number')
+        .select('first_name, last_name, phone_number')
         .eq('id', data.reporter_id)
         .single();
-      const firstName = profile?.first_name || 'Unknown';
-      setReporterName(firstName);
+      const fullName = [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') || 'Unknown';
+      setReporterName(fullName);
       setReporterPhone(profile?.phone_number || '');
 
       // Fetch photo if exists
@@ -244,10 +244,6 @@ export default function AdminReportDetail() {
                   <div>
                     <span className="text-muted-foreground block">Court Leader</span>
                     <span className="font-medium">{report.court_leader_name}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Event</span>
-                    <span className="font-medium">{report.event_name}</span>
                   </div>
                   <div>
                     <span className="text-muted-foreground block">Event Date</span>
