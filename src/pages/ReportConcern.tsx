@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowLeft, Camera, Check, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
+
 
 const CATEGORIES = [
   "Weird energy — something felt off",
@@ -30,7 +30,7 @@ const ReportConcern = () => {
   const [courtNumber, setCourtNumber] = useState('');
   const [courtLeaderName, setCourtLeaderName] = useState('');
   const [eventName, setEventName] = useState('');
-  const [eventDate, setEventDate] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [eventOptions, setEventOptions] = useState<{ id: string; label: string }[]>([]);
 
   // Step 2
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -40,23 +40,23 @@ const ReportConcern = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  // Pre-fill event name from upcoming events
+  // Fetch published events for dropdown
   useEffect(() => {
-    const fetchUpcomingEvent = async () => {
+    const fetchEvents = async () => {
       const { data } = await supabase
         .from('events')
-        .select('name, start_date')
+        .select('id, name, start_date')
         .eq('status', 'published')
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true })
-        .limit(1);
+        .order('start_date', { ascending: true });
 
       if (data && data.length > 0) {
-        const ev = data[0];
-        setEventName(`${format(new Date(ev.start_date), 'd MMMM, h:mma')}`);
+        setEventOptions(data.map((ev) => ({
+          id: ev.id,
+          label: ev.name,
+        })));
       }
     };
-    fetchUpcomingEvent();
+    fetchEvents();
   }, []);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -92,7 +92,7 @@ const ReportConcern = () => {
         court_number: parseInt(courtNumber),
         court_leader_name: courtLeaderName.trim(),
         event_name: eventName.trim(),
-        event_date: eventDate,
+        event_date: new Date().toISOString().split('T')[0],
         category: selectedCategory,
         description: description.trim() || null,
         photo_url: photoUrl,
@@ -119,7 +119,7 @@ const ReportConcern = () => {
     setPhotoPreview(null);
   };
 
-  const canProceedStep1 = reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventName.trim() && eventDate;
+  const canProceedStep1 = reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventName.trim();
   const canProceedStep2 = selectedCategory !== '';
 
   return (
@@ -198,21 +198,18 @@ const ReportConcern = () => {
 
               <div>
                 <label className="text-sm font-medium text-foreground mb-1.5 block">Event name</label>
-                <Input
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
-                  placeholder="e.g. 15 March, 2–5pm"
-                  maxLength={200}
-                />
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Date of event</label>
-                <Input
-                  type="date"
-                  value={eventDate}
-                  onChange={(e) => setEventDate(e.target.value)}
-                />
+                <Select value={eventName} onValueChange={setEventName}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select event" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {eventOptions.map((ev) => (
+                      <SelectItem key={ev.id} value={ev.label}>
+                        {ev.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
@@ -310,7 +307,7 @@ const ReportConcern = () => {
 
         {/* Step 4 — Confirmation */}
         {step === 4 && (
-          <div className="flex-1 flex flex-col items-center justify-center text-center py-12 animate-in fade-in">
+          <div className="flex-1 flex flex-col items-center justify-center text-center min-h-[60vh] animate-in fade-in">
             <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mb-6">
               <Heart className="w-8 h-8 text-primary" />
             </div>
