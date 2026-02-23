@@ -9,10 +9,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ArrowLeft, Camera, CalendarIcon, Heart } from 'lucide-react';
+import { ArrowLeft, Camera, CalendarIcon, Heart, User, Flag } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
-
 
 const CATEGORIES = [
   "Weird energy — something felt off",
@@ -24,15 +23,32 @@ const CATEGORIES = [
   "Something else — I'll describe it myself",
 ];
 
+const EVENT_ASPECTS = [
+  "Venue or safety concern",
+  "Event was not as described",
+  "I felt unwelcome or excluded",
+  "Something else — I'll describe it",
+];
+
+type ReportTopic = '' | 'person' | 'event';
+
 const ReportConcern = () => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Step 1 fields
+  // Step 1 — Topic
+  const [reportTopic, setReportTopic] = useState<ReportTopic>('');
+
+  // Step 1 — Person fields
   const [reportedFirstName, setReportedFirstName] = useState('');
   const [courtNumber, setCourtNumber] = useState('');
   const [courtLeaderName, setCourtLeaderName] = useState('');
+
+  // Step 1 — Event fields
+  const [eventAspect, setEventAspect] = useState('');
+
+  // Step 1 — Shared
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
 
   // Step 2
@@ -42,7 +58,6 @@ const ReportConcern = () => {
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,9 +88,11 @@ const ReportConcern = () => {
 
       const { error } = await supabase.from('concern_reports').insert({
         reporter_id: user.id,
-        reported_first_name: reportedFirstName.trim(),
-        court_number: parseInt(courtNumber),
-        court_leader_name: courtLeaderName.trim(),
+        report_topic: reportTopic,
+        reported_first_name: reportTopic === 'person' ? reportedFirstName.trim() : null,
+        court_number: reportTopic === 'person' ? parseInt(courtNumber) : null,
+        court_leader_name: reportTopic === 'person' ? courtLeaderName.trim() : null,
+        event_aspect: reportTopic === 'event' ? eventAspect : null,
         event_name: '',
         event_date: eventDate ? format(eventDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
         category: selectedCategory,
@@ -95,16 +112,24 @@ const ReportConcern = () => {
 
   const resetForm = () => {
     setStep(1);
+    setReportTopic('');
     setReportedFirstName('');
     setCourtNumber('');
     setCourtLeaderName('');
+    setEventAspect('');
     setDescription('');
     setSelectedCategory('');
     setPhotoFile(null);
     setPhotoPreview(null);
   };
 
-  const canProceedStep1 = reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventDate;
+  const canProceedStep1 =
+    reportTopic === 'person'
+      ? reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventDate
+      : reportTopic === 'event'
+        ? eventAspect && eventDate
+        : false;
+
   const canProceedStep2 = selectedCategory !== '';
 
   return (
@@ -136,52 +161,124 @@ const ReportConcern = () => {
       </div>
 
       <div className="flex-1 px-6">
-        {/* Step 1 — Who is this about? */}
+        {/* Step 1 — What is this about? */}
         {step === 1 && (
           <div className="space-y-5 animate-in fade-in">
             <div>
-              <h2 className="text-lg font-semibold text-foreground mb-1">Who is this about?</h2>
-              <p className="text-sm text-muted-foreground">Help us identify the right person. Everything you share stays confidential.</p>
+              <h2 className="text-lg font-semibold text-foreground mb-1">What is the main topic of your report?</h2>
+              <p className="text-sm text-muted-foreground">Everything you share stays confidential.</p>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">First name of the person</label>
-                <Input
-                  value={reportedFirstName}
-                  onChange={(e) => setReportedFirstName(e.target.value)}
-                  placeholder="Their first name"
-                  maxLength={100}
-                />
-              </div>
+            {/* Topic cards */}
+            <div className="grid grid-cols-1 gap-3">
+              <button
+                onClick={() => { setReportTopic('person'); setEventAspect(''); }}
+                className={cn(
+                  "flex items-start gap-4 p-4 rounded-2xl border text-left transition-all",
+                  reportTopic === 'person'
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                  reportTopic === 'person' ? "bg-primary/10" : "bg-muted"
+                )}>
+                  <User className={cn("w-5 h-5", reportTopic === 'person' ? "text-primary" : "text-muted-foreground")} />
+                </div>
+                <div>
+                  <span className="font-medium text-foreground block">A person</span>
+                  <span className="text-sm text-muted-foreground">Someone's behaviour made me uncomfortable</span>
+                </div>
+              </button>
 
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Court number</label>
-                <Select value={courtNumber} onValueChange={setCourtNumber}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select court" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.from({ length: 12 }, (_, i) => (
-                      <SelectItem key={i + 1} value={String(i + 1)}>
-                        Court {i + 1}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              <button
+                onClick={() => { setReportTopic('event'); setReportedFirstName(''); setCourtNumber(''); setCourtLeaderName(''); }}
+                className={cn(
+                  "flex items-start gap-4 p-4 rounded-2xl border text-left transition-all",
+                  reportTopic === 'event'
+                    ? "border-primary bg-primary/5 shadow-sm"
+                    : "border-border bg-card hover:border-primary/40"
+                )}
+              >
+                <div className={cn(
+                  "w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5",
+                  reportTopic === 'event' ? "bg-primary/10" : "bg-muted"
+                )}>
+                  <Flag className={cn("w-5 h-5", reportTopic === 'event' ? "text-primary" : "text-muted-foreground")} />
+                </div>
+                <div>
+                  <span className="font-medium text-foreground block">The event</span>
+                  <span className="text-sm text-muted-foreground">Something about the event itself felt off</span>
+                </div>
+              </button>
+            </div>
 
-              <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Court leader's name</label>
-                <Input
-                  value={courtLeaderName}
-                  onChange={(e) => setCourtLeaderName(e.target.value)}
-                  placeholder="Leader's name"
-                  maxLength={100}
-                />
-              </div>
+            {/* Person fields */}
+            {reportTopic === 'person' && (
+              <div className="space-y-4 animate-in fade-in">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">First name of the person</label>
+                  <Input
+                    value={reportedFirstName}
+                    onChange={(e) => setReportedFirstName(e.target.value)}
+                    placeholder="Their first name"
+                    maxLength={100}
+                  />
+                </div>
 
-              <div>
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">Court number</label>
+                  <Select value={courtNumber} onValueChange={setCourtNumber}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select court" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {Array.from({ length: 12 }, (_, i) => (
+                        <SelectItem key={i + 1} value={String(i + 1)}>
+                          Court {i + 1}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">Court leader's name</label>
+                  <Input
+                    value={courtLeaderName}
+                    onChange={(e) => setCourtLeaderName(e.target.value)}
+                    placeholder="Leader's name"
+                    maxLength={100}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Event fields */}
+            {reportTopic === 'event' && (
+              <div className="space-y-4 animate-in fade-in">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">What aspect of the event?</label>
+                  <Select value={eventAspect} onValueChange={setEventAspect}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an aspect" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {EVENT_ASPECTS.map((aspect) => (
+                        <SelectItem key={aspect} value={aspect}>
+                          {aspect}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+
+            {/* Shared: event date */}
+            {reportTopic && (
+              <div className="animate-in fade-in">
                 <label className="text-sm font-medium text-foreground mb-1.5 block">Event date</label>
                 <Popover>
                   <PopoverTrigger asChild>
@@ -207,7 +304,7 @@ const ReportConcern = () => {
                   </PopoverContent>
                 </Popover>
               </div>
-            </div>
+            )}
 
             <Button
               className="w-full mt-4"

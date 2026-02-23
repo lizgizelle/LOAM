@@ -105,13 +105,13 @@ export default function AdminReports() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Reporter</TableHead>
-                  <TableHead>Reported Person</TableHead>
-                  <TableHead>Court</TableHead>
-                  <TableHead>Event</TableHead>
-                  <TableHead>Category</TableHead>
-                  <TableHead>Date</TableHead>
-                  <TableHead>Status</TableHead>
+                   <TableHead>Reporter</TableHead>
+                   <TableHead>Topic</TableHead>
+                   <TableHead>Reported Person</TableHead>
+                   <TableHead>Court</TableHead>
+                   <TableHead>Category</TableHead>
+                   <TableHead>Date</TableHead>
+                   <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,21 +127,33 @@ export default function AdminReports() {
                         {report.reporter_phone && (
                           <span className="text-muted-foreground text-xs block">{report.reporter_phone}</span>
                         )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-2">
-                        {report.reported_first_name}
-                        {report.report_count! >= 2 && (
-                          <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                            <AlertTriangle className="w-3 h-3" />
-                            {report.report_count} reports
-                          </span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>{report.court_number}</TableCell>
-                    <TableCell className="max-w-[150px] truncate">{report.event_name}</TableCell>
+                     </div>
+                     </TableCell>
+                     <TableCell>
+                       <Badge variant="outline" className={
+                         (report as any).report_topic === 'event'
+                           ? 'bg-purple-50 text-purple-700 border-purple-200'
+                           : 'bg-sky-50 text-sky-700 border-sky-200'
+                       }>
+                         {(report as any).report_topic === 'event' ? 'Event' : 'Person'}
+                       </Badge>
+                     </TableCell>
+                     <TableCell>
+                       {(report as any).report_topic === 'person' ? (
+                         <div className="flex items-center gap-2">
+                           {report.reported_first_name}
+                           {report.report_count! >= 2 && (
+                             <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                               <AlertTriangle className="w-3 h-3" />
+                               {report.report_count} reports
+                             </span>
+                           )}
+                         </div>
+                       ) : (
+                         <span className="text-muted-foreground text-sm">{(report as any).event_aspect || '—'}</span>
+                       )}
+                     </TableCell>
+                     <TableCell>{report.court_number || '—'}</TableCell>
                     <TableCell className="max-w-[200px] truncate text-sm">{report.category}</TableCell>
                     <TableCell className="text-sm whitespace-nowrap">{format(new Date(report.created_at), 'dd MMM yyyy')}</TableCell>
                     <TableCell>
