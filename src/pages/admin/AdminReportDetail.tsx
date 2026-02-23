@@ -63,6 +63,7 @@ export default function AdminReportDetail() {
   const { user } = useAuth();
   const [report, setReport] = useState<Report | null>(null);
   const [reporterName, setReporterName] = useState('');
+  const [reporterPhone, setReporterPhone] = useState('');
   const [notes, setNotes] = useState<ReportNote[]>([]);
   const [relatedReports, setRelatedReports] = useState<RelatedReport[]>([]);
   const [newNote, setNewNote] = useState('');
@@ -84,13 +85,15 @@ export default function AdminReportDetail() {
       if (error) throw error;
       setReport(data);
 
-      // Fetch reporter name
+      // Fetch reporter profile
       const { data: profile } = await supabase
         .from('profiles')
-        .select('first_name')
+        .select('first_name, phone_number')
         .eq('id', data.reporter_id)
         .single();
-      setReporterName(profile?.first_name || 'Unknown');
+      const firstName = profile?.first_name || 'Unknown';
+      setReporterName(firstName);
+      setReporterPhone(profile?.phone_number || '');
 
       // Fetch photo if exists
       if (data.photo_url) {
@@ -226,6 +229,9 @@ export default function AdminReportDetail() {
                   <div>
                     <span className="text-muted-foreground block">Reporter</span>
                     <span className="font-medium">{reporterName}</span>
+                    {reporterPhone && (
+                      <span className="text-muted-foreground text-xs block">{reporterPhone}</span>
+                    )}
                   </div>
                   <div>
                     <span className="text-muted-foreground block">Reported Person</span>
