@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
@@ -6,8 +7,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Camera, Check, Heart } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ArrowLeft, Camera, CalendarIcon, Heart } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 
 const CATEGORIES = [
@@ -29,8 +33,7 @@ const ReportConcern = () => {
   const [reportedFirstName, setReportedFirstName] = useState('');
   const [courtNumber, setCourtNumber] = useState('');
   const [courtLeaderName, setCourtLeaderName] = useState('');
-  const [eventName, setEventName] = useState('');
-  const [eventOptions, setEventOptions] = useState<{ id: string; label: string }[]>([]);
+  const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
 
   // Step 2
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -40,24 +43,6 @@ const ReportConcern = () => {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  // Fetch published events for dropdown
-  useEffect(() => {
-    const fetchEvents = async () => {
-      const { data } = await supabase
-        .from('events')
-        .select('id, name, start_date')
-        .eq('status', 'published')
-        .order('start_date', { ascending: true });
-
-      if (data && data.length > 0) {
-        setEventOptions(data.map((ev) => ({
-          id: ev.id,
-          label: ev.name,
-        })));
-      }
-    };
-    fetchEvents();
-  }, []);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -91,8 +76,8 @@ const ReportConcern = () => {
         reported_first_name: reportedFirstName.trim(),
         court_number: parseInt(courtNumber),
         court_leader_name: courtLeaderName.trim(),
-        event_name: eventName.trim(),
-        event_date: new Date().toISOString().split('T')[0],
+        event_name: '',
+        event_date: eventDate ? format(eventDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
         category: selectedCategory,
         description: description.trim() || null,
         photo_url: photoUrl,
@@ -119,7 +104,7 @@ const ReportConcern = () => {
     setPhotoPreview(null);
   };
 
-  const canProceedStep1 = reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventName.trim();
+  const canProceedStep1 = reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventDate;
   const canProceedStep2 = selectedCategory !== '';
 
   return (
@@ -197,19 +182,30 @@ const ReportConcern = () => {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Event name</label>
-                <Select value={eventName} onValueChange={setEventName}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select event" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {eventOptions.map((ev) => (
-                      <SelectItem key={ev.id} value={ev.label}>
-                        {ev.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <label className="text-sm font-medium text-foreground mb-1.5 block">Event date</label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal",
+                        !eventDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={eventDate}
+                      onSelect={setEventDate}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
 
