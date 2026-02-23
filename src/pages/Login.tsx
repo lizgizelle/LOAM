@@ -58,7 +58,7 @@ const Login = () => {
     <div className="min-h-screen bg-background flex flex-col px-6 pt-6 pb-10 safe-area-top safe-area-bottom">
       {/* Back button */}
       <button
-        onClick={() => navigate('/auth-choice')}
+        onClick={() => navigate('/')}
         className="self-start p-2 -ml-2 text-foreground/70 hover:text-foreground transition-colors"
         aria-label="Go back"
       >
