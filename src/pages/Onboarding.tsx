@@ -192,7 +192,9 @@ const Onboarding = () => {
                 className="mt-1"
               />
               <label htmlFor="community-agreement" className="text-sm text-foreground leading-relaxed cursor-pointer">
-                I agree that membership here is earned and conditional. We curate every person who enters this community — and we continue curating after you're in. Any behavior that compromises the safety or integrity of this space may result in immediate removal. We are a private company and this decision rests entirely with us.
+                <span>I agree that membership here is earned and conditional. We curate every person who enters this community, and we continue curating after you're in.</span>
+                <br /><br />
+                <span>Any behavior that compromises the safety or integrity of this space may result in immediate removal. We are a private company and this decision rests entirely with us.</span>
               </label>
             </div>
 
