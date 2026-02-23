@@ -100,45 +100,51 @@ export type Database = {
       concern_reports: {
         Row: {
           category: string
-          court_leader_name: string
-          court_number: number
+          court_leader_name: string | null
+          court_number: number | null
           created_at: string
           description: string | null
+          event_aspect: string | null
           event_date: string
           event_name: string
           id: string
           photo_url: string | null
-          reported_first_name: string
+          report_topic: string
+          reported_first_name: string | null
           reporter_id: string
           status: string
           updated_at: string
         }
         Insert: {
           category: string
-          court_leader_name: string
-          court_number: number
+          court_leader_name?: string | null
+          court_number?: number | null
           created_at?: string
           description?: string | null
+          event_aspect?: string | null
           event_date: string
           event_name: string
           id?: string
           photo_url?: string | null
-          reported_first_name: string
+          report_topic?: string
+          reported_first_name?: string | null
           reporter_id: string
           status?: string
           updated_at?: string
         }
         Update: {
           category?: string
-          court_leader_name?: string
-          court_number?: number
+          court_leader_name?: string | null
+          court_number?: number | null
           created_at?: string
           description?: string | null
+          event_aspect?: string | null
           event_date?: string
           event_name?: string
           id?: string
           photo_url?: string | null
-          reported_first_name?: string
+          report_topic?: string
+          reported_first_name?: string | null
           reporter_id?: string
           status?: string
           updated_at?: string
