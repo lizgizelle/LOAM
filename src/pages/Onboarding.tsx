@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useAppStore } from '@/store/appStore';
 import { Camera } from 'lucide-react';
 import CountryCodeSelect from '@/components/CountryCodeSelect';
@@ -38,6 +39,7 @@ const Onboarding = () => {
   const { user } = useAuth();
   const { setOnboarded, setUserProfile, surveyAnswers } = useAppStore();
   const [step, setStep] = useState(1);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [phone, setPhone] = useState('');
   const [countryCode, setCountryCode] = useState<CountryCode>(defaultCountry);
   const [firstName, setFirstName] = useState('');
@@ -49,7 +51,7 @@ const Onboarding = () => {
   const [notifications, setNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 8;
+  const totalSteps = 9;
 
   const calculateAge = (day: number, month: number, year: number): number => {
     const today = new Date();
@@ -70,7 +72,6 @@ const Onboarding = () => {
     const age = calculateAge(birthdate.day, birthdate.month, birthdate.year);
     
     if (age < 21) {
-      // User is under 21 - save birthdate and redirect to blocked screen
       setIsSubmitting(true);
       
       const dateString = `${birthdate.year}-${String(birthdate.month).padStart(2, '0')}-${String(birthdate.day).padStart(2, '0')}`;
@@ -89,7 +90,20 @@ const Onboarding = () => {
       return;
     }
     
-    // User is 21+, continue onboarding
+    setStep(step + 1);
+  };
+
+  const handleAgreementNext = async () => {
+    if (!user) return;
+    setIsSubmitting(true);
+    await supabase
+      .from('profiles')
+      .update({
+        accepted_community_agreement: true,
+        accepted_community_agreement_at: new Date().toISOString(),
+      })
+      .eq('id', user.id);
+    setIsSubmitting(false);
     setStep(step + 1);
   };
 
@@ -106,10 +120,8 @@ const Onboarding = () => {
         ? `${birthdate.year}-${String(birthdate.month).padStart(2, '0')}-${String(birthdate.day).padStart(2, '0')}`
         : '';
       
-      // Auto-detect country from country code
       const detectedCity = countryCode.code === '+60' ? 'Malaysia' : 'Singapore';
       
-      // Update profile in Supabase
       await supabase
         .from('profiles')
         .update({
@@ -142,7 +154,6 @@ const Onboarding = () => {
   };
 
   const handlePhotoUpload = () => {
-    // Simulate photo upload
     setPhoto('/placeholder.svg');
   };
 
@@ -163,8 +174,44 @@ const Onboarding = () => {
       </div>
 
       <div className="flex-1 flex flex-col">
-        {/* Step 1: Phone number */}
+        {/* Step 1: Community Agreement */}
         {step === 1 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
+              Community Agreement
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              Please read and agree before continuing
+            </p>
+
+            <div className="flex items-start gap-3 p-4 rounded-xl bg-popover border border-border">
+              <Checkbox
+                id="community-agreement"
+                checked={agreedToTerms}
+                onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                className="mt-1"
+              />
+              <label htmlFor="community-agreement" className="text-sm text-foreground leading-relaxed cursor-pointer">
+                I agree that membership here is earned and conditional. We curate every person who enters this community — and we continue curating after you're in. Any behavior that compromises the safety or integrity of this space may result in immediate removal. We are a private company and this decision rests entirely with us.
+              </label>
+            </div>
+
+            <div className="mt-auto">
+              <Button 
+                variant="loam" 
+                size="lg" 
+                className="w-full"
+                onClick={handleAgreementNext}
+                disabled={!agreedToTerms || isSubmitting}
+              >
+                {isSubmitting ? 'Saving...' : 'Agree & Continue'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Phone number */}
+        {step === 2 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your phone number?
@@ -198,8 +245,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 2: First name */}
-        {step === 2 && (
+        {/* Step 3: First name */}
+        {step === 3 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your first name?
@@ -230,8 +277,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 3: Last name */}
-        {step === 3 && (
+        {/* Step 4: Last name */}
+        {step === 4 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your last name?
@@ -262,8 +309,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 4: Gender */}
-        {step === 4 && (
+        {/* Step 5: Gender */}
+        {step === 5 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Are you a man or a woman?
@@ -302,8 +349,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 5: Work Industry */}
-        {step === 5 && (
+        {/* Step 6: Work Industry */}
+        {step === 6 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What industry do you work in?
@@ -339,8 +386,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 6: Birthdate */}
-        {step === 6 && (
+        {/* Step 7: Birthdate */}
+        {step === 7 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your date of birth?
@@ -370,8 +417,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 7: Profile photo */}
-        {step === 7 && (
+        {/* Step 8: Profile photo */}
+        {step === 8 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Add a profile photo
@@ -412,8 +459,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 8: Notifications */}
-        {step === 8 && (
+        {/* Step 9: Notifications */}
+        {step === 9 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Enable notifications
