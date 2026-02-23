@@ -21,6 +21,7 @@ interface ConcernReport {
   status: string;
   created_at: string;
   reporter_name?: string;
+  reporter_phone?: string;
   report_count?: number;
 }
 
@@ -60,10 +61,10 @@ export default function AdminReports() {
       const reporterIds = [...new Set((reportsData || []).map(r => r.reporter_id))];
       const { data: profiles } = await supabase
         .from('profiles')
-        .select('id, first_name')
+        .select('id, first_name, phone_number')
         .in('id', reporterIds);
 
-      const profileMap = new Map((profiles || []).map(p => [p.id, p.first_name || 'Unknown']));
+      const profileMap = new Map((profiles || []).map(p => [p.id, { name: p.first_name || 'Unknown', phone: p.phone_number || '' }]));
 
       // Count reports per person (by first name + court)
       const countMap = new Map<string, number>();
@@ -74,7 +75,8 @@ export default function AdminReports() {
 
       const enriched = (reportsData || []).map(r => ({
         ...r,
-        reporter_name: profileMap.get(r.reporter_id) || 'Unknown',
+        reporter_name: profileMap.get(r.reporter_id)?.name || 'Unknown',
+        reporter_phone: profileMap.get(r.reporter_id)?.phone || '',
         report_count: countMap.get(`${r.reported_first_name.toLowerCase()}-${r.court_number}`) || 1,
       }));
 
@@ -119,7 +121,14 @@ export default function AdminReports() {
                     className="cursor-pointer hover:bg-muted/50"
                     onClick={() => navigate(`/admin/reports/${report.id}`)}
                   >
-                    <TableCell className="font-medium">{report.reporter_name}</TableCell>
+                    <TableCell>
+                      <div>
+                        <span className="font-medium">{report.reporter_name}</span>
+                        {report.reporter_phone && (
+                          <span className="text-muted-foreground text-xs block">{report.reporter_phone}</span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         {report.reported_first_name}
