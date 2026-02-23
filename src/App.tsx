@@ -16,6 +16,7 @@ import AlphacodeVerify from "./pages/AlphacodeVerify";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
 import Chat from "./pages/Chat";
+import ReportConcern from "./pages/ReportConcern";
 import MyEvents from "./pages/MyEvents";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
@@ -40,6 +41,8 @@ import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
 import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
 import AdminGame from "./pages/admin/AdminGame";
+import AdminReports from "./pages/admin/AdminReports";
+import AdminReportDetail from "./pages/admin/AdminReportDetail";
 import AdminEventQuestions from "./pages/admin/AdminEventQuestions";
 import Game from "./pages/Game";
 const queryClient = new QueryClient();
@@ -161,10 +164,11 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/chat" element={
+    <Route path="/chat" element={<Navigate to="/report" replace />} />
+    <Route path="/report" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <Chat />
+          <ReportConcern />
         </div>
       </ProtectedRoute>
     } />
@@ -248,6 +252,8 @@ const AppRoutes = () => (
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
     <Route path="/admin/quiz-responses" element={<AdminQuizResponses />} />
     <Route path="/admin/game" element={<AdminGame />} />
+    <Route path="/admin/reports" element={<AdminReports />} />
+    <Route path="/admin/reports/:id" element={<AdminReportDetail />} />
     {/* Keep old routes for backwards compatibility */}
     <Route path="/admin/survey-builder" element={<Navigate to="/admin/quiz-builder" replace />} />
     <Route path="/admin/survey-responses" element={<Navigate to="/admin/quiz-responses" replace />} />

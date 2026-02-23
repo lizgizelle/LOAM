@@ -62,6 +62,89 @@ export type Database = {
         }
         Relationships: []
       }
+      concern_report_notes: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          note_text: string | null
+          report_id: string
+          status_change: string | null
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          note_text?: string | null
+          report_id: string
+          status_change?: string | null
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          note_text?: string | null
+          report_id?: string
+          status_change?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "concern_report_notes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "concern_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      concern_reports: {
+        Row: {
+          category: string
+          court_leader_name: string
+          court_number: number
+          created_at: string
+          description: string | null
+          event_date: string
+          event_name: string
+          id: string
+          photo_url: string | null
+          reported_first_name: string
+          reporter_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          court_leader_name: string
+          court_number: number
+          created_at?: string
+          description?: string | null
+          event_date: string
+          event_name: string
+          id?: string
+          photo_url?: string | null
+          reported_first_name: string
+          reporter_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          court_leader_name?: string
+          court_number?: number
+          created_at?: string
+          description?: string | null
+          event_date?: string
+          event_name?: string
+          id?: string
+          photo_url?: string | null
+          reported_first_name?: string
+          reporter_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       event_participants: {
         Row: {
           created_at: string

@@ -28,6 +28,7 @@ const navItems = [
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
   { icon: Gamepad2, label: 'Game', path: '/admin/game' },
+  { icon: ClipboardList, label: 'Reports', path: '/admin/reports' },
   { icon: Settings, label: 'Settings', path: '/admin/settings' },
 ];
 
