@@ -408,7 +408,7 @@ const ReportConcern = () => {
               Thank you for trusting us with this
             </h2>
             <p className="text-muted-foreground max-w-xs leading-relaxed mb-8">
-              A real person on our team will review this within 24 hours. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.
+              A real person on our team will review this A real person on our team will review this within 15 minutes. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.
             </p>
             <Button variant="outline" onClick={resetForm}>
               Done
