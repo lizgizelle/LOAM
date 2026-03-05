@@ -93,7 +93,13 @@ export default function AdminGame() {
 
     let error;
     if (existing) {
-      ({ error } = await supabase.from('app_settings').update({ value: newVal as any }).eq('key', 'game_access_enabled'));
+      const res = await supabase.from('app_settings').update({ value: newVal as any }).eq('key', 'game_access_enabled').select('id');
+      error = res.error;
+      if (!error && (!res.data || res.data.length === 0)) {
+        toast.error('Permission denied. You need admin access.');
+        setToggling(false);
+        return;
+      }
     } else {
       ({ error } = await supabase.from('app_settings').insert({ key: 'game_access_enabled', value: newVal as any }));
     }
