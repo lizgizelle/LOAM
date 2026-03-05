@@ -68,13 +68,53 @@ interface RatingRow {
 
 export default function AdminGame() {
   const [activeTab, setActiveTab] = useState('buckets');
+  const [gameEnabled, setGameEnabled] = useState<boolean | null>(null);
+  const [toggling, setToggling] = useState(false);
+
+  useEffect(() => {
+    supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'game_access_enabled')
+      .maybeSingle()
+      .then(({ data }) => {
+        setGameEnabled(data?.value === true);
+      });
+  }, []);
+
+  const toggleGameAccess = async () => {
+    setToggling(true);
+    const newVal = !gameEnabled;
+    const { data: existing } = await supabase
+      .from('app_settings')
+      .select('id')
+      .eq('key', 'game_access_enabled')
+      .maybeSingle();
+
+    if (existing) {
+      await supabase.from('app_settings').update({ value: newVal as any }).eq('key', 'game_access_enabled');
+    } else {
+      await supabase.from('app_settings').insert({ key: 'game_access_enabled', value: newVal as any });
+    }
+    setGameEnabled(newVal);
+    toast.success(newVal ? 'Game access turned ON' : 'Game access turned OFF');
+    setToggling(false);
+  };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="text-2xl font-semibold">Game</h1>
-          <p className="text-muted-foreground mt-1">Manage flashcard questions, buckets, and access</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold">Game</h1>
+            <p className="text-muted-foreground mt-1">Manage flashcard questions, buckets, and access</p>
+          </div>
+          {gameEnabled !== null && (
+            <div className="flex items-center gap-3">
+              <span className="text-sm text-muted-foreground">{gameEnabled ? 'Game ON' : 'Game OFF'}</span>
+              <Switch checked={gameEnabled} onCheckedChange={toggleGameAccess} disabled={toggling} />
+            </div>
+          )}
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>

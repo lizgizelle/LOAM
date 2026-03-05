@@ -48,6 +48,19 @@ export default function Game() {
   const checkScheduleAndUnlock = async () => {
     if (!user?.id) return;
 
+    // Check master toggle
+    const { data: setting } = await supabase
+      .from('app_settings')
+      .select('value')
+      .eq('key', 'game_access_enabled')
+      .maybeSingle();
+
+    if (setting && setting.value === false) {
+      setScheduleOpen(false);
+      setChecking(false);
+      return;
+    }
+
     // Check if any active schedule window covers now
     const { data: schedules } = await supabase
       .from('game_schedule')
@@ -60,11 +73,9 @@ export default function Game() {
       (s: any) => now >= new Date(s.start_time) && now <= new Date(s.end_time)
     );
 
-    // If no schedules exist at all, treat game as always available (backwards compat)
     const hasSchedules = (schedules || []).length > 0;
 
     if (hasSchedules && !isWithinWindow) {
-      // Find next upcoming window
       const upcoming = (schedules || []).find((s: any) => new Date(s.start_time) > now);
       if (upcoming) {
         setNextWindow({ start: new Date((upcoming as any).start_time), end: new Date((upcoming as any).end_time) });
