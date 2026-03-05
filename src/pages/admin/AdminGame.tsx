@@ -91,13 +91,18 @@ export default function AdminGame() {
       .eq('key', 'game_access_enabled')
       .maybeSingle();
 
+    let error;
     if (existing) {
-      await supabase.from('app_settings').update({ value: newVal as any }).eq('key', 'game_access_enabled');
+      ({ error } = await supabase.from('app_settings').update({ value: newVal as any }).eq('key', 'game_access_enabled'));
     } else {
-      await supabase.from('app_settings').insert({ key: 'game_access_enabled', value: newVal as any });
+      ({ error } = await supabase.from('app_settings').insert({ key: 'game_access_enabled', value: newVal as any }));
     }
-    setGameEnabled(newVal);
-    toast.success(newVal ? 'Game access turned ON' : 'Game access turned OFF');
+    if (error) {
+      toast.error('Failed to update game access');
+    } else {
+      setGameEnabled(newVal);
+      toast.success(newVal ? 'Game access turned ON' : 'Game access turned OFF');
+    }
     setToggling(false);
   };
 
