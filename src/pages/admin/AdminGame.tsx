@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Plus, Trash2, Pencil, Check, X, FileDown, Flag, Users, Lock, LockOpen } from 'lucide-react';
+import { Plus, Trash2, Pencil, Check, X, FileDown, Flag, Users, Lock, LockOpen, Clock, Calendar } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
@@ -78,16 +78,18 @@ export default function AdminGame() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="buckets">Buckets</TabsTrigger>
             <TabsTrigger value="rules">Rules</TabsTrigger>
             <TabsTrigger value="access">Access</TabsTrigger>
+            <TabsTrigger value="schedule">Schedule</TabsTrigger>
             <TabsTrigger value="ratings">Ratings</TabsTrigger>
           </TabsList>
 
           <TabsContent value="buckets"><BucketsSection /></TabsContent>
           <TabsContent value="rules"><RulesSection /></TabsContent>
           <TabsContent value="access"><AccessSection /></TabsContent>
+          <TabsContent value="schedule"><ScheduleSection /></TabsContent>
           <TabsContent value="ratings"><RatingsSection /></TabsContent>
         </Tabs>
       </div>
@@ -823,6 +825,183 @@ function RatingsSection() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// ========== SCHEDULE SECTION ==========
+interface ScheduleSlot {
+  id: string;
+  start_time: string;
+  end_time: string;
+  is_active: boolean;
+  label: string | null;
+  created_at: string;
+}
+
+function ScheduleSection() {
+  const [slots, setSlots] = useState<ScheduleSlot[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [startDate, setStartDate] = useState('');
+  const [startTime, setStartTime] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [endTime, setEndTime] = useState('');
+  const [label, setLabel] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => { fetchSlots(); }, []);
+
+  const fetchSlots = async () => {
+    const { data } = await supabase
+      .from('game_schedule')
+      .select('*')
+      .order('start_time', { ascending: true });
+    setSlots((data || []) as ScheduleSlot[]);
+    setLoading(false);
+  };
+
+  const addSlot = async () => {
+    if (!startDate || !startTime || !endDate || !endTime) {
+      toast.error('Please fill in start and end date/time');
+      return;
+    }
+    const start = new Date(`${startDate}T${startTime}`).toISOString();
+    const end = new Date(`${endDate}T${endTime}`).toISOString();
+
+    if (new Date(end) <= new Date(start)) {
+      toast.error('End time must be after start time');
+      return;
+    }
+
+    setSaving(true);
+    const { error } = await supabase.from('game_schedule').insert({
+      start_time: start,
+      end_time: end,
+      label: label.trim() || null,
+      is_active: true,
+    });
+    if (error) {
+      toast.error('Failed to add schedule');
+    } else {
+      toast.success('Schedule added');
+      setStartDate(''); setStartTime(''); setEndDate(''); setEndTime(''); setLabel('');
+      fetchSlots();
+    }
+    setSaving(false);
+  };
+
+  const toggleSlot = async (id: string, currentActive: boolean) => {
+    await supabase.from('game_schedule').update({ is_active: !currentActive }).eq('id', id);
+    fetchSlots();
+  };
+
+  const deleteSlot = async (id: string) => {
+    await supabase.from('game_schedule').delete().eq('id', id);
+    toast.success('Schedule removed');
+    fetchSlots();
+  };
+
+  const now = new Date();
+
+  if (loading) return <div className="py-8 text-center text-muted-foreground">Loading...</div>;
+
+  return (
+    <div className="space-y-6 mt-4">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="w-5 h-5" /> Add Time Window
+          </CardTitle>
+          <CardDescription>
+            Set when the game is accessible to users. Outside these windows, users will see a "Game Locked" screen.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1">
+            <Label className="text-xs">Label (optional)</Label>
+            <Input
+              placeholder="e.g. Session 1 — March Meetup"
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+            />
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="space-y-1">
+              <Label className="text-xs">Start Date</Label>
+              <Input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Start Time</Label>
+              <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">End Date</Label>
+              <Input type="date" value={endDate} onChange={(e) => { setEndDate(e.target.value); }} />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">End Time</Label>
+              <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
+            </div>
+          </div>
+          <Button onClick={addSlot} disabled={saving || !startDate || !startTime || !endDate || !endTime}>
+            <Plus className="h-4 w-4 mr-2" /> Add Schedule
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Scheduled Windows ({slots.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {slots.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              No schedules set. The game will remain locked for all users.
+            </p>
+          ) : (
+            <div className="space-y-3">
+              {slots.map((slot) => {
+                const start = new Date(slot.start_time);
+                const end = new Date(slot.end_time);
+                const isLive = slot.is_active && now >= start && now <= end;
+                const isPast = now > end;
+
+                return (
+                  <div key={slot.id} className={`flex items-center justify-between p-4 rounded-lg border ${
+                    isLive ? 'border-green-500/50 bg-green-500/5' : isPast ? 'opacity-50' : 'bg-secondary/30'
+                  }`}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {slot.label && <p className="font-medium text-foreground">{slot.label}</p>}
+                        {isLive && <Badge variant="default" className="bg-green-600 text-xs">LIVE</Badge>}
+                        {isPast && <Badge variant="secondary" className="text-xs">Past</Badge>}
+                        {!slot.is_active && <Badge variant="outline" className="text-xs">Disabled</Badge>}
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {format(start, 'dd MMM yyyy, h:mm a')} → {format(end, 'dd MMM yyyy, h:mm a')}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2 ml-3">
+                      <Switch
+                        checked={slot.is_active}
+                        onCheckedChange={() => toggleSlot(slot.id, slot.is_active)}
+                      />
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-destructive hover:text-destructive"
+                        onClick={() => deleteSlot(slot.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </CardContent>

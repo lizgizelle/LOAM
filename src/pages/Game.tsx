@@ -30,6 +30,8 @@ export default function Game() {
   const [code, setCode] = useState('');
   const [checking, setChecking] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [nextWindow, setNextWindow] = useState<{ start: Date; end: Date } | null>(null);
 
   // Game state
   const [questions, setQuestions] = useState<GameQuestion[]>([]);
@@ -40,11 +42,40 @@ export default function Game() {
   const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
-    if (user?.id) checkUnlockStatus();
+    if (user?.id) checkScheduleAndUnlock();
   }, [user?.id]);
 
-  const checkUnlockStatus = async () => {
+  const checkScheduleAndUnlock = async () => {
     if (!user?.id) return;
+
+    // Check if any active schedule window covers now
+    const { data: schedules } = await supabase
+      .from('game_schedule')
+      .select('start_time, end_time')
+      .eq('is_active', true)
+      .order('start_time', { ascending: true });
+
+    const now = new Date();
+    const isWithinWindow = (schedules || []).some(
+      (s: any) => now >= new Date(s.start_time) && now <= new Date(s.end_time)
+    );
+
+    // If no schedules exist at all, treat game as always available (backwards compat)
+    const hasSchedules = (schedules || []).length > 0;
+
+    if (hasSchedules && !isWithinWindow) {
+      // Find next upcoming window
+      const upcoming = (schedules || []).find((s: any) => new Date(s.start_time) > now);
+      if (upcoming) {
+        setNextWindow({ start: new Date((upcoming as any).start_time), end: new Date((upcoming as any).end_time) });
+      }
+      setScheduleOpen(false);
+      setChecking(false);
+      return;
+    }
+
+    setScheduleOpen(true);
+    // Now check unlock status
     const { data } = await supabase
       .from('game_unlocks')
       .select('id, is_locked')
@@ -167,6 +198,35 @@ export default function Game() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center pb-20">
         <div className="animate-pulse text-muted-foreground">Loading...</div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // Schedule locked screen
+  if (!scheduleOpen) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col px-6 pb-24">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto w-full">
+          <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-6">
+            <Lock className="w-8 h-8 text-muted-foreground" />
+          </div>
+          <h1 className="text-2xl font-bold text-foreground mb-2 text-center">Game Locked</h1>
+          <p className="text-muted-foreground text-center mb-4">
+            The game is not available right now.
+          </p>
+          {nextWindow && (
+            <div className="bg-secondary/50 rounded-xl p-4 w-full text-center">
+              <p className="text-sm text-muted-foreground mb-1">Next session opens</p>
+              <p className="text-foreground font-semibold">
+                {nextWindow.start.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </p>
+              <p className="text-foreground font-medium">
+                {nextWindow.start.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} – {nextWindow.end.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          )}
+        </div>
         <BottomNav />
       </div>
     );
