@@ -525,6 +525,36 @@ export type Database = {
           },
         ]
       }
+      game_schedule: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          end_time: string
+          id: string
+          is_active: boolean
+          label: string | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          end_time: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          end_time?: string
+          id?: string
+          is_active?: boolean
+          label?: string | null
+          start_time?: string
+        }
+        Relationships: []
+      }
       game_unlocks: {
         Row: {
           id: string
