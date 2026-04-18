@@ -199,17 +199,13 @@ const ActivityBookingDetail = () => {
       <Dialog open={!!openMascot} onOpenChange={(o) => !o && setOpenMascot(null)}>
         <DialogContent className="max-w-xs rounded-3xl">
           <DialogHeader>
-            <DialogTitle className="sr-only">{openMascot?.name}'s church</DialogTitle>
+            <DialogTitle className="sr-only">Attendee's church</DialogTitle>
           </DialogHeader>
           {openMascot && (
             <div className="flex flex-col items-center text-center py-2">
-              <div
-                className="w-24 h-24 rounded-full overflow-hidden mb-4"
-                style={{ boxShadow: `0 0 0 5px ${openMascot.tint}` }}
-              >
-                <img src={openMascot.avatar} alt={openMascot.name} className="w-full h-full object-cover" />
+              <div className="w-24 h-24 rounded-full overflow-hidden mb-4">
+                <img src={openMascot.avatar} alt="Attendee" className="w-full h-full object-cover" />
               </div>
-              <p className="text-xl font-serif text-foreground mb-1">{openMascot.name}</p>
               <div className="flex items-center gap-1.5 text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-2">
                 <Church className="w-3.5 h-3.5" />
                 <span>Church</span>
