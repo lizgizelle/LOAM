@@ -102,10 +102,7 @@ const Home = () => {
       </div>
 
       {/* Hero greeting */}
-      <div className="px-6 pt-2 pb-10">
-        <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
-          🌿 Hosted in
-        </p>
+      <div className="px-6 pt-6 pb-10">
         <h1 className="text-4xl font-serif text-foreground leading-tight">
           Meet people in
         </h1>
@@ -115,9 +112,8 @@ const Home = () => {
       </div>
 
       {/* Section header */}
-      <div className="px-6 mb-4 flex items-end justify-between">
+      <div className="px-6 mb-4">
         <h2 className="text-2xl font-serif text-foreground">Book your next activity</h2>
-        <span className="text-xs text-muted-foreground italic">this week</span>
       </div>
 
       {/* Activity list */}
@@ -154,11 +150,6 @@ const Home = () => {
           ))
         )}
       </div>
-
-      {/* Loam footer accent */}
-      <p className="text-center text-xs text-muted-foreground/70 italic mt-8 px-6">
-        Small tables. Real conversations. 🌿
-      </p>
 
       <BottomNav />
     </div>
