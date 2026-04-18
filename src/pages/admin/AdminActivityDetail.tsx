@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Trash2, Calendar, Loader2 } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Calendar, Loader2, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import { DAYS_OF_WEEK, SG_AREAS, formatSlotDate, formatSlotTime } from '@/lib/activities';
 
@@ -317,7 +317,12 @@ const AdminActivityDetail = () => {
 
         {/* Slots */}
         <TabsContent value="slots" className="space-y-3">
-          <p className="text-sm text-muted-foreground">All upcoming dated slots, with bookings.</p>
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <p className="text-sm text-muted-foreground">All upcoming dated slots, with bookings.</p>
+            <Button variant="outline" size="sm" onClick={() => navigate('/admin/bookings')}>
+              <Users className="w-4 h-4 mr-1" /> Manage attendees
+            </Button>
+          </div>
           {upcomingSlots.length === 0 ? (
             <p className="text-muted-foreground">No upcoming slots. Add areas + rules, then click "Generate slots" in the Schedule tab.</p>
           ) : (

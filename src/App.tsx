@@ -30,12 +30,7 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
-import AdminEvents from "./pages/admin/AdminEvents";
-import AdminEventCreate from "./pages/admin/AdminEventCreate";
-import AdminEventDetail from "./pages/admin/AdminEventDetail";
-import AdminEventEdit from "./pages/admin/AdminEventEdit";
-import AdminRequests from "./pages/admin/AdminRequests";
-import AdminEventRequests from "./pages/admin/AdminEventRequests";
+
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
@@ -43,9 +38,8 @@ import AdminQuizResponses from "./pages/admin/AdminQuizResponses";
 import AdminGame from "./pages/admin/AdminGame";
 import AdminReports from "./pages/admin/AdminReports";
 import AdminReportDetail from "./pages/admin/AdminReportDetail";
-import AdminEventQuestions from "./pages/admin/AdminEventQuestions";
+import AdminBookings from "./pages/admin/AdminBookings";
 import Game from "./pages/Game";
-import Activities from "./pages/Activities";
 import ActivityDetail from "./pages/ActivityDetail";
 import ActivityArea from "./pages/ActivityArea";
 import ActivitySlots from "./pages/ActivitySlots";
@@ -301,13 +295,10 @@ const AppRoutes = () => (
     <Route path="/admin/login" element={<AdminLogin />} />
     <Route path="/admin" element={<AdminDashboard />} />
     <Route path="/admin/users" element={<AdminUsers />} />
-    <Route path="/admin/events" element={<AdminEvents />} />
-    <Route path="/admin/events/new" element={<AdminEventCreate />} />
-    <Route path="/admin/events/:id" element={<AdminEventDetail />} />
-    <Route path="/admin/events/:id/edit" element={<AdminEventEdit />} />
-    <Route path="/admin/requests" element={<Navigate to="/admin/events" replace />} />
-    <Route path="/admin/events/:id/requests" element={<AdminEventRequests />} />
-    <Route path="/admin/events/:id/questions" element={<AdminEventQuestions />} />
+    {/* Legacy events admin removed — redirect to activities */}
+    <Route path="/admin/events" element={<Navigate to="/admin/activities" replace />} />
+    <Route path="/admin/events/*" element={<Navigate to="/admin/activities" replace />} />
+    <Route path="/admin/requests" element={<Navigate to="/admin/bookings" replace />} />
     <Route path="/admin/settings" element={<AdminSettings />} />
     <Route path="/admin/quiz-builder" element={<AdminQuizBuilder />} />
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
@@ -315,6 +306,7 @@ const AppRoutes = () => (
     <Route path="/admin/game" element={<AdminGame />} />
     <Route path="/admin/activities" element={<AdminActivities />} />
     <Route path="/admin/activities/:id" element={<AdminActivityDetail />} />
+    <Route path="/admin/bookings" element={<AdminBookings />} />
     <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
     <Route path="/admin/reports" element={<AdminReports />} />
     <Route path="/admin/reports/:id" element={<AdminReportDetail />} />

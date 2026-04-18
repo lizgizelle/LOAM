@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { AdminLayout } from '@/components/admin/AdminLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Users, Calendar, Clock, UserCheck } from 'lucide-react';
+import { Users, UserCheck, Sparkles, Ticket, CalendarClock, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 
 interface DashboardStats {
   totalUsers: number;
   activeUsers: number;
-  upcomingEvents: number;
-  pendingApprovals: number;
+  activeActivities: number;
+  upcomingSlots: number;
+  upcomingBookings: number;
+  openReports: number;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     activeUsers: 0,
-    upcomingEvents: 0,
-    pendingApprovals: 0,
+    activeActivities: 0,
+    upcomingSlots: 0,
+    upcomingBookings: 0,
+    openReports: 0,
   });
   const [loading, setLoading] = useState(true);
 
@@ -26,35 +31,45 @@ export default function AdminDashboard() {
 
   const fetchStats = async () => {
     try {
-      // Get total users
-      const { count: totalUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      const nowIso = new Date().toISOString();
 
-      // Get active users (not shadow blocked)
-      const { count: activeUsers } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true })
-        .eq('is_shadow_blocked', false);
+      const [
+        totalUsers,
+        activeUsers,
+        activeActivities,
+        upcomingSlots,
+        openReports,
+      ] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('is_shadow_blocked', false),
+        supabase.from('activities').select('*', { count: 'exact', head: true }).eq('is_active', true),
+        supabase.from('activity_slots').select('id', { count: 'exact', head: true }).gt('start_time', nowIso).eq('status', 'open'),
+        supabase.from('concern_reports').select('*', { count: 'exact', head: true }).eq('status', 'new'),
+      ]);
 
-      // Get upcoming events
-      const { count: upcomingEvents } = await supabase
-        .from('events')
-        .select('*', { count: 'exact', head: true })
-        .gte('start_date', new Date().toISOString())
-        .eq('status', 'published');
-
-      // Get pending approvals
-      const { count: pendingApprovals } = await supabase
-        .from('event_participants')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'pending');
+      // Upcoming bookings = confirmed bookings on slots in the future
+      const { data: futureSlots } = await supabase
+        .from('activity_slots')
+        .select('id')
+        .gt('start_time', nowIso);
+      const slotIds = (futureSlots || []).map((s) => s.id);
+      let bookingsCount = 0;
+      if (slotIds.length) {
+        const { count } = await supabase
+          .from('activity_bookings')
+          .select('*', { count: 'exact', head: true })
+          .in('slot_id', slotIds)
+          .eq('status', 'confirmed');
+        bookingsCount = count || 0;
+      }
 
       setStats({
-        totalUsers: totalUsers || 0,
-        activeUsers: activeUsers || 0,
-        upcomingEvents: upcomingEvents || 0,
-        pendingApprovals: pendingApprovals || 0,
+        totalUsers: totalUsers.count || 0,
+        activeUsers: activeUsers.count || 0,
+        activeActivities: activeActivities.count || 0,
+        upcomingSlots: upcomingSlots.count || 0,
+        upcomingBookings: bookingsCount,
+        openReports: openReports.count || 0,
       });
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -64,10 +79,12 @@ export default function AdminDashboard() {
   };
 
   const statCards = [
-    { title: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-blue-600' },
-    { title: 'Active Users', value: stats.activeUsers, icon: UserCheck, color: 'text-green-600' },
-    { title: 'Upcoming Events', value: stats.upcomingEvents, icon: Calendar, color: 'text-purple-600' },
-    { title: 'Pending Approvals', value: stats.pendingApprovals, icon: Clock, color: 'text-orange-600' },
+    { title: 'Total Users', value: stats.totalUsers, icon: Users, link: '/admin/users' },
+    { title: 'Active Users', value: stats.activeUsers, icon: UserCheck, link: '/admin/users' },
+    { title: 'Active Activities', value: stats.activeActivities, icon: Sparkles, link: '/admin/activities' },
+    { title: 'Upcoming Slots', value: stats.upcomingSlots, icon: CalendarClock, link: '/admin/activities' },
+    { title: 'Upcoming Bookings', value: stats.upcomingBookings, icon: Ticket, link: '/admin/bookings' },
+    { title: 'Open Reports', value: stats.openReports, icon: ClipboardList, link: '/admin/reports' },
   ];
 
   return (
@@ -78,21 +95,23 @@ export default function AdminDashboard() {
           <p className="text-muted-foreground mt-1">Overview of your platform</p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {statCards.map((stat) => (
-            <Card key={stat.title}>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </CardTitle>
-                <stat.icon className={`h-5 w-5 ${stat.color}`} />
-              </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold">
-                  {loading ? '—' : stat.value}
-                </div>
-              </CardContent>
-            </Card>
+            <Link key={stat.title} to={stat.link}>
+              <Card className="hover:bg-muted/40 transition-colors cursor-pointer">
+                <CardHeader className="flex flex-row items-center justify-between pb-2">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">
+                    {stat.title}
+                  </CardTitle>
+                  <stat.icon className="h-5 w-5 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-3xl font-bold">
+                    {loading ? '—' : stat.value}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       </div>

@@ -967,6 +967,7 @@ export type Database = {
           admin_notes: string | null
           avatar_url: string | null
           children: string | null
+          church: string | null
           country_of_birth: string | null
           created_at: string
           date_of_birth: string | null
@@ -988,6 +989,7 @@ export type Database = {
           admin_notes?: string | null
           avatar_url?: string | null
           children?: string | null
+          church?: string | null
           country_of_birth?: string | null
           created_at?: string
           date_of_birth?: string | null
@@ -1009,6 +1011,7 @@ export type Database = {
           admin_notes?: string | null
           avatar_url?: string | null
           children?: string | null
+          church?: string | null
           country_of_birth?: string | null
           created_at?: string
           date_of_birth?: string | null
