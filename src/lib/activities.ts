@@ -49,10 +49,16 @@ export type SubscriptionPlanId = '1_month' | '3_months' | '6_months';
 
 export const formatSlotDate = (iso: string) => {
   const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+  return d.toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric',
+    timeZone: 'Asia/Singapore',
+  });
 };
 
 export const formatSlotTime = (iso: string) => {
   const d = new Date(iso);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  return d.toLocaleTimeString('en-US', {
+    hour: 'numeric', minute: '2-digit',
+    timeZone: 'Asia/Singapore',
+  });
 };
