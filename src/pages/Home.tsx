@@ -103,17 +103,21 @@ const Home = () => {
 
       {/* Hero greeting */}
       <div className="px-6 pt-2 pb-10">
+        <p className="text-xs uppercase tracking-[0.2em] text-primary font-semibold mb-3">
+          🌿 Hosted in
+        </p>
         <h1 className="text-4xl font-serif text-foreground leading-tight">
           Meet people in
         </h1>
-        <h1 className="text-4xl font-serif text-muted-foreground leading-tight">
-          Singapore
+        <h1 className="text-4xl font-serif italic text-muted-foreground leading-tight">
+          Singapore.
         </h1>
       </div>
 
       {/* Section header */}
-      <div className="px-6 mb-4">
-        <h2 className="text-2xl font-bold text-foreground">Book your next activity</h2>
+      <div className="px-6 mb-4 flex items-end justify-between">
+        <h2 className="text-2xl font-serif text-foreground">Book your next activity</h2>
+        <span className="text-xs text-muted-foreground italic">this week</span>
       </div>
 
       {/* Activity list */}
@@ -129,7 +133,7 @@ const Home = () => {
             <button
               key={a.id}
               onClick={() => navigate(`/activities/${a.id}`)}
-              className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all"
+              className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all border border-border/40"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
                 {a.icon_emoji || '✨'}
@@ -143,13 +147,18 @@ const Home = () => {
                   <p className="text-sm text-muted-foreground">{formatTime(a.next_slot)}</p>
                 )}
               </div>
-              <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center shrink-0">
-                <ArrowRight className="w-5 h-5 text-background" />
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                <ArrowRight className="w-5 h-5 text-primary" />
               </div>
             </button>
           ))
         )}
       </div>
+
+      {/* Loam footer accent */}
+      <p className="text-center text-xs text-muted-foreground/70 italic mt-8 px-6">
+        Small tables. Real conversations. 🌿
+      </p>
 
       <BottomNav />
     </div>
