@@ -195,7 +195,7 @@ const MyEvents = () => {
       </p>
       {type === 'upcoming' && (
         <button
-          onClick={() => navigate('/activities')}
+          onClick={() => navigate('/home')}
           className="px-5 h-11 rounded-full bg-foreground text-background font-semibold text-sm"
         >
           Browse activities

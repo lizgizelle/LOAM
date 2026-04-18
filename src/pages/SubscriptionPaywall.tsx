@@ -9,7 +9,7 @@ import { toast } from 'sonner';
 const SubscriptionPaywall = () => {
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const returnUrl = params.get('return') || '/activities';
+  const returnUrl = params.get('return') || '/home';
   const { user } = useAuth();
   const [selected, setSelected] = useState<SubscriptionPlanId>('3_months');
   const [loading, setLoading] = useState(false);

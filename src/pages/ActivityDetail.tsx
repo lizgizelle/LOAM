@@ -43,7 +43,7 @@ const ActivityDetail = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
         <p className="text-muted-foreground mb-4">Activity not found.</p>
-        <button onClick={() => navigate('/activities')} className="text-primary font-medium">
+        <button onClick={() => navigate('/home')} className="text-primary font-medium">
           Back to activities
         </button>
       </div>
@@ -62,7 +62,7 @@ const ActivityDetail = () => {
           </div>
         )}
         <button
-          onClick={() => navigate('/activities')}
+          onClick={() => navigate('/home')}
           className="absolute top-12 left-4 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center safe-area-top"
         >
           <ArrowLeft className="w-5 h-5" />
