@@ -30,7 +30,7 @@ import NotFound from "./pages/NotFound";
 import AdminLogin from "./pages/admin/AdminLogin";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
-import AdminRequests from "./pages/admin/AdminRequests";
+
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminQuizBuilder from "./pages/admin/AdminQuizBuilder";
 import AdminQuizQuestions from "./pages/admin/AdminQuizQuestions";
