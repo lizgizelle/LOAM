@@ -225,13 +225,7 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/activities" element={
-      <ProtectedRoute>
-        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <Activities />
-        </div>
-      </ProtectedRoute>
-    } />
+    <Route path="/activities" element={<Navigate to="/home" replace />} />
     <Route path="/activities/:id" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
