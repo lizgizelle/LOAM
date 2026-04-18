@@ -45,6 +45,15 @@ import AdminReports from "./pages/admin/AdminReports";
 import AdminReportDetail from "./pages/admin/AdminReportDetail";
 import AdminEventQuestions from "./pages/admin/AdminEventQuestions";
 import Game from "./pages/Game";
+import Activities from "./pages/Activities";
+import ActivityDetail from "./pages/ActivityDetail";
+import ActivityArea from "./pages/ActivityArea";
+import ActivitySlots from "./pages/ActivitySlots";
+import SubscriptionPaywall from "./pages/SubscriptionPaywall";
+import SubscriptionManage from "./pages/SubscriptionManage";
+import AdminActivities from "./pages/admin/AdminActivities";
+import AdminActivityDetail from "./pages/admin/AdminActivityDetail";
+import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 const queryClient = new QueryClient();
 
 // Wrapper component to check blocked status and email verification
@@ -214,6 +223,48 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
+    <Route path="/activities" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <Activities />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/activities/:id" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <ActivityDetail />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/activities/:id/area" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <ActivityArea />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/activities/:id/slots" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <ActivitySlots />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/subscription/paywall" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <SubscriptionPaywall />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/profile/subscription" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <SubscriptionManage />
+        </div>
+      </ProtectedRoute>
+    } />
     <Route path="/settings/notifications" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -252,6 +303,9 @@ const AppRoutes = () => (
     <Route path="/admin/quiz-builder/:quizId" element={<AdminQuizQuestions />} />
     <Route path="/admin/quiz-responses" element={<AdminQuizResponses />} />
     <Route path="/admin/game" element={<AdminGame />} />
+    <Route path="/admin/activities" element={<AdminActivities />} />
+    <Route path="/admin/activities/:id" element={<AdminActivityDetail />} />
+    <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
     <Route path="/admin/reports" element={<AdminReports />} />
     <Route path="/admin/reports/:id" element={<AdminReportDetail />} />
     {/* Keep old routes for backwards compatibility */}
