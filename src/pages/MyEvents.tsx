@@ -1,161 +1,215 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
-import { useAppStore } from '@/store/appStore';
-import { Calendar, MapPin, Clock, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, ChevronRight, Sparkles } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 interface ApprovedEvent {
+  kind: 'event';
   id: string;
   name: string;
   start_date: string;
   end_date: string | null;
   location: string | null;
-  status: string;
-  participationStatus: 'approved';
 }
+
+interface ActivityBookingRow {
+  kind: 'activity';
+  id: string; // booking id
+  name: string; // activity name
+  start_date: string;
+  end_date: string;
+  location: string; // area
+  icon_emoji: string | null;
+  activity_id: string;
+}
+
+type Item = ApprovedEvent | ActivityBookingRow;
 
 const MyEvents = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { eventParticipations } = useAppStore();
-  const [approvedEvents, setApprovedEvents] = useState<ApprovedEvent[]>([]);
+  const [items, setItems] = useState<Item[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const fetchMyEvents = async () => {
+    const fetchAll = async () => {
       if (!user?.id) {
         setLoading(false);
         return;
       }
 
       try {
-        // Fetch ONLY approved event participations at the backend level
-        const { data: participations } = await supabase
+        // Approved event participations
+        const { data: parts } = await supabase
           .from('event_participants')
           .select('event_id, status')
           .eq('user_id', user.id)
           .eq('status', 'approved');
 
-        if (participations && participations.length > 0) {
-          const eventIds = participations.map(p => p.event_id);
-          
+        let eventItems: ApprovedEvent[] = [];
+        if (parts && parts.length > 0) {
+          const ids = parts.map((p) => p.event_id);
           const { data: events } = await supabase
             .from('events')
-            .select('id, name, start_date, end_date, location, status')
-            .in('id', eventIds);
-
-          if (events) {
-            const eventsWithStatus = events.map(event => ({
-              ...event,
-              participationStatus: 'approved' as const
-            }));
-            setApprovedEvents(eventsWithStatus);
-          }
+            .select('id, name, start_date, end_date, location')
+            .in('id', ids);
+          eventItems = (events || []).map((e) => ({ kind: 'event' as const, ...e }));
         }
-      } catch (error) {
-        console.error('Error fetching events:', error);
+
+        // Activity bookings
+        const { data: bookings } = await supabase
+          .from('activity_bookings')
+          .select('id, slot_id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'confirmed');
+
+        let activityItems: ActivityBookingRow[] = [];
+        if (bookings && bookings.length > 0) {
+          const slotIds = bookings.map((b) => b.slot_id);
+          const { data: slots } = await supabase
+            .from('activity_slots')
+            .select('id, activity_id, start_time, duration_minutes, area_name')
+            .in('id', slotIds);
+
+          const actIds = Array.from(new Set((slots || []).map((s) => s.activity_id)));
+          const { data: acts } = await supabase
+            .from('activities')
+            .select('id, name, icon_emoji')
+            .in('id', actIds);
+          const actMap = new Map((acts || []).map((a) => [a.id, a]));
+
+          activityItems = (slots || []).map((s) => {
+            const a = actMap.get(s.activity_id);
+            const booking = bookings.find((b) => b.slot_id === s.id)!;
+            const end = new Date(new Date(s.start_time).getTime() + s.duration_minutes * 60000);
+            return {
+              kind: 'activity' as const,
+              id: booking.id,
+              name: a?.name || 'Activity',
+              start_date: s.start_time,
+              end_date: end.toISOString(),
+              location: s.area_name,
+              icon_emoji: a?.icon_emoji ?? null,
+              activity_id: s.activity_id,
+            };
+          });
+        }
+
+        setItems([...eventItems, ...activityItems]);
+      } catch (err) {
+        console.error('Error fetching my items:', err);
       } finally {
         setLoading(false);
       }
     };
 
-    fetchMyEvents();
+    fetchAll();
   }, [user?.id]);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-  };
+  const formatDate = (s: string) =>
+    new Date(s).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const formatTime = (s: string) =>
+    new Date(s).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  };
-
-  // All events are already approved from backend query
-  // Separate into upcoming and past events
   const now = new Date();
-  const upcomingEvents = approvedEvents.filter(event => {
-    const eventEnd = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
-    return eventEnd >= now;
-  });
+  const upcoming = items
+    .filter((i) => new Date(i.end_date || i.start_date) >= now)
+    .sort((a, b) => new Date(a.start_date).getTime() - new Date(b.start_date).getTime());
+  const past = items
+    .filter((i) => new Date(i.end_date || i.start_date) < now)
+    .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
-  const pastEvents = approvedEvents.filter(event => {
-    const eventEnd = event.end_date ? new Date(event.end_date) : new Date(event.start_date);
-    return eventEnd < now;
-  });
-
-  const EventCard = ({ event, isPast = false }: { event: ApprovedEvent; isPast?: boolean }) => (
-    <button
-      onClick={() => navigate(`/event/${event.id}?source=my-gatherings`)}
-      className={`w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
-        isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
-      }`}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-2">
-            <h3 className="font-semibold text-foreground truncate">{event.name}</h3>
-            <Badge 
-              variant="secondary" 
-              className={`text-xs shrink-0 ${
-                isPast ? 'bg-muted text-muted-foreground' : 'bg-green-100 text-green-800'
-              }`}
-            >
-              {isPast ? 'Past' : 'Confirmed'}
-            </Badge>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Calendar className="w-4 h-4 text-primary shrink-0" />
-              <span>{formatDate(event.start_date)}</span>
-              <Clock className="w-4 h-4 text-primary shrink-0 ml-2" />
-              <span>{formatTime(event.start_date)}</span>
+  const ItemCard = ({ item, isPast = false }: { item: Item; isPast?: boolean }) => {
+    const onClick = () => {
+      if (item.kind === 'event') navigate(`/event/${item.id}?source=my-gatherings`);
+      else navigate(`/activities/${item.activity_id}`);
+    };
+    return (
+      <button
+        onClick={onClick}
+        className={`w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
+          isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
+        }`}
+      >
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-2">
+              {item.kind === 'activity' && (
+                <span className="text-lg" aria-hidden>
+                  {item.icon_emoji || '✨'}
+                </span>
+              )}
+              <h3 className="font-semibold text-foreground truncate">{item.name}</h3>
+              <Badge
+                variant="secondary"
+                className={`text-xs shrink-0 ${
+                  isPast
+                    ? 'bg-muted text-muted-foreground'
+                    : item.kind === 'activity'
+                    ? 'bg-primary/15 text-primary'
+                    : 'bg-green-100 text-green-800'
+                }`}
+              >
+                {isPast ? 'Past' : item.kind === 'activity' ? 'Activity' : 'Confirmed'}
+              </Badge>
             </div>
-            {event.location && (
+            <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <MapPin className="w-4 h-4 text-primary shrink-0" />
-                <span className="truncate">{event.location}</span>
+                <Calendar className="w-4 h-4 text-primary shrink-0" />
+                <span>{formatDate(item.start_date)}</span>
+                <Clock className="w-4 h-4 text-primary shrink-0 ml-2" />
+                <span>{formatTime(item.start_date)}</span>
               </div>
-            )}
+              {item.location && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <MapPin className="w-4 h-4 text-primary shrink-0" />
+                  <span className="truncate">{item.location}</span>
+                </div>
+              )}
+            </div>
           </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
         </div>
-        <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0 mt-1" />
-      </div>
-    </button>
-  );
+      </button>
+    );
+  };
 
   const EmptyState = ({ type }: { type: 'upcoming' | 'past' }) => (
     <div className="flex flex-col items-center justify-center py-20">
       <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-        <Calendar className="w-10 h-10 text-primary" />
+        {type === 'upcoming' ? (
+          <Sparkles className="w-10 h-10 text-primary" />
+        ) : (
+          <Calendar className="w-10 h-10 text-primary" />
+        )}
       </div>
-      <h2 className="text-xl font-semibold text-foreground mb-2">
-        No {type} events
-      </h2>
-      <p className="text-muted-foreground text-center max-w-xs">
-        {type === 'upcoming' 
-          ? "You don't have any upcoming events yet." 
-          : "You don't have any past events yet."
-        }
+      <h2 className="text-xl font-semibold text-foreground mb-2">No {type} bookings</h2>
+      <p className="text-muted-foreground text-center max-w-xs mb-6">
+        {type === 'upcoming'
+          ? "You don't have any upcoming events or activities yet."
+          : "You don't have any past events or activities yet."}
       </p>
+      {type === 'upcoming' && (
+        <button
+          onClick={() => navigate('/activities')}
+          className="px-5 h-11 rounded-full bg-foreground text-background font-semibold text-sm"
+        >
+          Browse activities
+        </button>
+      )}
     </div>
   );
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
       <div className="px-6 pt-14 pb-4 safe-area-top">
-        <h1 className="text-2xl font-bold text-foreground">
-          My Events
-        </h1>
+        <h1 className="text-2xl font-bold text-foreground">My Events</h1>
       </div>
 
-      {/* Tabs */}
       <div className="px-6">
         {loading ? (
           <div className="flex items-center justify-center py-20">
@@ -164,24 +218,20 @@ const MyEvents = () => {
         ) : (
           <Tabs defaultValue="upcoming" className="w-full">
             <TabsList className="w-full mb-4">
-              <TabsTrigger value="upcoming" className="flex-1">
-                Upcoming
-              </TabsTrigger>
-              <TabsTrigger value="past" className="flex-1">
-                Past
-              </TabsTrigger>
+              <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
+              <TabsTrigger value="past" className="flex-1">Past</TabsTrigger>
             </TabsList>
 
             <TabsContent value="upcoming" className="mt-0">
-              {upcomingEvents.length > 0 ? (
+              {upcoming.length > 0 ? (
                 <div className="space-y-4">
-                  {upcomingEvents.map((event, index) => (
-                    <div 
-                      key={event.id}
+                  {upcoming.map((item, i) => (
+                    <div
+                      key={`${item.kind}-${item.id}`}
                       className="animate-fade-in-up"
-                      style={{ animationDelay: `${0.1 * (index + 1)}s` }}
+                      style={{ animationDelay: `${0.05 * (i + 1)}s` }}
                     >
-                      <EventCard event={event} />
+                      <ItemCard item={item} />
                     </div>
                   ))}
                 </div>
@@ -191,15 +241,15 @@ const MyEvents = () => {
             </TabsContent>
 
             <TabsContent value="past" className="mt-0">
-              {pastEvents.length > 0 ? (
+              {past.length > 0 ? (
                 <div className="space-y-4">
-                  {pastEvents.map((event, index) => (
-                    <div 
-                      key={event.id}
+                  {past.map((item, i) => (
+                    <div
+                      key={`${item.kind}-${item.id}`}
                       className="animate-fade-in-up"
-                      style={{ animationDelay: `${0.1 * (index + 1)}s` }}
+                      style={{ animationDelay: `${0.05 * (i + 1)}s` }}
                     >
-                      <EventCard event={event} isPast />
+                      <ItemCard item={item} isPast />
                     </div>
                   ))}
                 </div>
