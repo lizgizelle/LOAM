@@ -179,15 +179,11 @@ const ActivityBookingDetail = () => {
               <button
                 key={m.id}
                 onClick={() => setOpenMascot(m)}
-                className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-popover shadow-loam hover:scale-105 transition-transform"
+                className="flex items-center justify-center p-3 rounded-2xl bg-popover shadow-loam hover:scale-105 transition-transform"
               >
-                <div
-                  className="w-16 h-16 rounded-full overflow-hidden ring-4"
-                  style={{ ['--tw-ring-color' as any]: m.tint, boxShadow: `0 0 0 4px ${m.tint}` }}
-                >
-                  <img src={m.avatar} alt={m.name} className="w-full h-full object-cover" />
+                <div className="w-16 h-16 rounded-full overflow-hidden">
+                  <img src={m.avatar} alt="Attendee" className="w-full h-full object-cover" />
                 </div>
-                <span className="text-xs font-semibold text-foreground">{m.name}</span>
               </button>
             ))}
           </div>
