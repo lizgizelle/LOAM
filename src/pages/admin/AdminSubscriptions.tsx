@@ -40,7 +40,7 @@ const AdminSubscriptions = () => {
       .select('id, first_name, last_name, email')
       .in('id', ids);
     const pMap = new Map((profiles || []).map((p) => [p.id, p]));
-    setRows(subs.map((s) => ({ ...s, profile: pMap.get(s.user_id) as any })));
+    setRows(subs.map((s) => ({ ...s, profile: pMap.get(s.user_id) as any })) as SubRow[]);
     setLoading(false);
   };
 
