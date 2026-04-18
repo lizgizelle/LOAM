@@ -5,6 +5,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { getDefaultAvatar, DEFAULT_AVATARS } from '@/lib/avatars';
 import { formatSlotDate, formatSlotTime } from '@/lib/activities';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
 
 interface MockMascot {
   id: string;
