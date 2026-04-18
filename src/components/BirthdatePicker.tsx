@@ -28,7 +28,7 @@ interface WheelColumnProps {
 const WheelColumn = ({ items, selectedIndex, onSelect }: WheelColumnProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
   const scrollToIndex = useCallback((index: number, smooth = true) => {
     if (containerRef.current) {
