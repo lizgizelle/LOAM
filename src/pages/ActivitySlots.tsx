@@ -40,8 +40,8 @@ const ActivitySlots = () => {
           .eq('area_name', area)
           .eq('status', 'open')
           .gt('start_time', new Date().toISOString())
-          .order('start_time', { ascending: true })
-          .limit(20),
+          .lt('start_time', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
+          .order('start_time', { ascending: true }),
       ]);
 
       setActivityName(actRes.data?.name || '');
@@ -137,10 +137,9 @@ const ActivitySlots = () => {
                       <p className="font-semibold text-foreground">{formatSlotDate(s.start_time)}</p>
                       <p className="text-sm text-muted-foreground">{formatSlotTime(s.start_time)}</p>
                     </div>
-                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Users className="w-4 h-4" />
-                      {isFull ? 'Full' : `${spotsLeft} left`}
-                    </div>
+                    {isFull && (
+                      <span className="text-sm text-muted-foreground">Full</span>
+                    )}
                   </div>
                 </button>
               );
