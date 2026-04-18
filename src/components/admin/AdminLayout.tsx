@@ -3,7 +3,6 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
-  Calendar, 
   ClipboardList, 
   Settings,
   Menu,
@@ -13,7 +12,8 @@ import {
   MessageSquare,
   Gamepad2,
   Sparkles,
-  CreditCard
+  CreditCard,
+  Ticket
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -26,8 +26,8 @@ interface AdminLayoutProps {
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
-  { icon: Calendar, label: 'Events', path: '/admin/events' },
   { icon: Sparkles, label: 'Activities', path: '/admin/activities' },
+  { icon: Ticket, label: 'Bookings', path: '/admin/bookings' },
   { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
