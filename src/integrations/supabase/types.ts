@@ -14,6 +14,197 @@ export type Database = {
   }
   public: {
     Tables: {
+      activities: {
+        Row: {
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          display_order: number
+          icon_emoji: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          display_order?: number
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      activity_areas: {
+        Row: {
+          activity_id: string
+          area_name: string
+          created_at: string
+          id: string
+          is_active: boolean
+        }
+        Insert: {
+          activity_id: string
+          area_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Update: {
+          activity_id?: string
+          area_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_areas_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_bookings: {
+        Row: {
+          created_at: string
+          id: string
+          slot_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          slot_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          slot_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_bookings_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "activity_slots"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_schedule_rules: {
+        Row: {
+          activity_id: string
+          capacity: number
+          created_at: string
+          day_of_week: number
+          duration_minutes: number
+          id: string
+          is_active: boolean
+          start_time: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          capacity?: number
+          created_at?: string
+          day_of_week: number
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          start_time: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          capacity?: number
+          created_at?: string
+          day_of_week?: number
+          duration_minutes?: number
+          id?: string
+          is_active?: boolean
+          start_time?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_schedule_rules_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      activity_slots: {
+        Row: {
+          activity_id: string
+          area_name: string
+          capacity: number
+          created_at: string
+          duration_minutes: number
+          id: string
+          start_time: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          area_name: string
+          capacity?: number
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          start_time: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          area_name?: string
+          capacity?: number
+          created_at?: string
+          duration_minutes?: number
+          id?: string
+          start_time?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_slots_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admin_invites: {
         Row: {
           created_at: string
@@ -843,6 +1034,42 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          cancelled_at: string | null
+          created_at: string
+          expires_at: string
+          id: string
+          plan: string
+          started_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at: string
+          id?: string
+          plan: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancelled_at?: string | null
+          created_at?: string
+          expires_at?: string
+          id?: string
+          plan?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       survey_questions: {
         Row: {
           created_at: string
@@ -994,6 +1221,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      has_active_subscription: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
