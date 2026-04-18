@@ -49,6 +49,7 @@ import Activities from "./pages/Activities";
 import ActivityDetail from "./pages/ActivityDetail";
 import ActivityArea from "./pages/ActivityArea";
 import ActivitySlots from "./pages/ActivitySlots";
+import ActivityBooked from "./pages/ActivityBooked";
 import SubscriptionPaywall from "./pages/SubscriptionPaywall";
 import SubscriptionManage from "./pages/SubscriptionManage";
 import AdminActivities from "./pages/admin/AdminActivities";
@@ -248,6 +249,13 @@ const AppRoutes = () => (
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <ActivitySlots />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/activities/booked/:bookingId" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <ActivityBooked />
         </div>
       </ProtectedRoute>
     } />

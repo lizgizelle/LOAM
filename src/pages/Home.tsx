@@ -2,296 +2,154 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, MapPin, Clock, Users, ChevronRight, Sparkles } from 'lucide-react';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { getDefaultAvatar } from '@/lib/avatars';
+import { Bell, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
-interface EventWithDetails {
+interface ActivityCard {
   id: string;
   name: string;
-  description: string | null;
-  cover_image_url: string | null;
-  location: string | null;
-  start_date: string;
-  end_date: string | null;
-  capacity: number | null;
-  is_unlimited_capacity: boolean;
-  status: string;
-  ticket_price: number | null;
-  currency: string;
-  approved_count: number;
-  participants: { id: string; first_name: string | null; avatar_url: string | null }[];
+  icon_emoji: string | null;
+  next_slot: string | null;
 }
+
+const ICON_BG = [
+  'bg-orange-100 text-orange-600',
+  'bg-emerald-100 text-emerald-600',
+  'bg-purple-100 text-purple-600',
+  'bg-pink-100 text-pink-600',
+  'bg-sky-100 text-sky-600',
+  'bg-amber-100 text-amber-600',
+  'bg-rose-100 text-rose-600',
+  'bg-indigo-100 text-indigo-600',
+];
 
 const Home = () => {
   const navigate = useNavigate();
-  const [events, setEvents] = useState<EventWithDetails[]>([]);
+  const { user } = useAuth();
+  const [firstName, setFirstName] = useState<string>('');
+  const [activities, setActivities] = useState<ActivityCard[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchEvents();
-  }, []);
-
-  const fetchEvents = async () => {
-    try {
-      const { data: eventsData } = await supabase
-        .from('events')
-        .select('id, name, description, cover_image_url, location, start_date, end_date, capacity, is_unlimited_capacity, status, ticket_price, currency')
-        .eq('status', 'published')
-        .eq('visibility', 'public')
-        .gte('start_date', new Date().toISOString())
-        .order('start_date', { ascending: true });
-
-      if (!eventsData || eventsData.length === 0) {
-        setEvents([]);
-        setLoading(false);
-        return;
+    const load = async () => {
+      // Greeting name
+      if (user?.id) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('first_name')
+          .eq('id', user.id)
+          .maybeSingle();
+        setFirstName(profile?.first_name || '');
       }
 
+      // Activities
+      const { data: acts } = await supabase
+        .from('activities')
+        .select('id, name, icon_emoji')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+
       const enriched = await Promise.all(
-        eventsData.map(async (event) => {
-          const { data: participantData } = await supabase
-            .from('event_participants')
-            .select('user_id')
-            .eq('event_id', event.id)
-            .eq('status', 'approved')
-            .limit(5);
-
-          const userIds = (participantData || []).map(p => p.user_id);
-          let profiles: { id: string; first_name: string | null; avatar_url: string | null }[] = [];
-
-          if (userIds.length > 0) {
-            const { data: profileData } = await supabase
-              .from('profiles')
-              .select('id, first_name, avatar_url')
-              .in('id', userIds);
-            profiles = profileData || [];
-          }
-
-          const { count } = await supabase
-            .from('event_participants')
-            .select('*', { count: 'exact', head: true })
-            .eq('event_id', event.id)
-            .eq('status', 'approved');
-
+        (acts || []).map(async (a) => {
+          const { data: nextSlot } = await supabase
+            .from('activity_slots')
+            .select('start_time')
+            .eq('activity_id', a.id)
+            .eq('status', 'open')
+            .gt('start_time', new Date().toISOString())
+            .order('start_time', { ascending: true })
+            .limit(1)
+            .maybeSingle();
           return {
-            ...event,
-            approved_count: count || 0,
-            participants: profiles,
+            id: a.id,
+            name: a.name,
+            icon_emoji: a.icon_emoji,
+            next_slot: nextSlot?.start_time || null,
           };
         })
       );
-
-      setEvents(enriched);
-    } catch (error) {
-      console.error('Error fetching events:', error);
-    } finally {
+      setActivities(enriched);
       setLoading(false);
-    }
+    };
+    load();
+  }, [user?.id]);
+
+  const formatNextSlot = (iso: string | null) => {
+    if (!iso) return 'Coming soon';
+    const d = new Date(iso);
+    const day = d.toLocaleDateString('en-US', { weekday: 'long' });
+    const date = d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+    return `${day}, ${date}`;
   };
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  const formatTime = (iso: string | null) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
   };
-
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  };
-
-  const formatPrice = (price: number | null, currency: string) => {
-    if (!price || price === 0) return 'Free';
-    return `${currency} $${price.toFixed(0)}`;
-  };
-
-  const featured = events[0];
-  const upcoming = events.slice(1);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background pb-24 flex flex-col">
-        <div className="px-6 pt-14 pb-4 safe-area-top">
-          <h1 className="text-2xl font-bold text-foreground">Events</h1>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="animate-pulse text-muted-foreground">Loading...</div>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
-
-  if (events.length === 0) {
-    return (
-      <div className="min-h-screen bg-background pb-24">
-        <div className="px-6 pt-14 pb-4 safe-area-top">
-          <h1 className="text-2xl font-bold text-foreground">Events</h1>
-        </div>
-
-        {/* Activities entry — always visible */}
-        <div className="px-4 mb-6">
-          <button
-            onClick={() => navigate('/activities')}
-            className="w-full text-left bg-gradient-to-br from-primary/15 via-primary/5 to-secondary/40 rounded-2xl p-4 shadow-loam flex items-center gap-4 hover:shadow-loam-lg transition-all"
-          >
-            <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shrink-0">
-              <Sparkles className="w-6 h-6 text-background" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wide">New</p>
-              <h3 className="font-bold text-foreground">Small group activities</h3>
-              <p className="text-xs text-muted-foreground">Climbing, bowling, run club & more</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-          </button>
-        </div>
-
-        <div className="flex flex-col items-center justify-center px-6 py-12">
-          <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
-            <Calendar className="w-10 h-10 text-primary" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">No upcoming events</h2>
-          <p className="text-muted-foreground text-center max-w-xs">
-            Check back soon for new events 🌱
-          </p>
-        </div>
-        <BottomNav />
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-background pb-24">
-      <div className="px-6 pt-14 pb-4 safe-area-top">
-        <h1 className="text-2xl font-bold text-foreground">Events</h1>
-      </div>
-
-      {/* Activities entry — Timeleft-style small group bookings */}
-      <div className="px-4 mb-6">
-        <button
-          onClick={() => navigate('/activities')}
-          className="w-full text-left bg-gradient-to-br from-primary/15 via-primary/5 to-secondary/40 rounded-2xl p-4 shadow-loam flex items-center gap-4 hover:shadow-loam-lg transition-all"
-        >
-          <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shrink-0">
-            <Sparkles className="w-6 h-6 text-background" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-primary uppercase tracking-wide">New</p>
-            <h3 className="font-bold text-foreground">Small group activities</h3>
-            <p className="text-xs text-muted-foreground">Climbing, bowling, run club & more</p>
-          </div>
-          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+      {/* Header */}
+      <div className="px-6 pt-14 pb-2 safe-area-top flex items-start justify-between">
+        <p className="text-base font-medium text-foreground">
+          Hey {firstName || 'there'} 👋
+        </p>
+        <button className="w-10 h-10 rounded-full bg-popover flex items-center justify-center shadow-sm relative">
+          <Bell className="w-5 h-5 text-foreground" />
+          <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
         </button>
       </div>
 
-      {/* Featured Event Hero */}
-      {featured && (
-        <button
-          onClick={() => navigate(`/event/${featured.id}`)}
-          className="w-full text-left px-4 mb-6"
-        >
-          <div className="rounded-2xl overflow-hidden bg-popover shadow-loam">
-            {/* Cover image */}
-            <div className="relative h-48 bg-gradient-to-br from-primary/20 to-primary/5">
-              {featured.cover_image_url ? (
-                <img
-                  src={featured.cover_image_url}
-                  alt={featured.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <span className="text-5xl">✨</span>
-                </div>
-              )}
-              {/* Price badge */}
-              <div className="absolute top-3 right-3 bg-background/90 backdrop-blur-sm rounded-full px-3 py-1 text-xs font-semibold text-foreground">
-                {formatPrice(featured.ticket_price, featured.currency)}
-              </div>
-            </div>
+      {/* Hero greeting */}
+      <div className="px-6 pt-2 pb-10">
+        <h1 className="text-4xl font-serif text-foreground leading-tight">
+          Meet people in
+        </h1>
+        <h1 className="text-4xl font-serif text-muted-foreground leading-tight">
+          Singapore
+        </h1>
+      </div>
 
-            {/* Details */}
-            <div className="p-4">
-              <p className="text-xs font-semibold text-primary uppercase tracking-wide mb-1">
-                {formatDate(featured.start_date)} · {formatTime(featured.start_date)}
-              </p>
-              <h2 className="text-lg font-bold text-foreground mb-1">
-                {featured.name}
-              </h2>
-              {featured.location && (
-                <p className="text-sm text-muted-foreground mb-3">{featured.location}</p>
-              )}
+      {/* Section header */}
+      <div className="px-6 mb-4">
+        <h2 className="text-2xl font-bold text-foreground">Book your next activity</h2>
+      </div>
 
-              {/* Attendees row */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {featured.participants.length > 0 && (
-                    <div className="flex -space-x-2">
-                      {featured.participants.slice(0, 3).map((p, i) => (
-                        <Avatar key={p.id} className="w-6 h-6 border-2 border-popover" style={{ zIndex: 3 - i }}>
-                          <AvatarImage src={p.avatar_url || getDefaultAvatar(p.first_name || p.id)} />
-                          <AvatarFallback className="bg-primary/10 text-primary text-[10px]">
-                            {p.first_name?.[0]?.toUpperCase() || '?'}
-                          </AvatarFallback>
-                        </Avatar>
-                      ))}
-                    </div>
-                  )}
-                  <span className="text-xs text-muted-foreground">
-                    {featured.approved_count} going
-                  </span>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground" />
-              </div>
-            </div>
+      {/* Activity list */}
+      <div className="px-4 space-y-3">
+        {loading ? (
+          <p className="text-center text-muted-foreground py-8">Loading...</p>
+        ) : activities.length === 0 ? (
+          <div className="px-4 py-12 text-center">
+            <p className="text-muted-foreground">No activities yet. Check back soon 🌱</p>
           </div>
-        </button>
-      )}
-
-      {/* Upcoming Events List */}
-      {upcoming.length > 0 && (
-        <div className="px-4">
-          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide mb-3 px-2">
-            Upcoming
-          </h3>
-          <div className="space-y-3">
-            {upcoming.map((event) => (
-              <button
-                key={event.id}
-                onClick={() => navigate(`/event/${event.id}`)}
-                className="w-full text-left bg-popover rounded-xl shadow-loam p-3 flex gap-3 items-center transition-colors hover:bg-secondary/30"
-              >
-                {/* Thumbnail */}
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-gradient-to-br from-primary/20 to-primary/5 shrink-0">
-                  {event.cover_image_url ? (
-                    <img src={event.cover_image_url} alt={event.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-2xl">✨</div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold text-primary uppercase tracking-wide">
-                    {formatDate(event.start_date)} · {formatTime(event.start_date)}
-                  </p>
-                  <h4 className="font-semibold text-foreground text-sm truncate">{event.name}</h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-muted-foreground">{event.approved_count} going</span>
-                    <span className="text-xs text-muted-foreground">·</span>
-                    <span className="text-xs font-medium text-foreground">
-                      {formatPrice(event.ticket_price, event.currency)}
-                    </span>
-                  </div>
-                </div>
-
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+        ) : (
+          activities.map((a, i) => (
+            <button
+              key={a.id}
+              onClick={() => navigate(`/activities/${a.id}`)}
+              className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all"
+            >
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
+                {a.icon_emoji || '✨'}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-base text-foreground">{a.name}</p>
+                <p className="text-base font-bold text-foreground">
+                  {formatNextSlot(a.next_slot)}
+                </p>
+                {a.next_slot && (
+                  <p className="text-sm text-muted-foreground">{formatTime(a.next_slot)}</p>
+                )}
+              </div>
+              <div className="w-10 h-10 rounded-full bg-foreground flex items-center justify-center shrink-0">
+                <ArrowRight className="w-5 h-5 text-background" />
+              </div>
+            </button>
+          ))
+        )}
+      </div>
 
       <BottomNav />
     </div>

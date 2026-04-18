@@ -67,9 +67,11 @@ const ActivitySlots = () => {
   const handleConfirm = async () => {
     if (!selected || !user?.id) return;
     setBooking(true);
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('activity_bookings')
-      .insert({ slot_id: selected, user_id: user.id, status: 'confirmed' });
+      .insert({ slot_id: selected, user_id: user.id, status: 'confirmed' })
+      .select('id')
+      .maybeSingle();
     setBooking(false);
 
     if (error) {
@@ -80,8 +82,7 @@ const ActivitySlots = () => {
       }
       return;
     }
-    toast.success('Booked! See you there 🎉');
-    navigate('/my-events');
+    navigate(`/activities/booked/${data?.id}`);
   };
 
   return (
