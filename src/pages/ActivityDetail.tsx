@@ -43,7 +43,7 @@ const ActivityDetail = () => {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center px-6">
         <p className="text-muted-foreground mb-4">Activity not found.</p>
-        <button onClick={() => navigate('/activities')} className="text-primary font-medium">
+        <button onClick={() => navigate('/home')} className="text-primary font-medium">
           Back to activities
         </button>
       </div>
