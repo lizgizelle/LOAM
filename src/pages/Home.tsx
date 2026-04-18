@@ -124,11 +124,30 @@ const Home = () => {
 
   if (events.length === 0) {
     return (
-      <div className="min-h-screen bg-background pb-24 flex flex-col">
+      <div className="min-h-screen bg-background pb-24">
         <div className="px-6 pt-14 pb-4 safe-area-top">
           <h1 className="text-2xl font-bold text-foreground">Events</h1>
         </div>
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
+
+        {/* Activities entry — always visible */}
+        <div className="px-4 mb-6">
+          <button
+            onClick={() => navigate('/activities')}
+            className="w-full text-left bg-gradient-to-br from-primary/15 via-primary/5 to-secondary/40 rounded-2xl p-4 shadow-loam flex items-center gap-4 hover:shadow-loam-lg transition-all"
+          >
+            <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+              <Sparkles className="w-6 h-6 text-background" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold text-primary uppercase tracking-wide">New</p>
+              <h3 className="font-bold text-foreground">Small group activities</h3>
+              <p className="text-xs text-muted-foreground">Climbing, bowling, run club & more</p>
+            </div>
+            <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+          </button>
+        </div>
+
+        <div className="flex flex-col items-center justify-center px-6 py-12">
           <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-6">
             <Calendar className="w-10 h-10 text-primary" />
           </div>
