@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useAppStore } from '@/store/appStore';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronRight, Bell, Globe, MapPin, LogOut, Shield } from 'lucide-react';
+import { ChevronRight, Bell, Globe, MapPin, LogOut, Shield, Sparkles } from 'lucide-react';
 import { getDefaultAvatar } from '@/lib/avatars';
 import {
   DropdownMenu,
@@ -84,6 +84,26 @@ const Profile = () => {
             Edit profile
           </button>
         </div>
+      </div>
+
+      {/* Subscription */}
+      <div className="px-6 mb-6">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Membership
+        </h3>
+        <button
+          onClick={() => navigate('/profile/subscription')}
+          className="w-full flex items-center gap-4 p-4 bg-popover rounded-2xl shadow-loam text-left hover:bg-secondary/50 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-foreground">Subscription</p>
+            <p className="text-sm text-muted-foreground">Manage your plan</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Settings */}

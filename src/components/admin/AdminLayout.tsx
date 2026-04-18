@@ -11,7 +11,9 @@ import {
   LogOut,
   FileQuestion,
   MessageSquare,
-  Gamepad2
+  Gamepad2,
+  Sparkles,
+  CreditCard
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -25,6 +27,8 @@ const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/admin' },
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: Calendar, label: 'Events', path: '/admin/events' },
+  { icon: Sparkles, label: 'Activities', path: '/admin/activities' },
+  { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
   { icon: Gamepad2, label: 'Game', path: '/admin/game' },

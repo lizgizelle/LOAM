@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, MapPin, Clock, Users, ChevronRight } from 'lucide-react';
+import { Calendar, MapPin, Clock, Users, ChevronRight, Sparkles } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { getDefaultAvatar } from '@/lib/avatars';
 
@@ -146,6 +146,24 @@ const Home = () => {
     <div className="min-h-screen bg-background pb-24">
       <div className="px-6 pt-14 pb-4 safe-area-top">
         <h1 className="text-2xl font-bold text-foreground">Events</h1>
+      </div>
+
+      {/* Activities entry — Timeleft-style small group bookings */}
+      <div className="px-4 mb-6">
+        <button
+          onClick={() => navigate('/activities')}
+          className="w-full text-left bg-gradient-to-br from-primary/15 via-primary/5 to-secondary/40 rounded-2xl p-4 shadow-loam flex items-center gap-4 hover:shadow-loam-lg transition-all"
+        >
+          <div className="w-12 h-12 rounded-xl bg-foreground flex items-center justify-center shrink-0">
+            <Sparkles className="w-6 h-6 text-background" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold text-primary uppercase tracking-wide">New</p>
+            <h3 className="font-bold text-foreground">Small group activities</h3>
+            <p className="text-xs text-muted-foreground">Climbing, bowling, run club & more</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+        </button>
       </div>
 
       {/* Featured Event Hero */}
