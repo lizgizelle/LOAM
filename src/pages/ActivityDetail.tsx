@@ -62,7 +62,7 @@ const ActivityDetail = () => {
           </div>
         )}
         <button
-          onClick={() => navigate('/activities')}
+          onClick={() => navigate('/home')}
           className="absolute top-12 left-4 w-10 h-10 rounded-full bg-background/90 backdrop-blur-sm flex items-center justify-center safe-area-top"
         >
           <ArrowLeft className="w-5 h-5" />
