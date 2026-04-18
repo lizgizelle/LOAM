@@ -5,6 +5,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { getDefaultAvatar, DEFAULT_AVATARS } from '@/lib/avatars';
 import { formatSlotDate, formatSlotTime } from '@/lib/activities';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { toast } from '@/hooks/use-toast';
 
 interface MockMascot {
   id: string;
@@ -45,6 +57,23 @@ const ActivityBookingDetail = () => {
   const [startTime, setStartTime] = useState('');
   const [durationMin, setDurationMin] = useState(90);
   const [openMascot, setOpenMascot] = useState<MockMascot | null>(null);
+  const [cancelling, setCancelling] = useState(false);
+
+  const handleCancel = async () => {
+    if (!bookingId) return;
+    setCancelling(true);
+    const { error } = await supabase
+      .from('activity_bookings')
+      .update({ status: 'cancelled' })
+      .eq('id', bookingId);
+    setCancelling(false);
+    if (error) {
+      toast({ title: 'Could not cancel', description: error.message, variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Booking cancelled', description: 'Hope to see you at another one 🌿' });
+    navigate('/my-events');
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -190,9 +219,36 @@ const ActivityBookingDetail = () => {
         </div>
 
         {/* Gentle reminder */}
-        <p className="text-xs text-muted-foreground text-center max-w-xs mx-auto leading-relaxed">
+        <p className="text-xs text-muted-foreground text-center max-w-xs mx-auto leading-relaxed mb-6">
           Plans change — just give us 48 hours' notice if you can't make it 🌿
         </p>
+
+        {/* Cancel button */}
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <button className="w-full py-4 rounded-2xl border border-destructive/30 text-destructive font-medium hover:bg-destructive/5 transition-colors">
+              Cancel booking
+            </button>
+          </AlertDialogTrigger>
+          <AlertDialogContent className="rounded-3xl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Your seat will be released so someone else can join. You can always book another activity.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Keep booking</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleCancel}
+                disabled={cancelling}
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              >
+                {cancelling ? 'Cancelling...' : 'Yes, cancel'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
 
       {/* Mascot church dialog */}
