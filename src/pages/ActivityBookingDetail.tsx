@@ -201,20 +201,36 @@ const ActivityBookingDetail = () => {
             <h2 className="text-base font-semibold text-foreground">Who's going</h2>
             <span className="text-xs text-muted-foreground">({mascots.length})</span>
           </div>
-          <p className="text-xs text-muted-foreground mb-4">Tap a mascot to see which church they go to 🙏</p>
+          <p className="text-xs text-muted-foreground mb-4">
+            {locationRevealed
+              ? 'Tap a mascot to see which church they go to 🙏'
+              : 'Churches revealed 24 hours before — final groups confirmed by our team 🌿'}
+          </p>
 
           <div className="grid grid-cols-3 gap-3">
-            {mascots.map((m) => (
-              <button
-                key={m.id}
-                onClick={() => setOpenMascot(m)}
-                className="flex items-center justify-center p-3 rounded-2xl bg-popover shadow-loam hover:scale-105 transition-transform"
-              >
+            {mascots.map((m) => {
+              const inner = (
                 <div className="w-16 h-16 rounded-full overflow-hidden">
                   <img src={m.avatar} alt="Attendee" className="w-full h-full object-cover" />
                 </div>
-              </button>
-            ))}
+              );
+              return locationRevealed ? (
+                <button
+                  key={m.id}
+                  onClick={() => setOpenMascot(m)}
+                  className="flex items-center justify-center p-3 rounded-2xl bg-popover shadow-loam hover:scale-105 transition-transform"
+                >
+                  {inner}
+                </button>
+              ) : (
+                <div
+                  key={m.id}
+                  className="flex items-center justify-center p-3 rounded-2xl bg-popover shadow-loam"
+                >
+                  {inner}
+                </div>
+              );
+            })}
           </div>
         </div>
 
