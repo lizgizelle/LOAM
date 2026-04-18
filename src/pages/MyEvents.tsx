@@ -126,7 +126,7 @@ const MyEvents = () => {
   const ItemCard = ({ item, isPast = false }: { item: Item; isPast?: boolean }) => {
     const onClick = () => {
       if (item.kind === 'event') navigate(`/event/${item.id}?source=my-gatherings`);
-      else navigate(`/activities/${item.activity_id}`);
+      else navigate(`/my-events/activity/${item.id}`);
     };
     return (
       <button
