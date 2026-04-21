@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { ArrowLeft, AlertTriangle } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/useAuth';
@@ -14,11 +14,13 @@ import { useAuth } from '@/hooks/useAuth';
 interface Report {
   id: string;
   reporter_id: string;
-  reported_first_name: string;
-  court_number: number;
-  court_leader_name: string;
+  report_topic: string;
+  reported_first_name: string | null;
+  activity_id: string | null;
   event_name: string;
   event_date: string;
+  event_time: string | null;
+  event_aspect: string | null;
   category: string;
   description: string | null;
   photo_url: string | null;
@@ -57,6 +59,15 @@ const statusLabels: Record<string, string> = {
   closed: 'Closed — No Action',
 };
 
+const formatTime = (t: string | null) => {
+  if (!t) return '—';
+  const [h, m] = t.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'pm' : 'am';
+  const h12 = hour % 12 || 12;
+  return `${h12}:${m}${ampm}`;
+};
+
 export default function AdminReportDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -64,6 +75,7 @@ export default function AdminReportDetail() {
   const [report, setReport] = useState<Report | null>(null);
   const [reporterName, setReporterName] = useState('');
   const [reporterPhone, setReporterPhone] = useState('');
+  const [activityName, setActivityName] = useState<string>('');
   const [notes, setNotes] = useState<ReportNote[]>([]);
   const [relatedReports, setRelatedReports] = useState<RelatedReport[]>([]);
   const [newNote, setNewNote] = useState('');
@@ -83,9 +95,9 @@ export default function AdminReportDetail() {
         .single();
 
       if (error) throw error;
-      setReport(data);
+      setReport(data as any);
 
-      // Fetch reporter profile
+      // Reporter profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('first_name, last_name, phone_number')
@@ -95,7 +107,20 @@ export default function AdminReportDetail() {
       setReporterName(fullName);
       setReporterPhone(profile?.phone_number || '');
 
-      // Fetch photo if exists
+      // Activity name
+      const actId = (data as any).activity_id as string | null;
+      if (actId) {
+        const { data: act } = await supabase
+          .from('activities')
+          .select('name')
+          .eq('id', actId)
+          .single();
+        setActivityName(act?.name || (data as any).event_name || '—');
+      } else {
+        setActivityName((data as any).event_name || '—');
+      }
+
+      // Photo
       if (data.photo_url) {
         const { data: signedData } = await supabase.storage
           .from('report-photos')
@@ -103,14 +128,13 @@ export default function AdminReportDetail() {
         if (signedData) setPhotoUrl(signedData.signedUrl);
       }
 
-      // Fetch notes
+      // Notes
       const { data: notesData } = await supabase
         .from('concern_report_notes')
         .select('*')
         .eq('report_id', id!)
         .order('created_at', { ascending: true });
 
-      // Fetch admin names for notes
       const adminIds = [...new Set((notesData || []).map(n => n.admin_id))];
       const { data: adminProfiles } = await supabase
         .from('profiles')
@@ -123,15 +147,21 @@ export default function AdminReportDetail() {
         admin_name: adminMap.get(n.admin_id) || 'Admin',
       })));
 
-      // Fetch related reports (same name + court, excluding current)
-      const { data: related } = await supabase
-        .from('concern_reports')
-        .select('id, category, event_name, status, created_at')
-        .ilike('reported_first_name', data.reported_first_name)
-        .eq('court_number', data.court_number)
-        .neq('id', id!);
-
-      setRelatedReports(related || []);
+      // Related reports — same person + same activity
+      if ((data as any).report_topic === 'person' && data.reported_first_name) {
+        let relQuery = supabase
+          .from('concern_reports')
+          .select('id, category, event_name, status, created_at')
+          .ilike('reported_first_name', data.reported_first_name)
+          .neq('id', id!);
+        if (actId) {
+          relQuery = relQuery.eq('activity_id', actId);
+        }
+        const { data: related } = await relQuery;
+        setRelatedReports(related || []);
+      } else {
+        setRelatedReports([]);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -196,6 +226,7 @@ export default function AdminReportDetail() {
   }
 
   const totalReports = relatedReports.length + 1;
+  const isPerson = report.report_topic === 'person';
 
   return (
     <AdminLayout>
@@ -210,7 +241,7 @@ export default function AdminReportDetail() {
           </div>
         </div>
 
-        {totalReports >= 2 && (
+        {isPerson && totalReports >= 2 && (
           <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm font-medium">
             <AlertTriangle className="w-4 h-4" />
             Multiple reports ({totalReports}) — review recommended
@@ -218,7 +249,6 @@ export default function AdminReportDetail() {
         )}
 
         <div className="grid gap-6 lg:grid-cols-3">
-          {/* Main content */}
           <div className="lg:col-span-2 space-y-6">
             <Card>
               <CardHeader>
@@ -234,20 +264,44 @@ export default function AdminReportDetail() {
                     )}
                   </div>
                   <div>
-                    <span className="text-muted-foreground block">Reported Person</span>
-                    <span className="font-medium">{report.reported_first_name}</span>
+                    <span className="text-muted-foreground block">Topic</span>
+                    <Badge
+                      variant="outline"
+                      className={
+                        isPerson
+                          ? 'bg-sky-50 text-sky-700 border-sky-200'
+                          : 'bg-purple-50 text-purple-700 border-purple-200'
+                      }
+                    >
+                      {isPerson ? 'Person' : 'Activity'}
+                    </Badge>
                   </div>
+
+                  {isPerson ? (
+                    <div>
+                      <span className="text-muted-foreground block">Reported Person</span>
+                      <span className="font-medium">{report.reported_first_name || '—'}</span>
+                    </div>
+                  ) : (
+                    <div>
+                      <span className="text-muted-foreground block">Aspect</span>
+                      <span className="font-medium">{report.event_aspect || '—'}</span>
+                    </div>
+                  )}
+
                   <div>
-                    <span className="text-muted-foreground block">Court Number</span>
-                    <span className="font-medium">{report.court_number}</span>
+                    <span className="text-muted-foreground block">Activity</span>
+                    <span className="font-medium">{activityName}</span>
                   </div>
+
                   <div>
-                    <span className="text-muted-foreground block">Court Leader</span>
-                    <span className="font-medium">{report.court_leader_name}</span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground block">Event Date</span>
+                    <span className="text-muted-foreground block">Date</span>
                     <span className="font-medium">{format(new Date(report.event_date), 'dd MMM yyyy')}</span>
+                  </div>
+
+                  <div>
+                    <span className="text-muted-foreground block">Time</span>
+                    <span className="font-medium">{formatTime(report.event_time)}</span>
                   </div>
                 </div>
 
@@ -272,7 +326,6 @@ export default function AdminReportDetail() {
               </CardContent>
             </Card>
 
-            {/* Status & Actions */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Status & Actions</CardTitle>
@@ -304,7 +357,6 @@ export default function AdminReportDetail() {
               </CardContent>
             </Card>
 
-            {/* Internal Notes */}
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">Internal Notes</CardTitle>
@@ -340,14 +392,17 @@ export default function AdminReportDetail() {
             </Card>
           </div>
 
-          {/* Sidebar — Related reports */}
           <div className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Previous Reports</CardTitle>
+                <CardTitle className="text-base">
+                  {isPerson ? 'Previous Reports' : 'Related'}
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                {relatedReports.length === 0 ? (
+                {!isPerson ? (
+                  <p className="text-sm text-muted-foreground">Activity reports are not grouped.</p>
+                ) : relatedReports.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No previous reports for this person.</p>
                 ) : (
                   <div className="space-y-3">

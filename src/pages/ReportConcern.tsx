@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,33 +23,41 @@ const CATEGORIES = [
   "Something else — I'll describe it myself",
 ];
 
-const EVENT_ASPECTS = [
+const ACTIVITY_ASPECTS = [
   "Venue or safety concern",
-  "Event was not as described",
+  "Activity was not as described",
   "I felt unwelcome or excluded",
+  "Host or facilitation issue",
   "Something else — I'll describe it",
 ];
 
-type ReportTopic = '' | 'person' | 'event';
+type ReportTopic = '' | 'person' | 'activity';
+
+interface ActivityOption {
+  id: string;
+  name: string;
+  icon_emoji: string | null;
+}
 
 const ReportConcern = () => {
   const { user } = useAuth();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [activities, setActivities] = useState<ActivityOption[]>([]);
 
   // Step 1 — Topic
   const [reportTopic, setReportTopic] = useState<ReportTopic>('');
 
   // Step 1 — Person fields
   const [reportedFirstName, setReportedFirstName] = useState('');
-  const [courtNumber, setCourtNumber] = useState('');
-  const [courtLeaderName, setCourtLeaderName] = useState('');
 
-  // Step 1 — Event fields
-  const [eventAspect, setEventAspect] = useState('');
+  // Step 1 — Activity-specific fields
+  const [activityAspect, setActivityAspect] = useState('');
 
-  // Step 1 — Shared
+  // Step 1 — Shared (both topics): activity, date, time
+  const [activityId, setActivityId] = useState('');
   const [eventDate, setEventDate] = useState<Date | undefined>(undefined);
+  const [eventTime, setEventTime] = useState('');
 
   // Step 2
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -58,6 +66,17 @@ const ReportConcern = () => {
   const [description, setDescription] = useState('');
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from('activities')
+        .select('id, name, icon_emoji')
+        .eq('is_active', true)
+        .order('display_order', { ascending: true });
+      setActivities(data || []);
+    })();
+  }, []);
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,15 +105,17 @@ const ReportConcern = () => {
         }
       }
 
+      const activityName = activities.find(a => a.id === activityId)?.name || '';
+
       const { error } = await supabase.from('concern_reports').insert({
         reporter_id: user.id,
         report_topic: reportTopic,
-        reported_first_name: reportTopic === 'person' ? reportedFirstName.trim() : null,
-        court_number: reportTopic === 'person' ? parseInt(courtNumber) : null,
-        court_leader_name: reportTopic === 'person' ? courtLeaderName.trim() : null,
-        event_aspect: reportTopic === 'event' ? eventAspect : null,
-        event_name: '',
+        activity_id: activityId || null,
+        event_name: activityName,
         event_date: eventDate ? format(eventDate, 'yyyy-MM-dd') : new Date().toISOString().split('T')[0],
+        event_time: eventTime || null,
+        reported_first_name: reportTopic === 'person' ? reportedFirstName.trim() : null,
+        event_aspect: reportTopic === 'activity' ? activityAspect : null,
         category: selectedCategory,
         description: description.trim() || null,
         photo_url: photoUrl,
@@ -114,20 +135,23 @@ const ReportConcern = () => {
     setStep(1);
     setReportTopic('');
     setReportedFirstName('');
-    setCourtNumber('');
-    setCourtLeaderName('');
-    setEventAspect('');
+    setActivityAspect('');
+    setActivityId('');
+    setEventDate(undefined);
+    setEventTime('');
     setDescription('');
     setSelectedCategory('');
     setPhotoFile(null);
     setPhotoPreview(null);
   };
 
+  const sharedFieldsValid = !!(activityId && eventDate && eventTime);
+
   const canProceedStep1 =
     reportTopic === 'person'
-      ? reportedFirstName.trim() && courtNumber && courtLeaderName.trim() && eventDate
-      : reportTopic === 'event'
-        ? eventAspect && eventDate
+      ? !!reportedFirstName.trim() && sharedFieldsValid
+      : reportTopic === 'activity'
+        ? !!activityAspect && sharedFieldsValid
         : false;
 
   const canProceedStep2 = selectedCategory !== '';
@@ -172,7 +196,7 @@ const ReportConcern = () => {
             {/* Topic cards */}
             <div className="grid grid-cols-1 gap-3">
               <button
-                onClick={() => { setReportTopic('person'); setEventAspect(''); }}
+                onClick={() => { setReportTopic('person'); setActivityAspect(''); }}
                 className={cn(
                   "flex items-start gap-4 p-4 rounded-2xl border text-left transition-all",
                   reportTopic === 'person'
@@ -193,28 +217,28 @@ const ReportConcern = () => {
               </button>
 
               <button
-                onClick={() => { setReportTopic('event'); setReportedFirstName(''); setCourtNumber(''); setCourtLeaderName(''); }}
+                onClick={() => { setReportTopic('activity'); setReportedFirstName(''); }}
                 className={cn(
                   "flex items-start gap-4 p-4 rounded-2xl border text-left transition-all",
-                  reportTopic === 'event'
+                  reportTopic === 'activity'
                     ? "border-primary bg-primary/5 shadow-sm"
                     : "border-border bg-card hover:border-primary/40"
                 )}
               >
                 <div className={cn(
                   "w-10 h-10 rounded-full flex items-center justify-center shrink-0 mt-0.5",
-                  reportTopic === 'event' ? "bg-primary/10" : "bg-muted"
+                  reportTopic === 'activity' ? "bg-primary/10" : "bg-muted"
                 )}>
-                  <Flag className={cn("w-5 h-5", reportTopic === 'event' ? "text-primary" : "text-muted-foreground")} />
+                  <Flag className={cn("w-5 h-5", reportTopic === 'activity' ? "text-primary" : "text-muted-foreground")} />
                 </div>
                 <div>
-                  <span className="font-medium text-foreground block">The event</span>
-                  <span className="text-sm text-muted-foreground">Something about the event itself felt off</span>
+                  <span className="font-medium text-foreground block">The activity</span>
+                  <span className="text-sm text-muted-foreground">Something about the activity itself felt off</span>
                 </div>
               </button>
             </div>
 
-            {/* Person fields */}
+            {/* Person-only field */}
             {reportTopic === 'person' && (
               <div className="space-y-4 animate-in fade-in">
                 <div>
@@ -226,46 +250,20 @@ const ReportConcern = () => {
                     maxLength={100}
                   />
                 </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">Court number</label>
-                  <Select value={courtNumber} onValueChange={setCourtNumber}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select court" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.from({ length: 12 }, (_, i) => (
-                        <SelectItem key={i + 1} value={String(i + 1)}>
-                          Court {i + 1}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">Court leader's name</label>
-                  <Input
-                    value={courtLeaderName}
-                    onChange={(e) => setCourtLeaderName(e.target.value)}
-                    placeholder="Leader's name"
-                    maxLength={100}
-                  />
-                </div>
               </div>
             )}
 
-            {/* Event fields */}
-            {reportTopic === 'event' && (
+            {/* Activity-only field */}
+            {reportTopic === 'activity' && (
               <div className="space-y-4 animate-in fade-in">
                 <div>
-                  <label className="text-sm font-medium text-foreground mb-1.5 block">What aspect of the event?</label>
-                  <Select value={eventAspect} onValueChange={setEventAspect}>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">What aspect of the activity?</label>
+                  <Select value={activityAspect} onValueChange={setActivityAspect}>
                     <SelectTrigger>
                       <SelectValue placeholder="Select an aspect" />
                     </SelectTrigger>
                     <SelectContent>
-                      {EVENT_ASPECTS.map((aspect) => (
+                      {ACTIVITY_ASPECTS.map((aspect) => (
                         <SelectItem key={aspect} value={aspect}>
                           {aspect}
                         </SelectItem>
@@ -276,33 +274,64 @@ const ReportConcern = () => {
               </div>
             )}
 
-            {/* Shared: event date */}
+            {/* Shared: activity / date / time */}
             {reportTopic && (
-              <div className="animate-in fade-in">
-                <label className="text-sm font-medium text-foreground mb-1.5 block">Event date</label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !eventDate && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {eventDate ? format(eventDate, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={eventDate}
-                      onSelect={setEventDate}
-                      initialFocus
-                      className={cn("p-3 pointer-events-auto")}
+              <div className="space-y-4 animate-in fade-in">
+                <div>
+                  <label className="text-sm font-medium text-foreground mb-1.5 block">
+                    {reportTopic === 'person' ? 'Which activity were you at?' : 'Which activity?'}
+                  </label>
+                  <Select value={activityId} onValueChange={setActivityId}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an activity" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {activities.map((a) => (
+                        <SelectItem key={a.id} value={a.id}>
+                          {a.icon_emoji ? `${a.icon_emoji} ` : ''}{a.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Date</label>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className={cn(
+                            "w-full justify-start text-left font-normal",
+                            !eventDate && "text-muted-foreground"
+                          )}
+                        >
+                          <CalendarIcon className="mr-2 h-4 w-4" />
+                          {eventDate ? format(eventDate, "PP") : <span>Pick a date</span>}
+                        </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={eventDate}
+                          onSelect={setEventDate}
+                          initialFocus
+                          className={cn("p-3 pointer-events-auto")}
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </div>
+
+                  <div>
+                    <label className="text-sm font-medium text-foreground mb-1.5 block">Time</label>
+                    <Input
+                      type="time"
+                      value={eventTime}
+                      onChange={(e) => setEventTime(e.target.value)}
                     />
-                  </PopoverContent>
-                </Popover>
+                  </div>
+                </div>
               </div>
             )}
 
