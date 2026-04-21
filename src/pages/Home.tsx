@@ -91,10 +91,7 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="px-6 pt-14 pb-2 safe-area-top flex items-start justify-between">
-        <p className="text-base font-medium text-foreground">
-          Hey {firstName || 'there'} 👋
-        </p>
+      <div className="px-6 pt-14 pb-2 safe-area-top flex items-start justify-end">
         <button className="w-10 h-10 rounded-full bg-popover flex items-center justify-center shadow-sm relative">
           <Bell className="w-5 h-5 text-foreground" />
           <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-primary" />
