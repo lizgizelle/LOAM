@@ -434,10 +434,13 @@ const ReportConcern = () => {
               <Heart className="w-8 h-8 text-primary" />
             </div>
             <h2 className="text-xl font-semibold text-foreground mb-3">
-              Thank you for trusting us with this
+              Thank you for trusting us with this.
             </h2>
-            <p className="text-muted-foreground max-w-xs leading-relaxed mb-8">
-              A real person on our team will review this within 15 minutes. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.
+            <p className="text-muted-foreground max-w-sm leading-relaxed mb-4">
+              A real person on our team will review your report within 24 hours. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.
+            </p>
+            <p className="text-muted-foreground max-w-sm leading-relaxed mb-8 text-sm">
+              If the situation involves illegal activity — such as sexual harassment or other violations of the law — you should not hesitate to contact your local authorities or the police directly.
             </p>
             <Button variant="outline" onClick={resetForm}>
               Done
