@@ -45,6 +45,7 @@ import ActivityArea from "./pages/ActivityArea";
 import ActivitySlots from "./pages/ActivitySlots";
 import ActivityBooked from "./pages/ActivityBooked";
 import ActivityBookingDetail from "./pages/ActivityBookingDetail";
+import ActivityFeedback from "./pages/ActivityFeedback";
 import SubscriptionPaywall from "./pages/SubscriptionPaywall";
 import SubscriptionManage from "./pages/SubscriptionManage";
 import AdminActivities from "./pages/admin/AdminActivities";
@@ -245,6 +246,13 @@ const AppRoutes = () => (
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <ActivityBookingDetail />
+        </div>
+      </ProtectedRoute>
+    } />
+    <Route path="/my-events/activity/:bookingId/feedback" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <ActivityFeedback />
         </div>
       </ProtectedRoute>
     } />

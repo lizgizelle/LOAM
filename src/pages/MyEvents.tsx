@@ -25,6 +25,7 @@ interface ActivityBookingRow {
   location: string; // area
   icon_emoji: string | null;
   activity_id: string;
+  has_feedback: boolean;
 }
 
 type Item = ApprovedEvent | ActivityBookingRow;
@@ -82,6 +83,14 @@ const MyEvents = () => {
             .in('id', actIds);
           const actMap = new Map((acts || []).map((a) => [a.id, a]));
 
+          // Fetch existing feedback for these bookings
+          const bookingIds = bookings.map((b) => b.id);
+          const { data: feedbacks } = await supabase
+            .from('activity_feedback')
+            .select('booking_id')
+            .in('booking_id', bookingIds);
+          const feedbackSet = new Set((feedbacks || []).map((f) => f.booking_id));
+
           activityItems = (slots || []).map((s) => {
             const a = actMap.get(s.activity_id);
             const booking = bookings.find((b) => b.slot_id === s.id)!;
@@ -95,6 +104,7 @@ const MyEvents = () => {
               location: s.area_name,
               icon_emoji: a?.icon_emoji ?? null,
               activity_id: s.activity_id,
+              has_feedback: feedbackSet.has(booking.id),
             };
           });
         }
@@ -124,20 +134,34 @@ const MyEvents = () => {
     .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
   const ItemCard = ({ item, isPast = false }: { item: Item; isPast?: boolean }) => {
+    const needsFeedback =
+      isPast && item.kind === 'activity' && !item.has_feedback;
+
     const onClick = () => {
-      if (item.kind === 'event') navigate(`/event/${item.id}?source=my-gatherings`);
-      else navigate(`/my-events/activity/${item.id}`);
+      if (item.kind === 'event') {
+        navigate(`/event/${item.id}?source=my-gatherings`);
+      } else if (needsFeedback) {
+        navigate(`/my-events/activity/${item.id}/feedback`);
+      } else {
+        navigate(`/my-events/activity/${item.id}`);
+      }
     };
     return (
       <button
         onClick={onClick}
-        className={`w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
-          isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
+        className={`relative w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
+          isPast && !needsFeedback ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
         }`}
       >
+        {needsFeedback && (
+          <span className="absolute top-3 right-3 flex items-center justify-center">
+            <span className="absolute w-3 h-3 rounded-full bg-destructive/40 animate-ping" />
+            <span className="relative w-2.5 h-2.5 rounded-full bg-destructive" />
+          </span>
+        )}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               {item.kind === 'activity' && (
                 <span className="text-lg" aria-hidden>
                   {item.icon_emoji || '✨'}
@@ -156,6 +180,11 @@ const MyEvents = () => {
               >
                 {isPast ? 'Past' : item.kind === 'activity' ? 'Activity' : 'Confirmed'}
               </Badge>
+              {needsFeedback && (
+                <Badge className="text-xs shrink-0 bg-destructive/10 text-destructive border-0">
+                  Feedback needed
+                </Badge>
+              )}
             </div>
             <div className="space-y-1">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -169,6 +198,11 @@ const MyEvents = () => {
                   <MapPin className="w-4 h-4 text-primary shrink-0" />
                   <span className="truncate">{item.location}</span>
                 </div>
+              )}
+              {needsFeedback && (
+                <p className="text-xs text-destructive font-medium pt-1">
+                  Tap to share how it went →
+                </p>
               )}
             </div>
           </div>
