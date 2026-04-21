@@ -290,6 +290,7 @@ export type Database = {
       }
       concern_reports: {
         Row: {
+          activity_id: string | null
           category: string
           court_leader_name: string | null
           court_number: number | null
@@ -298,6 +299,7 @@ export type Database = {
           event_aspect: string | null
           event_date: string
           event_name: string
+          event_time: string | null
           id: string
           photo_url: string | null
           report_topic: string
@@ -307,6 +309,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activity_id?: string | null
           category: string
           court_leader_name?: string | null
           court_number?: number | null
@@ -315,6 +318,7 @@ export type Database = {
           event_aspect?: string | null
           event_date: string
           event_name: string
+          event_time?: string | null
           id?: string
           photo_url?: string | null
           report_topic?: string
@@ -324,6 +328,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activity_id?: string | null
           category?: string
           court_leader_name?: string | null
           court_number?: number | null
@@ -332,6 +337,7 @@ export type Database = {
           event_aspect?: string | null
           event_date?: string
           event_name?: string
+          event_time?: string | null
           id?: string
           photo_url?: string | null
           report_topic?: string
@@ -340,7 +346,15 @@ export type Database = {
           status?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "concern_reports_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       event_participants: {
         Row: {
