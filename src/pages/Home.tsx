@@ -104,10 +104,10 @@ const Home = () => {
       {/* Hero greeting */}
       <div className="px-6 pt-6 pb-10">
         <h1 className="text-4xl font-serif text-foreground leading-tight">
-          Meet people in
+          Meet Faith-Driven
         </h1>
         <h1 className="text-4xl font-serif italic text-muted-foreground leading-tight">
-          Singapore.
+          Singles in Singapore.
         </h1>
       </div>
 
