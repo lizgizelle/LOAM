@@ -25,6 +25,7 @@ interface ActivityBookingRow {
   location: string; // area
   icon_emoji: string | null;
   activity_id: string;
+  has_feedback: boolean;
 }
 
 type Item = ApprovedEvent | ActivityBookingRow;
@@ -82,6 +83,14 @@ const MyEvents = () => {
             .in('id', actIds);
           const actMap = new Map((acts || []).map((a) => [a.id, a]));
 
+          // Fetch existing feedback for these bookings
+          const bookingIds = bookings.map((b) => b.id);
+          const { data: feedbacks } = await supabase
+            .from('activity_feedback')
+            .select('booking_id')
+            .in('booking_id', bookingIds);
+          const feedbackSet = new Set((feedbacks || []).map((f) => f.booking_id));
+
           activityItems = (slots || []).map((s) => {
             const a = actMap.get(s.activity_id);
             const booking = bookings.find((b) => b.slot_id === s.id)!;
@@ -95,6 +104,7 @@ const MyEvents = () => {
               location: s.area_name,
               icon_emoji: a?.icon_emoji ?? null,
               activity_id: s.activity_id,
+              has_feedback: feedbackSet.has(booking.id),
             };
           });
         }
