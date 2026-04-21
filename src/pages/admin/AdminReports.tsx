@@ -10,11 +10,13 @@ import { AlertTriangle } from 'lucide-react';
 interface ConcernReport {
   id: string;
   reporter_id: string;
-  reported_first_name: string;
-  court_number: number;
-  court_leader_name: string;
+  report_topic: string;
+  reported_first_name: string | null;
+  activity_id: string | null;
   event_name: string;
   event_date: string;
+  event_time: string | null;
+  event_aspect: string | null;
   category: string;
   description: string | null;
   photo_url: string | null;
@@ -22,6 +24,7 @@ interface ConcernReport {
   created_at: string;
   reporter_name?: string;
   reporter_phone?: string;
+  activity_name?: string;
   report_count?: number;
 }
 
@@ -37,6 +40,15 @@ const statusLabels: Record<string, string> = {
   under_review: 'Under Review',
   action_taken: 'Action Taken',
   closed: 'Closed — No Action',
+};
+
+const formatTime = (t: string | null) => {
+  if (!t) return '—';
+  const [h, m] = t.split(':');
+  const hour = parseInt(h);
+  const ampm = hour >= 12 ? 'pm' : 'am';
+  const h12 = hour % 12 || 12;
+  return `${h12}:${m}${ampm}`;
 };
 
 export default function AdminReports() {
@@ -57,28 +69,58 @@ export default function AdminReports() {
 
       if (error) throw error;
 
-      // Fetch reporter names
+      // Fetch reporter profiles
       const reporterIds = [...new Set((reportsData || []).map(r => r.reporter_id))];
       const { data: profiles } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, phone_number')
         .in('id', reporterIds);
 
-      const profileMap = new Map((profiles || []).map(p => [p.id, { name: [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown', phone: p.phone_number || '' }]));
+      const profileMap = new Map(
+        (profiles || []).map(p => [
+          p.id,
+          {
+            name: [p.first_name, p.last_name].filter(Boolean).join(' ') || 'Unknown',
+            phone: p.phone_number || '',
+          },
+        ])
+      );
 
-      // Count reports per person (by first name + court)
+      // Fetch activity names
+      const activityIds = [
+        ...new Set((reportsData || []).map(r => (r as any).activity_id).filter(Boolean)),
+      ] as string[];
+      let activityMap = new Map<string, string>();
+      if (activityIds.length > 0) {
+        const { data: acts } = await supabase
+          .from('activities')
+          .select('id, name')
+          .in('id', activityIds);
+        activityMap = new Map((acts || []).map(a => [a.id, a.name]));
+      }
+
+      // Count repeat reports per reported person within same activity
       const countMap = new Map<string, number>();
       (reportsData || []).forEach(r => {
-        const key = `${r.reported_first_name.toLowerCase()}-${r.court_number}`;
-        countMap.set(key, (countMap.get(key) || 0) + 1);
+        if (r.report_topic === 'person' && r.reported_first_name) {
+          const key = `${r.reported_first_name.toLowerCase()}-${(r as any).activity_id || 'na'}`;
+          countMap.set(key, (countMap.get(key) || 0) + 1);
+        }
       });
 
       const enriched = (reportsData || []).map(r => ({
-        ...r,
+        ...(r as any),
         reporter_name: profileMap.get(r.reporter_id)?.name || 'Unknown',
         reporter_phone: profileMap.get(r.reporter_id)?.phone || '',
-        report_count: countMap.get(`${r.reported_first_name.toLowerCase()}-${r.court_number}`) || 1,
-      }));
+        activity_name:
+          activityMap.get((r as any).activity_id) || (r as any).event_name || '—',
+        report_count:
+          r.report_topic === 'person' && r.reported_first_name
+            ? countMap.get(
+                `${r.reported_first_name.toLowerCase()}-${(r as any).activity_id || 'na'}`
+              ) || 1
+            : 1,
+      })) as ConcernReport[];
 
       setReports(enriched);
     } catch (error) {
@@ -105,13 +147,13 @@ export default function AdminReports() {
             <Table>
               <TableHeader>
                 <TableRow>
-                   <TableHead>Reporter</TableHead>
-                   <TableHead>Topic</TableHead>
-                   <TableHead>Reported Person</TableHead>
-                   <TableHead>Court</TableHead>
-                   <TableHead>Category</TableHead>
-                   <TableHead>Date</TableHead>
-                   <TableHead>Status</TableHead>
+                  <TableHead>Reporter</TableHead>
+                  <TableHead>Topic</TableHead>
+                  <TableHead>Reported / Aspect</TableHead>
+                  <TableHead>Activity</TableHead>
+                  <TableHead>When</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead>Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -127,35 +169,41 @@ export default function AdminReports() {
                         {report.reporter_phone && (
                           <span className="text-muted-foreground text-xs block">{report.reporter_phone}</span>
                         )}
-                     </div>
-                     </TableCell>
-                     <TableCell>
-                       <Badge variant="outline" className={
-                         (report as any).report_topic === 'event'
-                           ? 'bg-purple-50 text-purple-700 border-purple-200'
-                           : 'bg-sky-50 text-sky-700 border-sky-200'
-                       }>
-                         {(report as any).report_topic === 'event' ? 'Event' : 'Person'}
-                       </Badge>
-                     </TableCell>
-                     <TableCell>
-                       {(report as any).report_topic === 'person' ? (
-                         <div className="flex items-center gap-2">
-                           {report.reported_first_name}
-                           {report.report_count! >= 2 && (
-                             <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
-                               <AlertTriangle className="w-3 h-3" />
-                               {report.report_count} reports
-                             </span>
-                           )}
-                         </div>
-                       ) : (
-                         <span className="text-muted-foreground text-sm">{(report as any).event_aspect || '—'}</span>
-                       )}
-                     </TableCell>
-                     <TableCell>{report.court_number || '—'}</TableCell>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          report.report_topic === 'activity'
+                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            : 'bg-sky-50 text-sky-700 border-sky-200'
+                        }
+                      >
+                        {report.report_topic === 'activity' ? 'Activity' : 'Person'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {report.report_topic === 'person' ? (
+                        <div className="flex items-center gap-2">
+                          {report.reported_first_name || '—'}
+                          {report.report_count! >= 2 && (
+                            <span className="inline-flex items-center gap-1 text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                              <AlertTriangle className="w-3 h-3" />
+                              {report.report_count} reports
+                            </span>
+                          )}
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-sm">{report.event_aspect || '—'}</span>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-sm">{report.activity_name}</TableCell>
+                    <TableCell className="text-sm whitespace-nowrap">
+                      {format(new Date(report.event_date), 'dd MMM yyyy')}
+                      <span className="text-muted-foreground"> · {formatTime(report.event_time)}</span>
+                    </TableCell>
                     <TableCell className="max-w-[200px] truncate text-sm">{report.category}</TableCell>
-                    <TableCell className="text-sm whitespace-nowrap">{format(new Date(report.created_at), 'dd MMM yyyy')}</TableCell>
                     <TableCell>
                       <Badge variant="outline" className={statusColors[report.status] || statusColors.new}>
                         {statusLabels[report.status] || report.status}
