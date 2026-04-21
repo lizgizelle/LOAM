@@ -439,7 +439,7 @@ const ReportConcern = () => {
             <p className="text-muted-foreground max-w-sm leading-relaxed mb-4">
               A real person on our team will review your report within 24 hours. Your identity will not be shared with the person you've reported. You're helping us keep this community safe.
             </p>
-            <p className="text-muted-foreground max-w-sm leading-relaxed mb-8 text-sm">
+            <p className="text-muted-foreground max-w-sm leading-relaxed mb-8">
               If the situation involves illegal activity — such as sexual harassment or other violations of the law — you should not hesitate to contact your local authorities or the police directly.
             </p>
             <Button variant="outline" onClick={resetForm}>
