@@ -154,7 +154,7 @@ const ActivityBooked = () => {
           onClick={() => navigate('/my-events')}
           className="w-full h-14 rounded-full bg-foreground text-background font-semibold text-base font-sans hover:opacity-90 transition-opacity"
         >
-          See in My Events
+          See in My Activities
         </button>
         <button
           onClick={() => navigate('/home')}

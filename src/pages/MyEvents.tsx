@@ -190,8 +190,8 @@ const MyEvents = () => {
       <h2 className="text-xl font-semibold text-foreground mb-2">No {type} bookings</h2>
       <p className="text-muted-foreground text-center max-w-xs mb-6">
         {type === 'upcoming'
-          ? "You don't have any upcoming events or activities yet."
-          : "You don't have any past events or activities yet."}
+          ? "You don't have any upcoming activities yet."
+          : "You don't have any past activities yet."}
       </p>
       {type === 'upcoming' && (
         <button
@@ -207,7 +207,7 @@ const MyEvents = () => {
   return (
     <div className="min-h-screen bg-background pb-24">
       <div className="px-6 pt-14 pb-4 safe-area-top">
-        <h1 className="text-2xl font-bold text-foreground">My Events</h1>
+        <h1 className="text-2xl font-bold text-foreground">My Activities</h1>
       </div>
 
       <div className="px-6">
