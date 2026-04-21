@@ -148,7 +148,10 @@ const ActivitySlots = () => {
         )}
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-background safe-area-bottom">
+      <div className="fixed bottom-0 left-0 right-0 max-w-md mx-auto p-4 bg-background safe-area-bottom space-y-3">
+        <p className="text-xs text-muted-foreground text-center leading-relaxed px-2">
+          Please only book if you're sure you can make it. A <span className="font-semibold text-foreground">$10 no-show fee</span> applies if you don't turn up — out of respect for your host and the others attending.
+        </p>
         <button
           onClick={handleConfirm}
           disabled={!selected || booking}
