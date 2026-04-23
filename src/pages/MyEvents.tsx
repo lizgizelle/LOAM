@@ -23,9 +23,10 @@ interface ActivityBookingRow {
   start_date: string;
   end_date: string;
   location: string; // area
-  icon_emoji: string | null;
+  artwork_url: string | null;
   activity_id: string;
-  has_feedback: boolean;
+  group_name: string | null;
+  groups_confirmed: boolean;
 }
 
 type Item = ApprovedEvent | ActivityBookingRow;
@@ -64,7 +65,7 @@ const MyEvents = () => {
         // Activity bookings
         const { data: bookings } = await supabase
           .from('activity_bookings')
-          .select('id, slot_id, status')
+          .select('id, slot_id, status, group_id')
           .eq('user_id', user.id)
           .eq('status', 'confirmed');
 
@@ -73,25 +74,23 @@ const MyEvents = () => {
           const slotIds = bookings.map((b) => b.slot_id);
           const { data: slots } = await supabase
             .from('activity_slots')
-            .select('id, activity_id, start_time, duration_minutes, area_name')
+            .select('id, activity_id, start_time, duration_minutes, area_name, groups_confirmed_at')
             .in('id', slotIds);
 
           const actIds = Array.from(new Set((slots || []).map((s) => s.activity_id)));
           const { data: acts } = await supabase
             .from('activities')
-            .select('id, name, icon_emoji')
+            .select('id, name, artwork_url')
             .in('id', actIds);
           const actMap = new Map((acts || []).map((a) => [a.id, a]));
 
-          // Fetch existing feedback for these bookings
-          const bookingIds = bookings.map((b) => b.id);
-          const { data: feedbacks } = await supabase
-            .from('activity_feedback')
-            .select('booking_id')
-            .in('booking_id', bookingIds);
-          const feedbackSet = new Set((feedbacks || []).map((f) => f.booking_id));
+          const groupIds = bookings.map((b) => b.group_id).filter(Boolean) as string[];
+          const { data: groups } = groupIds.length
+            ? await supabase.from('activity_groups').select('id, name').in('id', groupIds)
+            : { data: [] as any[] };
+          const groupMap = new Map((groups || []).map((g: any) => [g.id, g.name]));
 
-          activityItems = (slots || []).map((s) => {
+          activityItems = (slots || []).map((s: any) => {
             const a = actMap.get(s.activity_id);
             const booking = bookings.find((b) => b.slot_id === s.id)!;
             const end = new Date(new Date(s.start_time).getTime() + s.duration_minutes * 60000);
@@ -102,9 +101,10 @@ const MyEvents = () => {
               start_date: s.start_time,
               end_date: end.toISOString(),
               location: s.area_name,
-              icon_emoji: a?.icon_emoji ?? null,
+              artwork_url: a?.artwork_url ?? null,
               activity_id: s.activity_id,
-              has_feedback: feedbackSet.has(booking.id),
+              group_name: booking.group_id ? (groupMap.get(booking.group_id) || null) : null,
+              groups_confirmed: !!s.groups_confirmed_at,
             };
           });
         }
