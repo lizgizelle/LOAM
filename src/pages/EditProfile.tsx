@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -11,6 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { toast } from 'sonner';
 
 const WORK_INDUSTRIES = [
   'Technology',
@@ -29,16 +32,49 @@ const WORK_INDUSTRIES = [
 
 const EditProfile = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { userProfile, setUserProfile } = useAppStore();
-  
+
   const [firstName, setFirstName] = useState(userProfile?.firstName || '');
   const [phone, setPhone] = useState(userProfile?.phone || '');
   const [relationshipStatus, setRelationshipStatus] = useState(userProfile?.relationshipStatus || 'single');
   const [hasChildren, setHasChildren] = useState(userProfile?.hasChildren || false);
   const [workIndustry, setWorkIndustry] = useState(userProfile?.workIndustry || '');
   const [countryOfBirth, setCountryOfBirth] = useState(userProfile?.countryOfBirth || '');
+  const [church, setChurch] = useState(userProfile?.church || '');
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = () => {
+  // Pull latest church value from DB so it's always fresh
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('church')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (data?.church) setChurch(data.church);
+    })();
+  }, [user]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    if (user) {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: firstName.trim(),
+          phone_number: phone,
+          work_industry: workIndustry,
+          church: church.trim() || null,
+        })
+        .eq('id', user.id);
+      if (error) {
+        toast.error(error.message);
+        setSaving(false);
+        return;
+      }
+    }
     setUserProfile({
       firstName,
       phone,
@@ -46,7 +82,10 @@ const EditProfile = () => {
       hasChildren,
       workIndustry,
       countryOfBirth,
+      church: church.trim() || undefined,
     });
+    setSaving(false);
+    toast.success('Profile updated');
     navigate('/profile');
   };
 
@@ -94,6 +133,15 @@ const EditProfile = () => {
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
             placeholder="Your phone number"
+          />
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-muted-foreground mb-2 block">Church you currently attend</label>
+          <Input
+            value={church}
+            onChange={(e) => setChurch(e.target.value)}
+            placeholder="e.g. Cornerstone Community Church"
           />
         </div>
 
@@ -184,13 +232,14 @@ const EditProfile = () => {
           </div>
         </div>
 
-        <Button 
-          variant="loam" 
-          size="lg" 
+        <Button
+          variant="loam"
+          size="lg"
           className="w-full mt-8"
           onClick={handleSave}
+          disabled={saving}
         >
-          Save changes
+          {saving ? 'Saving...' : 'Save changes'}
         </Button>
       </div>
     </div>
