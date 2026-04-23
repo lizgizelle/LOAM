@@ -341,7 +341,9 @@ export type Database = {
         Row: {
           body: string
           created_at: string
+          edited_at: string | null
           id: string
+          is_deleted: boolean
           read_by_admin_at: string | null
           read_by_user_at: string | null
           sender_id: string | null
@@ -351,7 +353,9 @@ export type Database = {
         Insert: {
           body: string
           created_at?: string
+          edited_at?: string | null
           id?: string
+          is_deleted?: boolean
           read_by_admin_at?: string | null
           read_by_user_at?: string | null
           sender_id?: string | null
@@ -361,7 +365,9 @@ export type Database = {
         Update: {
           body?: string
           created_at?: string
+          edited_at?: string | null
           id?: string
+          is_deleted?: boolean
           read_by_admin_at?: string | null
           read_by_user_at?: string | null
           sender_id?: string | null
