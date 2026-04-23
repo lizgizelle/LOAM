@@ -13,8 +13,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
-import { ArrowLeft, Loader2, Plus, Trash2, Users, GripVertical, Move, Church, Mail, Phone } from 'lucide-react';
+import { ArrowLeft, Loader2, Plus, Trash2, Users, GripVertical, Move, Church, Mail, Phone, CheckCircle2, Lock } from 'lucide-react';
 import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { ensureUserThreadAdmin, postSystemMessage } from '@/lib/chat';
 import { formatSlotDate, formatSlotTime } from '@/lib/activities';
 
 interface Slot {
@@ -25,6 +27,7 @@ interface Slot {
   duration_minutes: number;
   activity_id: string;
   activity_name: string;
+  groups_confirmed_at: string | null;
 }
 
 interface Group {
