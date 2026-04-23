@@ -84,7 +84,7 @@ const ActivityDetail = () => {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">Small group</p>
-              <p className="text-xs text-muted-foreground">Up to 6 people</p>
+              <p className="text-xs text-muted-foreground">Small groups from 4-8 people</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
