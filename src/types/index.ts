@@ -27,6 +27,7 @@ export interface UserProfile {
   workIndustry?: string;
   countryOfBirth?: string;
   dateOfBirth?: string;
+  church?: string;
   defaultAvatarIndex?: number;
   notificationsEnabled?: boolean;
   language?: string;

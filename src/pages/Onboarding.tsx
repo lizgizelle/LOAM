@@ -48,10 +48,11 @@ const Onboarding = () => {
   const [workIndustry, setWorkIndustry] = useState('');
   const [birthdate, setBirthdate] = useState<{ day: number; month: number; year: number } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [church, setChurch] = useState('');
   const [notifications, setNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 9;
+  const totalSteps = 10;
 
   const calculateAge = (day: number, month: number, year: number): number => {
     const today = new Date();
@@ -126,10 +127,12 @@ const Onboarding = () => {
         .from('profiles')
         .update({
           first_name: firstName.trim(),
+          last_name: lastName.trim(),
           phone_number: fullPhone,
           date_of_birth: dateString,
           gender: gender,
           work_industry: workIndustry,
+          church: church.trim() || null,
         })
         .eq('id', user.id);
       
@@ -144,6 +147,7 @@ const Onboarding = () => {
         workIndustry: workIndustry,
         countryOfBirth: '',
         dateOfBirth: dateString,
+        church: church.trim() || undefined,
         city: detectedCity,
       });
       
@@ -388,8 +392,40 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 7: Birthdate */}
+        {/* Step 7: Church */}
         {step === 7 && (
+          <div className="animate-fade-in flex-1 flex flex-col">
+            <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
+              Which church are you currently attending?
+            </h1>
+            <p className="text-muted-foreground mb-8">
+              This helps us connect you with people in your community.
+            </p>
+
+            <Input
+              type="text"
+              placeholder="e.g. Cornerstone Community Church"
+              value={church}
+              onChange={(e) => setChurch(e.target.value)}
+              className="mb-8"
+            />
+
+            <div className="mt-auto">
+              <Button
+                variant="loam"
+                size="lg"
+                className="w-full"
+                onClick={handleNext}
+                disabled={!church.trim()}
+              >
+                Next
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 8: Birthdate */}
+        {step === 8 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               What's your date of birth?
@@ -419,8 +455,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 8: Profile photo */}
-        {step === 8 && (
+        {/* Step 9: Profile photo */}
+        {step === 9 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Add a profile photo
@@ -461,8 +497,8 @@ const Onboarding = () => {
           </div>
         )}
 
-        {/* Step 9: Notifications */}
-        {step === 9 && (
+        {/* Step 10: Notifications */}
+        {step === 10 && (
           <div className="animate-fade-in flex-1 flex flex-col">
             <h1 className="text-2xl font-bold font-serif text-foreground mb-2">
               Enable notifications
