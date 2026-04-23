@@ -467,6 +467,32 @@ export default function AdminUsers() {
 
                 <Separator />
 
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Activity Feedback</h4>
+                  {loadingFeedback ? (
+                    <p className="text-sm text-muted-foreground">Loading feedback...</p>
+                  ) : feedbackResponses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">No feedback submitted yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {feedbackResponses.map((r) => (
+                        <div key={r.id} className="text-sm border-l-2 border-primary/30 pl-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs text-muted-foreground">{r.activity_name || 'Activity'}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(r.created_at), 'd MMM')}</p>
+                          </div>
+                          <p className="text-muted-foreground mt-1">Q: {r.question_text_snapshot}</p>
+                          <p className="font-medium">
+                            A: {r.question_type_snapshot === 'rating_5' ? `${r.answer_value}/5 ★` : r.answer_value}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Admin Notes</label>
                   <Textarea
