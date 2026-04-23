@@ -28,7 +28,7 @@ interface BookingRow {
   slot_status: string;
   activity_id: string;
   activity_name: string;
-  activity_emoji: string | null;
+  activity_artwork: string | null;
   // profile
   first_name: string | null;
   last_name: string | null;
@@ -68,7 +68,7 @@ const AdminBookings = () => {
         id, status, slot_id, user_id,
         activity_slots:slot_id (
           start_time, area_name, capacity, status, activity_id,
-          activities:activity_id ( name, icon_emoji )
+          activities:activity_id ( name, artwork_url )
         )
       `)
       .order('created_at', { ascending: false })
@@ -101,7 +101,7 @@ const AdminBookings = () => {
         slot_status: b.activity_slots?.status || '',
         activity_id: b.activity_slots?.activity_id || '',
         activity_name: b.activity_slots?.activities?.name || 'Activity',
-        activity_emoji: b.activity_slots?.activities?.icon_emoji ?? null,
+        activity_artwork: b.activity_slots?.activities?.artwork_url ?? null,
         first_name: p.first_name,
         last_name: p.last_name,
         email: p.email,
