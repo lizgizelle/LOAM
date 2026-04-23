@@ -69,6 +69,7 @@ const AdminBookings = () => {
   const [moveOptions, setMoveOptions] = useState<SlotOption[]>([]);
   const [moveTargetId, setMoveTargetId] = useState<string>('');
   const [submittingMove, setSubmittingMove] = useState(false);
+  const [cancelling, setCancelling] = useState<BookingRow | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
