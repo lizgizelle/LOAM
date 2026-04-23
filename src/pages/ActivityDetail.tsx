@@ -53,11 +53,11 @@ const ActivityDetail = () => {
   return (
     <div className="min-h-screen bg-background pb-32">
       {/* Cover */}
-      <div className="relative h-64 bg-gradient-to-br from-primary/20 to-primary/5">
+      <div className="relative h-64 bg-white">
         {activity.cover_image_url ? (
           <img src={activity.cover_image_url} alt={activity.name} className="w-full h-full object-cover" />
         ) : activity.artwork_url ? (
-          <div className="w-full h-full flex items-center justify-center p-6">
+          <div className="w-full h-full flex items-center justify-center p-6 bg-white">
             <img src={activity.artwork_url} alt={activity.name} className="max-h-full max-w-full object-contain" />
           </div>
         ) : (
