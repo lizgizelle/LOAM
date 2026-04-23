@@ -218,7 +218,7 @@ const Chat = () => {
                           {fmtTime(m.created_at)}{m.edited_at && !m.is_deleted ? ' · edited' : ''}
                         </p>
                         {isUser && !m.is_deleted && !isEditing && (
-                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <div className="flex items-center gap-1">
                             <button
                               onClick={() => startEdit(m)}
                               className="p-1 rounded hover:bg-muted text-muted-foreground"
