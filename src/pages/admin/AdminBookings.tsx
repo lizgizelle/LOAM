@@ -15,6 +15,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 interface BookingRow {
   id: string;
@@ -59,6 +69,7 @@ const AdminBookings = () => {
   const [moveOptions, setMoveOptions] = useState<SlotOption[]>([]);
   const [moveTargetId, setMoveTargetId] = useState<string>('');
   const [submittingMove, setSubmittingMove] = useState(false);
+  const [cancelling, setCancelling] = useState<BookingRow | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -293,7 +304,7 @@ const AdminBookings = () => {
                           <Move className="w-3.5 h-3.5 mr-1" /> Move
                         </Button>
                         {b.status !== 'cancelled' ? (
-                          <Button size="sm" variant="ghost" onClick={() => setBookingStatus(b.id, 'cancelled')}>Cancel</Button>
+                          <Button size="sm" variant="ghost" onClick={() => setCancelling(b)}>Cancel</Button>
                         ) : (
                           <Button size="sm" variant="ghost" onClick={() => setBookingStatus(b.id, 'confirmed')}>Reactivate</Button>
                         )}
@@ -344,6 +355,40 @@ const AdminBookings = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel confirmation */}
+      <AlertDialog open={!!cancelling} onOpenChange={(o) => !o && setCancelling(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancelling && (
+                <>
+                  This will cancel <span className="font-medium text-foreground">{cancelling.first_name} {cancelling.last_name}</span>'s spot for{' '}
+                  <span className="font-medium text-foreground">{cancelling.activity_name}</span> on{' '}
+                  {formatSlotDate(cancelling.slot_start)} · {formatSlotTime(cancelling.slot_start)}.
+                  <br />
+                  You can reactivate it later if needed.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep booking</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (cancelling) {
+                  setBookingStatus(cancelling.id, 'cancelled');
+                  setCancelling(null);
+                }
+              }}
+            >
+              Yes, cancel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
