@@ -56,6 +56,16 @@ interface QuizResponse {
   answer_value: string;
 }
 
+interface FeedbackResponseRow {
+  id: string;
+  question_text_snapshot: string;
+  question_type_snapshot: string;
+  answer_value: string;
+  created_at: string;
+  activity_id: string;
+  activity_name?: string | null;
+}
+
 interface GameBucket {
   id: string;
   name: string;
@@ -72,6 +82,8 @@ export default function AdminUsers() {
   const [quizResponses, setQuizResponses] = useState<QuizResponse[]>([]);
   const [gameBucket, setGameBucket] = useState<GameBucket | null>(null);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+  const [feedbackResponses, setFeedbackResponses] = useState<FeedbackResponseRow[]>([]);
+  const [loadingFeedback, setLoadingFeedback] = useState(false);
 
   const openChatWith = (userId: string) => {
     navigate(`/admin/chat?user=${userId}`);
@@ -176,7 +188,9 @@ export default function AdminUsers() {
     setShowProfileDialog(true);
     setQuizResponses([]);
     setGameBucket(null);
+    setFeedbackResponses([]);
     setLoadingQuiz(true);
+    setLoadingFeedback(true);
 
     try {
       // Fetch quiz responses
@@ -202,6 +216,30 @@ export default function AdminUsers() {
       console.error('Error fetching quiz data:', error);
     } finally {
       setLoadingQuiz(false);
+    }
+
+    // Fetch feedback responses (separate try so it doesn't block)
+    try {
+      const { data: fbs } = await supabase
+        .from('feedback_responses')
+        .select('id, question_text_snapshot, question_type_snapshot, answer_value, created_at, activity_id')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      const rows = (fbs as any[]) || [];
+      const actIds = Array.from(new Set(rows.map((r) => r.activity_id)));
+      let amap: Record<string, string> = {};
+      if (actIds.length) {
+        const { data: acts } = await supabase
+          .from('activities')
+          .select('id, name')
+          .in('id', actIds);
+        (acts || []).forEach((a: any) => { amap[a.id] = a.name; });
+      }
+      setFeedbackResponses(rows.map((r) => ({ ...r, activity_name: amap[r.activity_id] })));
+    } catch (error) {
+      console.error('Error fetching feedback:', error);
+    } finally {
+      setLoadingFeedback(false);
     }
   };
 
@@ -421,6 +459,32 @@ export default function AdminUsers() {
                         <div key={i} className="text-sm">
                           <p className="text-muted-foreground">Q: {r.question_text_snapshot}</p>
                           <p className="font-medium">A: {formatAnswer(r)}</p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <h4 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Activity Feedback</h4>
+                  {loadingFeedback ? (
+                    <p className="text-sm text-muted-foreground">Loading feedback...</p>
+                  ) : feedbackResponses.length === 0 ? (
+                    <p className="text-sm text-muted-foreground italic">No feedback submitted yet.</p>
+                  ) : (
+                    <div className="space-y-3">
+                      {feedbackResponses.map((r) => (
+                        <div key={r.id} className="text-sm border-l-2 border-primary/30 pl-3">
+                          <div className="flex items-center justify-between gap-2">
+                            <p className="text-xs text-muted-foreground">{r.activity_name || 'Activity'}</p>
+                            <p className="text-xs text-muted-foreground">{format(new Date(r.created_at), 'd MMM')}</p>
+                          </div>
+                          <p className="text-muted-foreground mt-1">Q: {r.question_text_snapshot}</p>
+                          <p className="font-medium">
+                            A: {r.question_type_snapshot === 'rating_5' ? `${r.answer_value}/5 ★` : r.answer_value}
+                          </p>
                         </div>
                       ))}
                     </div>

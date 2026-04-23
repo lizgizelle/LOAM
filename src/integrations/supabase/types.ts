@@ -734,6 +734,142 @@ export type Database = {
         }
         Relationships: []
       }
+      feedback_invites: {
+        Row: {
+          activity_id: string
+          booking_id: string
+          created_at: string
+          id: string
+          responded_at: string | null
+          scheduled_at: string
+          sent_at: string | null
+          slot_id: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          booking_id: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          scheduled_at: string
+          sent_at?: string | null
+          slot_id: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          booking_id?: string
+          created_at?: string
+          id?: string
+          responded_at?: string | null
+          scheduled_at?: string
+          sent_at?: string | null
+          slot_id?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      feedback_questions: {
+        Row: {
+          activity_id: string | null
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          is_required: boolean
+          options: Json | null
+          question_text: string
+          question_type: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          question_text: string
+          question_type: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          is_required?: boolean
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_questions_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feedback_responses: {
+        Row: {
+          activity_id: string
+          answer_value: string
+          booking_id: string
+          created_at: string
+          id: string
+          invite_id: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          user_id: string
+        }
+        Insert: {
+          activity_id: string
+          answer_value: string
+          booking_id: string
+          created_at?: string
+          id?: string
+          invite_id: string
+          question_id: string
+          question_text_snapshot: string
+          question_type_snapshot: string
+          user_id: string
+        }
+        Update: {
+          activity_id?: string
+          answer_value?: string
+          booking_id?: string
+          created_at?: string
+          id?: string
+          invite_id?: string
+          question_id?: string
+          question_text_snapshot?: string
+          question_type_snapshot?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_responses_invite_id_fkey"
+            columns: ["invite_id"]
+            isOneToOne: false
+            referencedRelation: "feedback_invites"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       game_access_codes: {
         Row: {
           code: string
