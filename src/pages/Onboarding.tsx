@@ -48,10 +48,11 @@ const Onboarding = () => {
   const [workIndustry, setWorkIndustry] = useState('');
   const [birthdate, setBirthdate] = useState<{ day: number; month: number; year: number } | null>(null);
   const [photo, setPhoto] = useState<string | null>(null);
+  const [church, setChurch] = useState('');
   const [notifications, setNotifications] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const totalSteps = 9;
+  const totalSteps = 10;
 
   const calculateAge = (day: number, month: number, year: number): number => {
     const today = new Date();
