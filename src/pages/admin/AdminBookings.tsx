@@ -355,6 +355,40 @@ const AdminBookings = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Cancel confirmation */}
+      <AlertDialog open={!!cancelling} onOpenChange={(o) => !o && setCancelling(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Cancel this booking?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancelling && (
+                <>
+                  This will cancel <span className="font-medium text-foreground">{cancelling.first_name} {cancelling.last_name}</span>'s spot for{' '}
+                  <span className="font-medium text-foreground">{cancelling.activity_name}</span> on{' '}
+                  {formatSlotDate(cancelling.slot_start)} · {formatSlotTime(cancelling.slot_start)}.
+                  <br />
+                  You can reactivate it later if needed.
+                </>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Keep booking</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (cancelling) {
+                  setBookingStatus(cancelling.id, 'cancelled');
+                  setCancelling(null);
+                }
+              }}
+            >
+              Yes, cancel
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 };
