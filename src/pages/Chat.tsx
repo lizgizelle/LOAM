@@ -1,17 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import BottomNav from '@/components/BottomNav';
-import { MessageCircle, Send } from 'lucide-react';
+import { MessageCircle, Send, Pencil, Trash2, X, Check } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { ensureUserThread, postUserMessage } from '@/lib/chat';
+import { ensureUserThread, postUserMessage, editMessage, deleteMessage } from '@/lib/chat';
 import { Textarea } from '@/components/ui/textarea';
 
 interface Msg {
   id: string;
   thread_id: string;
   sender_type: 'user' | 'admin' | 'system';
+  sender_id: string | null;
   body: string;
   created_at: string;
+  edited_at: string | null;
+  is_deleted: boolean;
 }
 
 const Chat = () => {
@@ -21,6 +24,8 @@ const Chat = () => {
   const [loading, setLoading] = useState(true);
   const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // Init thread + load messages
@@ -33,7 +38,7 @@ const Chat = () => {
       setThreadId(tid);
       const { data } = await supabase
         .from('chat_messages')
-        .select('id, thread_id, sender_type, body, created_at')
+        .select('id, thread_id, sender_type, sender_id, body, created_at, edited_at, is_deleted')
         .eq('thread_id', tid)
         .order('created_at', { ascending: true });
       if (!cancelled) {
@@ -45,7 +50,7 @@ const Chat = () => {
     return () => { cancelled = true; };
   }, [user?.id]);
 
-  // Realtime subscribe
+  // Realtime subscribe (INSERT + UPDATE)
   useEffect(() => {
     if (!threadId) return;
     const channel = supabase
@@ -58,6 +63,15 @@ const Chat = () => {
             prev.some((m) => m.id === (payload.new as any).id)
               ? prev
               : [...prev, payload.new as Msg]
+          );
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'chat_messages', filter: `thread_id=eq.${threadId}` },
+        (payload) => {
+          setMessages((prev) =>
+            prev.map((m) => (m.id === (payload.new as any).id ? (payload.new as Msg) : m))
           );
         }
       )
@@ -81,6 +95,25 @@ const Chat = () => {
       setDraft(body);
       console.error(error);
     }
+  };
+
+  const startEdit = (m: Msg) => {
+    setEditingId(m.id);
+    setEditDraft(m.body);
+  };
+
+  const saveEdit = async () => {
+    if (!editingId || !editDraft.trim()) return;
+    const { error } = await editMessage(editingId, editDraft.trim());
+    if (error) console.error(error);
+    setEditingId(null);
+    setEditDraft('');
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Delete this message?')) return;
+    const { error } = await deleteMessage(id);
+    if (error) console.error(error);
   };
 
   const fmtTime = (iso: string) =>
@@ -136,24 +169,73 @@ const Chat = () => {
                   );
                 }
                 const isUser = m.sender_type === 'user';
+                const isEditing = editingId === m.id;
                 return (
-                  <div key={m.id} className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
+                  <div key={m.id} className={`flex group ${isUser ? 'justify-end' : 'justify-start'}`}>
                     <div className="max-w-[78%]">
                       {!isUser && (
                         <p className="text-[11px] text-muted-foreground mb-0.5 px-2">Loam team</p>
                       )}
-                      <div
-                        className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ${
-                          isUser
-                            ? 'bg-primary text-primary-foreground rounded-br-md'
-                            : 'bg-popover border border-border rounded-bl-md text-foreground'
-                        }`}
-                      >
-                        {m.body}
+                      {isEditing ? (
+                        <div className="flex items-end gap-1.5">
+                          <Textarea
+                            value={editDraft}
+                            onChange={(e) => setEditDraft(e.target.value)}
+                            rows={2}
+                            className="resize-none rounded-2xl text-sm min-w-[200px]"
+                            autoFocus
+                          />
+                          <button
+                            onClick={saveEdit}
+                            className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center"
+                            aria-label="Save edit"
+                          >
+                            <Check className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => { setEditingId(null); setEditDraft(''); }}
+                            className="h-8 w-8 rounded-full bg-muted text-foreground flex items-center justify-center"
+                            aria-label="Cancel edit"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <div
+                          className={`rounded-2xl px-4 py-2.5 text-sm whitespace-pre-line ${
+                            m.is_deleted
+                              ? 'bg-muted/60 text-muted-foreground italic'
+                              : isUser
+                              ? 'bg-primary text-primary-foreground rounded-br-md'
+                              : 'bg-popover border border-border rounded-bl-md text-foreground'
+                          }`}
+                        >
+                          {m.is_deleted ? 'Message deleted' : m.body}
+                        </div>
+                      )}
+                      <div className={`flex items-center gap-2 mt-1 ${isUser ? 'justify-end pr-2' : 'pl-2'}`}>
+                        <p className="text-[10px] text-muted-foreground">
+                          {fmtTime(m.created_at)}{m.edited_at && !m.is_deleted ? ' · edited' : ''}
+                        </p>
+                        {isUser && !m.is_deleted && !isEditing && (
+                          <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <button
+                              onClick={() => startEdit(m)}
+                              className="p-1 rounded hover:bg-muted text-muted-foreground"
+                              aria-label="Edit"
+                            >
+                              <Pencil className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(m.id)}
+                              className="p-1 rounded hover:bg-muted text-muted-foreground"
+                              aria-label="Delete"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          </div>
+                        )}
                       </div>
-                      <p className={`text-[10px] text-muted-foreground mt-1 ${isUser ? 'text-right pr-2' : 'pl-2'}`}>
-                        {fmtTime(m.created_at)}
-                      </p>
                     </div>
                   </div>
                 );
