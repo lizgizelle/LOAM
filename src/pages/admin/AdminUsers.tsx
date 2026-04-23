@@ -312,6 +312,10 @@ export default function AdminUsers() {
                             <Eye className="h-4 w-4 mr-2" />
                             View profile
                           </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => openChatWith(user.id)}>
+                            <MessageCircle className="h-4 w-4 mr-2" />
+                            Chat
+                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => toggleShadowBlock(user.id, user.is_shadow_blocked)}
                           >
