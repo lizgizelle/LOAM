@@ -58,12 +58,14 @@ interface OtherSlot {
 const AdminSlotManager = () => {
   const { slotId } = useParams<{ slotId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [slot, setSlot] = useState<Slot | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [bookings, setBookings] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [newGroupName, setNewGroupName] = useState('');
+  const [confirming, setConfirming] = useState(false);
 
   const [moving, setMoving] = useState<BookingRow | null>(null);
   const [otherSlots, setOtherSlots] = useState<OtherSlot[]>([]);
@@ -79,7 +81,7 @@ const AdminSlotManager = () => {
 
     const { data: slotData } = await supabase
       .from('activity_slots')
-      .select('id, start_time, area_name, status, duration_minutes, activity_id, activities:activity_id (name)')
+      .select('id, start_time, area_name, status, duration_minutes, activity_id, groups_confirmed_at, activities:activity_id (name)')
       .eq('id', slotId)
       .maybeSingle<any>();
 
@@ -97,6 +99,7 @@ const AdminSlotManager = () => {
       duration_minutes: slotData.duration_minutes,
       activity_id: slotData.activity_id,
       activity_name: slotData.activities?.name || 'Activity',
+      groups_confirmed_at: slotData.groups_confirmed_at,
     });
 
     const [{ data: groupsData }, { data: bookingsData }] = await Promise.all([
