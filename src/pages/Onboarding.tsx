@@ -147,6 +147,7 @@ const Onboarding = () => {
         workIndustry: workIndustry,
         countryOfBirth: '',
         dateOfBirth: dateString,
+        church: church.trim() || undefined,
         city: detectedCity,
       });
       
