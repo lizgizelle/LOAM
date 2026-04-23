@@ -93,7 +93,7 @@ const ActivityDetail = () => {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">90 minutes</p>
-              <p className="text-xs text-muted-foreground">Plus optional drinks after</p>
+              <p className="text-xs text-muted-foreground">Plus optional bites after</p>
             </div>
           </div>
           <div className="flex items-center gap-3">
