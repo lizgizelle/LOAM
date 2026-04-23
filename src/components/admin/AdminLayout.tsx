@@ -13,7 +13,8 @@ import {
   Gamepad2,
   Sparkles,
   CreditCard,
-  Ticket
+  Ticket,
+  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,6 +30,7 @@ const navItems = [
   { icon: Sparkles, label: 'Activities', path: '/admin/activities' },
   { icon: Ticket, label: 'Bookings', path: '/admin/bookings' },
   { icon: MessageSquare, label: 'Chat', path: '/admin/chat' },
+  { icon: Star, label: 'Feedback', path: '/admin/feedback' },
   { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
