@@ -65,14 +65,6 @@ const ActivityArea = () => {
         </h1>
         <p className="text-center text-muted-foreground mb-6">In Singapore</p>
 
-        <div className="bg-secondary/60 rounded-xl p-4 flex items-start gap-3 mb-6">
-          <div className="w-6 h-6 rounded-full bg-foreground/80 flex items-center justify-center shrink-0 mt-0.5">
-            <Info className="w-3.5 h-3.5 text-background" />
-          </div>
-          <p className="text-sm text-foreground">
-            This activity does not take place in all areas.
-          </p>
-        </div>
 
         {loading ? (
           <p className="text-center text-muted-foreground py-8">Loading areas...</p>
