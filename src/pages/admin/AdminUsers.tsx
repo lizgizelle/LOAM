@@ -442,7 +442,18 @@ export default function AdminUsers() {
                   </Button>
                 </div>
 
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setShowProfileDialog(false);
+                      openChatWith(selectedUser.id);
+                    }}
+                    className="w-full gap-2"
+                  >
+                    <MessageCircle className="h-4 w-4" />
+                    Chat with {selectedUser.first_name || 'user'}
+                  </Button>
                   <Button
                     variant={selectedUser.is_shadow_blocked ? 'outline' : 'destructive'}
                     onClick={() => {
