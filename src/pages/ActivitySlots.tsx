@@ -40,14 +40,14 @@ const ActivitySlots = () => {
           .eq('area_name', area)
           .eq('status', 'open')
           .gt('start_time', new Date().toISOString())
-          .lt('start_time', new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString())
-          .order('start_time', { ascending: true }),
+          .order('start_time', { ascending: true })
+          .limit(2),
       ]);
 
       setActivityName(actRes.data?.name || '');
 
       const slotList = slotRes.data || [];
-      // Get booked counts in parallel
+      // No capacity gating — admins manually split groups. We still surface count for context but never hide.
       const enriched = await Promise.all(
         slotList.map(async (s) => {
           const { count } = await supabase
@@ -117,17 +117,12 @@ const ActivitySlots = () => {
           <div className="space-y-3">
             {slots.map((s) => {
               const isSelected = selected === s.id;
-              const spotsLeft = s.capacity - s.booked_count;
-              const isFull = spotsLeft <= 0;
               return (
                 <button
                   key={s.id}
-                  onClick={() => !isFull && setSelected(s.id)}
-                  disabled={isFull}
+                  onClick={() => setSelected(s.id)}
                   className={`w-full p-4 rounded-xl text-left transition-all ${
-                    isFull
-                      ? 'bg-secondary/40 opacity-50 cursor-not-allowed'
-                      : isSelected
+                    isSelected
                       ? 'bg-popover border-2 border-foreground'
                       : 'bg-popover border-2 border-transparent'
                   }`}
@@ -137,9 +132,6 @@ const ActivitySlots = () => {
                       <p className="font-semibold text-foreground">{formatSlotDate(s.start_time)}</p>
                       <p className="text-sm text-muted-foreground">{formatSlotTime(s.start_time)}</p>
                     </div>
-                    {isFull && (
-                      <span className="text-sm text-muted-foreground">Full</span>
-                    )}
                   </div>
                 </button>
               );

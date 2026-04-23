@@ -8,19 +8,19 @@ import { useAuth } from '@/hooks/useAuth';
 interface ActivityCard {
   id: string;
   name: string;
-  icon_emoji: string | null;
+  artwork_url: string | null;
   next_slot: string | null;
 }
 
 const ICON_BG = [
-  'bg-orange-100 text-orange-600',
-  'bg-emerald-100 text-emerald-600',
-  'bg-purple-100 text-purple-600',
-  'bg-pink-100 text-pink-600',
-  'bg-sky-100 text-sky-600',
-  'bg-amber-100 text-amber-600',
-  'bg-rose-100 text-rose-600',
-  'bg-indigo-100 text-indigo-600',
+  'bg-orange-100',
+  'bg-emerald-100',
+  'bg-purple-100',
+  'bg-pink-100',
+  'bg-sky-100',
+  'bg-amber-100',
+  'bg-rose-100',
+  'bg-indigo-100',
 ];
 
 const Home = () => {
@@ -45,7 +45,7 @@ const Home = () => {
       // Activities
       const { data: acts } = await supabase
         .from('activities')
-        .select('id, name, icon_emoji')
+        .select('id, name, artwork_url')
         .eq('is_active', true)
         .order('display_order', { ascending: true });
 
@@ -63,7 +63,7 @@ const Home = () => {
           return {
             id: a.id,
             name: a.name,
-            icon_emoji: a.icon_emoji,
+            artwork_url: (a as any).artwork_url ?? null,
             next_slot: nextSlot?.start_time || null,
           };
         })
@@ -128,8 +128,12 @@ const Home = () => {
               onClick={() => navigate(`/activities/${a.id}`)}
               className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all border border-border/40"
             >
-              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center text-2xl shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
-                {a.icon_emoji || '✨'}
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
+                {a.artwork_url ? (
+                  <img src={a.artwork_url} alt={a.name} className="w-full h-full object-contain" loading="lazy" width={56} height={56} />
+                ) : (
+                  <span className="text-2xl">✨</span>
+                )}
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-base text-foreground">{a.name}</p>
