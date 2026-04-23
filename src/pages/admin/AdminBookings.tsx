@@ -136,7 +136,7 @@ const AdminBookings = () => {
 
   // Group by slot for cleaner overview
   const grouped = useMemo(() => {
-    const map = new Map<string, { slot_id: string; slot_start: string; slot_area: string; slot_capacity: number; activity_name: string; activity_emoji: string | null; rows: BookingRow[] }>();
+    const map = new Map<string, { slot_id: string; slot_start: string; slot_area: string; slot_capacity: number; activity_name: string; activity_artwork: string | null; rows: BookingRow[] }>();
     filtered.forEach((b) => {
       if (!map.has(b.slot_id)) {
         map.set(b.slot_id, {
@@ -145,7 +145,7 @@ const AdminBookings = () => {
           slot_area: b.slot_area,
           slot_capacity: b.slot_capacity,
           activity_name: b.activity_name,
-          activity_emoji: b.activity_emoji,
+          activity_artwork: b.activity_artwork,
           rows: [],
         });
       }
