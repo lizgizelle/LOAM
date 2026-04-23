@@ -127,10 +127,12 @@ const Onboarding = () => {
         .from('profiles')
         .update({
           first_name: firstName.trim(),
+          last_name: lastName.trim(),
           phone_number: fullPhone,
           date_of_birth: dateString,
           gender: gender,
           work_industry: workIndustry,
+          church: church.trim() || null,
         })
         .eq('id', user.id);
       
