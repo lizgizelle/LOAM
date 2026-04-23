@@ -262,7 +262,11 @@ const AdminBookings = () => {
               <div key={g.slot_id} className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl" aria-hidden>{g.activity_emoji || '✨'}</span>
+                    {g.activity_artwork ? (
+                      <img src={g.activity_artwork} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : (
+                      <span className="text-2xl" aria-hidden>✨</span>
+                    )}
                     <div>
                       <p className="font-semibold">{g.activity_name} · {g.slot_area}</p>
                       <p className="text-sm text-muted-foreground">{formatSlotDate(g.slot_start)} · {formatSlotTime(g.slot_start)}</p>
