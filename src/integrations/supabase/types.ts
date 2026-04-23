@@ -246,6 +246,8 @@ export type Database = {
           capacity: number
           created_at: string
           duration_minutes: number
+          groups_confirmed_at: string | null
+          groups_confirmed_by: string | null
           id: string
           start_time: string
           status: string
@@ -257,6 +259,8 @@ export type Database = {
           capacity?: number
           created_at?: string
           duration_minutes?: number
+          groups_confirmed_at?: string | null
+          groups_confirmed_by?: string | null
           id?: string
           start_time: string
           status?: string
@@ -268,6 +272,8 @@ export type Database = {
           capacity?: number
           created_at?: string
           duration_minutes?: number
+          groups_confirmed_at?: string | null
+          groups_confirmed_by?: string | null
           id?: string
           start_time?: string
           status?: string
@@ -328,6 +334,71 @@ export type Database = {
           key?: string
           updated_at?: string
           value?: Json
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          read_by_admin_at: string | null
+          read_by_user_at: string | null
+          sender_id: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          read_by_admin_at?: string | null
+          read_by_user_at?: string | null
+          sender_id?: string | null
+          sender_type: string
+          thread_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          read_by_admin_at?: string | null
+          read_by_user_at?: string | null
+          sender_id?: string | null
+          sender_type?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_thread_id_fkey"
+            columns: ["thread_id"]
+            isOneToOne: false
+            referencedRelation: "chat_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chat_threads: {
+        Row: {
+          created_at: string
+          id: string
+          last_message_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
