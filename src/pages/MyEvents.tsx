@@ -134,38 +134,26 @@ const MyEvents = () => {
     .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
   const ItemCard = ({ item, isPast = false }: { item: Item; isPast?: boolean }) => {
-    const needsFeedback =
-      isPast && item.kind === 'activity' && !item.has_feedback;
-
     const onClick = () => {
       if (item.kind === 'event') {
         navigate(`/event/${item.id}?source=my-gatherings`);
-      } else if (needsFeedback) {
-        navigate(`/my-events/activity/${item.id}/feedback`);
       } else {
         navigate(`/my-events/activity/${item.id}`);
       }
     };
+    const isActivity = item.kind === 'activity';
     return (
       <button
         onClick={onClick}
         className={`relative w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
-          isPast && !needsFeedback ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
+          isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
         }`}
       >
-        {needsFeedback && (
-          <span className="absolute top-3 right-3 flex items-center justify-center">
-            <span className="absolute w-3 h-3 rounded-full bg-destructive/40 animate-ping" />
-            <span className="relative w-2.5 h-2.5 rounded-full bg-destructive" />
-          </span>
-        )}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {item.kind === 'activity' && (
-                <span className="text-lg" aria-hidden>
-                  {item.icon_emoji || '✨'}
-                </span>
+              {isActivity && item.artwork_url && (
+                <img src={item.artwork_url} alt="" className="w-7 h-7 rounded-lg object-cover" />
               )}
               <h3 className="font-semibold text-foreground truncate">{item.name}</h3>
               <Badge
@@ -173,16 +161,16 @@ const MyEvents = () => {
                 className={`text-xs shrink-0 ${
                   isPast
                     ? 'bg-muted text-muted-foreground'
-                    : item.kind === 'activity'
+                    : isActivity
                     ? 'bg-primary/15 text-primary'
                     : 'bg-green-100 text-green-800'
                 }`}
               >
-                {isPast ? 'Past' : item.kind === 'activity' ? 'Activity' : 'Confirmed'}
+                {isPast ? 'Past' : isActivity ? 'Activity' : 'Confirmed'}
               </Badge>
-              {needsFeedback && (
-                <Badge className="text-xs shrink-0 bg-destructive/10 text-destructive border-0">
-                  Feedback needed
+              {isActivity && !isPast && item.group_name && item.groups_confirmed && (
+                <Badge className="text-xs shrink-0 bg-primary text-primary-foreground border-0">
+                  {item.group_name}
                 </Badge>
               )}
             </div>
@@ -199,9 +187,9 @@ const MyEvents = () => {
                   <span className="truncate">{item.location}</span>
                 </div>
               )}
-              {needsFeedback && (
-                <p className="text-xs text-destructive font-medium pt-1">
-                  Tap to share how it went →
+              {isActivity && !isPast && !item.groups_confirmed && (
+                <p className="text-xs text-muted-foreground italic pt-1">
+                  Group will be confirmed by the team soon.
                 </p>
               )}
             </div>
