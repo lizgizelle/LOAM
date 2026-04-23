@@ -113,7 +113,7 @@ const ActivityBooked = () => {
           <span className="italic" style={{ color: 'hsl(var(--primary))' }}>{firstName}</span>.
         </h1>
         <p className="text-base text-muted-foreground text-center mb-8 max-w-xs font-sans animate-fade-in" style={{ animationDelay: '0.15s' }}>
-          A seat is held for you. We can't wait to see who you'll meet.
+          A spot is held for you. We can't wait to see who you'll meet.
         </p>
 
         {/* Booking detail card — soft, hosted feel */}
