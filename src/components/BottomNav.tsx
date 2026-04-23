@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Flag, Calendar, User, Gamepad2 } from 'lucide-react';
+import { Home, MessageCircle, Calendar, User, Gamepad2 } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -8,7 +8,7 @@ const BottomNav = () => {
     { path: '/home', icon: Home, label: 'Home', highlight: false },
     { path: '/my-events', icon: Calendar, label: 'My Activities', highlight: false },
     { path: '/game', icon: Gamepad2, label: 'Game', highlight: true },
-    { path: '/report', icon: Flag, label: 'Report', highlight: false },
+    { path: '/chat', icon: MessageCircle, label: 'Chat', highlight: false },
     { path: '/profile', icon: User, label: 'Profile', highlight: false },
   ];
 

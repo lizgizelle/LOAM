@@ -23,9 +23,10 @@ interface ActivityBookingRow {
   start_date: string;
   end_date: string;
   location: string; // area
-  icon_emoji: string | null;
+  artwork_url: string | null;
   activity_id: string;
-  has_feedback: boolean;
+  group_name: string | null;
+  groups_confirmed: boolean;
 }
 
 type Item = ApprovedEvent | ActivityBookingRow;
@@ -64,7 +65,7 @@ const MyEvents = () => {
         // Activity bookings
         const { data: bookings } = await supabase
           .from('activity_bookings')
-          .select('id, slot_id, status')
+          .select('id, slot_id, status, group_id')
           .eq('user_id', user.id)
           .eq('status', 'confirmed');
 
@@ -73,25 +74,23 @@ const MyEvents = () => {
           const slotIds = bookings.map((b) => b.slot_id);
           const { data: slots } = await supabase
             .from('activity_slots')
-            .select('id, activity_id, start_time, duration_minutes, area_name')
+            .select('id, activity_id, start_time, duration_minutes, area_name, groups_confirmed_at')
             .in('id', slotIds);
 
           const actIds = Array.from(new Set((slots || []).map((s) => s.activity_id)));
           const { data: acts } = await supabase
             .from('activities')
-            .select('id, name, icon_emoji')
+            .select('id, name, artwork_url')
             .in('id', actIds);
           const actMap = new Map((acts || []).map((a) => [a.id, a]));
 
-          // Fetch existing feedback for these bookings
-          const bookingIds = bookings.map((b) => b.id);
-          const { data: feedbacks } = await supabase
-            .from('activity_feedback')
-            .select('booking_id')
-            .in('booking_id', bookingIds);
-          const feedbackSet = new Set((feedbacks || []).map((f) => f.booking_id));
+          const groupIds = bookings.map((b) => b.group_id).filter(Boolean) as string[];
+          const { data: groups } = groupIds.length
+            ? await supabase.from('activity_groups').select('id, name').in('id', groupIds)
+            : { data: [] as any[] };
+          const groupMap = new Map((groups || []).map((g: any) => [g.id, g.name]));
 
-          activityItems = (slots || []).map((s) => {
+          activityItems = (slots || []).map((s: any) => {
             const a = actMap.get(s.activity_id);
             const booking = bookings.find((b) => b.slot_id === s.id)!;
             const end = new Date(new Date(s.start_time).getTime() + s.duration_minutes * 60000);
@@ -102,9 +101,10 @@ const MyEvents = () => {
               start_date: s.start_time,
               end_date: end.toISOString(),
               location: s.area_name,
-              icon_emoji: a?.icon_emoji ?? null,
+              artwork_url: a?.artwork_url ?? null,
               activity_id: s.activity_id,
-              has_feedback: feedbackSet.has(booking.id),
+              group_name: booking.group_id ? (groupMap.get(booking.group_id) || null) : null,
+              groups_confirmed: !!s.groups_confirmed_at,
             };
           });
         }
@@ -134,38 +134,26 @@ const MyEvents = () => {
     .sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
 
   const ItemCard = ({ item, isPast = false }: { item: Item; isPast?: boolean }) => {
-    const needsFeedback =
-      isPast && item.kind === 'activity' && !item.has_feedback;
-
     const onClick = () => {
       if (item.kind === 'event') {
         navigate(`/event/${item.id}?source=my-gatherings`);
-      } else if (needsFeedback) {
-        navigate(`/my-events/activity/${item.id}/feedback`);
       } else {
         navigate(`/my-events/activity/${item.id}`);
       }
     };
+    const isActivity = item.kind === 'activity';
     return (
       <button
         onClick={onClick}
         className={`relative w-full bg-popover rounded-2xl shadow-loam p-4 text-left transition-colors ${
-          isPast && !needsFeedback ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
+          isPast ? 'opacity-60 hover:opacity-80' : 'hover:bg-secondary/30'
         }`}
       >
-        {needsFeedback && (
-          <span className="absolute top-3 right-3 flex items-center justify-center">
-            <span className="absolute w-3 h-3 rounded-full bg-destructive/40 animate-ping" />
-            <span className="relative w-2.5 h-2.5 rounded-full bg-destructive" />
-          </span>
-        )}
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2 flex-wrap">
-              {item.kind === 'activity' && (
-                <span className="text-lg" aria-hidden>
-                  {item.icon_emoji || '✨'}
-                </span>
+              {isActivity && item.artwork_url && (
+                <img src={item.artwork_url} alt="" className="w-7 h-7 rounded-lg object-cover" />
               )}
               <h3 className="font-semibold text-foreground truncate">{item.name}</h3>
               <Badge
@@ -173,16 +161,16 @@ const MyEvents = () => {
                 className={`text-xs shrink-0 ${
                   isPast
                     ? 'bg-muted text-muted-foreground'
-                    : item.kind === 'activity'
+                    : isActivity
                     ? 'bg-primary/15 text-primary'
                     : 'bg-green-100 text-green-800'
                 }`}
               >
-                {isPast ? 'Past' : item.kind === 'activity' ? 'Activity' : 'Confirmed'}
+                {isPast ? 'Past' : isActivity ? 'Activity' : 'Confirmed'}
               </Badge>
-              {needsFeedback && (
-                <Badge className="text-xs shrink-0 bg-destructive/10 text-destructive border-0">
-                  Feedback needed
+              {isActivity && !isPast && item.group_name && item.groups_confirmed && (
+                <Badge className="text-xs shrink-0 bg-primary text-primary-foreground border-0">
+                  {item.group_name}
                 </Badge>
               )}
             </div>
@@ -199,9 +187,9 @@ const MyEvents = () => {
                   <span className="truncate">{item.location}</span>
                 </div>
               )}
-              {needsFeedback && (
-                <p className="text-xs text-destructive font-medium pt-1">
-                  Tap to share how it went →
+              {isActivity && !isPast && !item.groups_confirmed && (
+                <p className="text-xs text-muted-foreground italic pt-1">
+                  Group will be confirmed by the team soon.
                 </p>
               )}
             </div>

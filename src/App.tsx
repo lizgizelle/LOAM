@@ -45,13 +45,13 @@ import ActivityArea from "./pages/ActivityArea";
 import ActivitySlots from "./pages/ActivitySlots";
 import ActivityBooked from "./pages/ActivityBooked";
 import ActivityBookingDetail from "./pages/ActivityBookingDetail";
-import ActivityFeedback from "./pages/ActivityFeedback";
 import SubscriptionPaywall from "./pages/SubscriptionPaywall";
 import SubscriptionManage from "./pages/SubscriptionManage";
 import AdminActivities from "./pages/admin/AdminActivities";
 import AdminActivityDetail from "./pages/admin/AdminActivityDetail";
 import AdminSlotManager from "./pages/admin/AdminSlotManager";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
+import AdminChat from "./pages/admin/AdminChat";
 const queryClient = new QueryClient();
 
 // Wrapper component to check blocked status and email verification
@@ -171,7 +171,13 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/chat" element={<Navigate to="/report" replace />} />
+    <Route path="/chat" element={
+      <ProtectedRoute>
+        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
+          <Chat />
+        </div>
+      </ProtectedRoute>
+    } />
     <Route path="/report" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -250,13 +256,8 @@ const AppRoutes = () => (
         </div>
       </ProtectedRoute>
     } />
-    <Route path="/my-events/activity/:bookingId/feedback" element={
-      <ProtectedRoute>
-        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <ActivityFeedback />
-        </div>
-      </ProtectedRoute>
-    } />
+    {/* Feedback flow removed — admin asks via chat */}
+    <Route path="/my-events/activity/:bookingId/feedback" element={<Navigate to="/chat" replace />} />
     <Route path="/activities/booked/:bookingId" element={
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
@@ -317,6 +318,7 @@ const AppRoutes = () => (
     <Route path="/admin/activities/:id" element={<AdminActivityDetail />} />
     <Route path="/admin/slots/:slotId" element={<AdminSlotManager />} />
     <Route path="/admin/bookings" element={<AdminBookings />} />
+    <Route path="/admin/chat" element={<AdminChat />} />
     <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
     <Route path="/admin/reports" element={<AdminReports />} />
     <Route path="/admin/reports/:id" element={<AdminReportDetail />} />
