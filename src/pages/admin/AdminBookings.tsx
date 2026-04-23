@@ -136,7 +136,7 @@ const AdminBookings = () => {
 
   // Group by slot for cleaner overview
   const grouped = useMemo(() => {
-    const map = new Map<string, { slot_id: string; slot_start: string; slot_area: string; slot_capacity: number; activity_name: string; activity_emoji: string | null; rows: BookingRow[] }>();
+    const map = new Map<string, { slot_id: string; slot_start: string; slot_area: string; slot_capacity: number; activity_name: string; activity_artwork: string | null; rows: BookingRow[] }>();
     filtered.forEach((b) => {
       if (!map.has(b.slot_id)) {
         map.set(b.slot_id, {
@@ -145,7 +145,7 @@ const AdminBookings = () => {
           slot_area: b.slot_area,
           slot_capacity: b.slot_capacity,
           activity_name: b.activity_name,
-          activity_emoji: b.activity_emoji,
+          activity_artwork: b.activity_artwork,
           rows: [],
         });
       }
@@ -262,7 +262,11 @@ const AdminBookings = () => {
               <div key={g.slot_id} className="bg-card border border-border rounded-xl overflow-hidden">
                 <div className="p-4 border-b border-border bg-muted/30 flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-3">
-                    <span className="text-2xl" aria-hidden>{g.activity_emoji || '✨'}</span>
+                    {g.activity_artwork ? (
+                      <img src={g.activity_artwork} alt="" className="w-10 h-10 rounded-lg object-cover" />
+                    ) : (
+                      <span className="text-2xl" aria-hidden>✨</span>
+                    )}
                     <div>
                       <p className="font-semibold">{g.activity_name} · {g.slot_area}</p>
                       <p className="text-sm text-muted-foreground">{formatSlotDate(g.slot_start)} · {formatSlotTime(g.slot_start)}</p>
