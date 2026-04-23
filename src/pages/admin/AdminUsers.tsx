@@ -62,6 +62,7 @@ interface GameBucket {
 }
 
 export default function AdminUsers() {
+  const navigate = useNavigate();
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -71,6 +72,10 @@ export default function AdminUsers() {
   const [quizResponses, setQuizResponses] = useState<QuizResponse[]>([]);
   const [gameBucket, setGameBucket] = useState<GameBucket | null>(null);
   const [loadingQuiz, setLoadingQuiz] = useState(false);
+
+  const openChatWith = (userId: string) => {
+    navigate(`/admin/chat?user=${userId}`);
+  };
 
   useEffect(() => {
     fetchUsers();
