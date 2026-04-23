@@ -504,12 +504,12 @@ const AdminChat = () => {
                               {m.edited_at && !m.is_deleted ? ' · edited' : ''}
                             </p>
                             {isAdmin && !m.is_deleted && !isEditing && (
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                <button onClick={() => startEdit(m)} className="p-1 rounded hover:bg-muted text-muted-foreground" aria-label="Edit">
-                                  <Pencil className="w-3 h-3" />
+                              <div className="flex items-center gap-1">
+                                <button onClick={() => startEdit(m)} className={`p-1 rounded hover:bg-background/20 ${isAdmin ? 'text-primary-foreground/80' : 'text-muted-foreground'}`} aria-label="Edit">
+                                  <Pencil className="w-3.5 h-3.5" />
                                 </button>
-                                <button onClick={() => handleDelete(m.id)} className="p-1 rounded hover:bg-muted text-muted-foreground" aria-label="Delete">
-                                  <Trash2 className="w-3 h-3" />
+                                <button onClick={() => handleDelete(m.id)} className={`p-1 rounded hover:bg-background/20 ${isAdmin ? 'text-primary-foreground/80' : 'text-muted-foreground'}`} aria-label="Delete">
+                                  <Trash2 className="w-3.5 h-3.5" />
                                 </button>
                               </div>
                             )}
