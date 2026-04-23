@@ -21,7 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
-import { Search, Eye, Ban, Undo, Download, MoreHorizontal } from 'lucide-react';
+import { Search, Eye, Ban, Undo, Download, MoreHorizontal, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import {
   DropdownMenu,
   DropdownMenuContent,
