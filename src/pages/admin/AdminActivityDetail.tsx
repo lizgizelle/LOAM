@@ -8,31 +8,34 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, Plus, Trash2, Calendar, Loader2, Users } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Calendar, Loader2, Users, Eye } from 'lucide-react';
 import { toast } from 'sonner';
 import { DAYS_OF_WEEK, SG_AREAS, formatSlotDate, formatSlotTime } from '@/lib/activities';
+import ImageUploadField from '@/components/admin/ImageUploadField';
 
 interface Activity {
   id: string;
   name: string;
   description: string | null;
   cover_image_url: string | null;
-  icon_emoji: string | null;
+  artwork_url: string | null;
   is_active: boolean;
 }
+
+const VISIBLE_SLOTS_PER_AREA = 2;
 
 const AdminActivityDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [activity, setActivity] = useState<Activity | null>(null);
   const [areas, setAreas] = useState<{ id: string; area_name: string; is_active: boolean }[]>([]);
-  const [rules, setRules] = useState<{ id: string; day_of_week: number; start_time: string; duration_minutes: number; capacity: number; is_active: boolean }[]>([]);
+  const [rules, setRules] = useState<{ id: string; day_of_week: number; start_time: string; duration_minutes: number; is_active: boolean }[]>([]);
   const [slots, setSlots] = useState<any[]>([]);
   const [bookingCounts, setBookingCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  const [newRule, setNewRule] = useState({ day_of_week: 3, start_time: '19:30', duration_minutes: 90, capacity: 6 });
+  const [newRule, setNewRule] = useState({ day_of_week: 3, start_time: '19:30', duration_minutes: 90 });
   const [newArea, setNewArea] = useState('');
   const [generateWeeks, setGenerateWeeks] = useState(8);
   const [generating, setGenerating] = useState(false);
@@ -41,12 +44,12 @@ const AdminActivityDetail = () => {
     if (!id) return;
     setLoading(true);
     const [aRes, areaRes, ruleRes, slotRes] = await Promise.all([
-      supabase.from('activities').select('*').eq('id', id).maybeSingle(),
+      supabase.from('activities').select('id, name, description, cover_image_url, artwork_url, is_active').eq('id', id).maybeSingle(),
       supabase.from('activity_areas').select('id, area_name, is_active').eq('activity_id', id).order('area_name'),
       supabase.from('activity_schedule_rules').select('*').eq('activity_id', id).order('day_of_week'),
-      supabase.from('activity_slots').select('*').eq('activity_id', id).order('start_time', { ascending: true }).limit(100),
+      supabase.from('activity_slots').select('*').eq('activity_id', id).order('start_time', { ascending: true }).limit(200),
     ]);
-    setActivity(aRes.data);
+    setActivity(aRes.data as any);
     setAreas(areaRes.data || []);
     setRules(ruleRes.data || []);
     setSlots(slotRes.data || []);
@@ -78,7 +81,7 @@ const AdminActivityDetail = () => {
       .update({
         name: activity.name,
         description: activity.description,
-        icon_emoji: activity.icon_emoji,
+        artwork_url: activity.artwork_url,
         cover_image_url: activity.cover_image_url,
         is_active: activity.is_active,
       })
@@ -102,7 +105,8 @@ const AdminActivityDetail = () => {
 
   const addRule = async () => {
     if (!id) return;
-    const { error } = await supabase.from('activity_schedule_rules').insert({ activity_id: id, ...newRule });
+    // capacity is no longer used for visibility, but column is non-null with default 6 — keep default
+    const { error } = await supabase.from('activity_schedule_rules').insert({ activity_id: id, ...newRule, capacity: 6 });
     if (error) toast.error(error.message);
     else { toast.success('Schedule rule added'); load(); }
   };
@@ -141,7 +145,7 @@ const AdminActivityDetail = () => {
             area_name: area.area_name,
             start_time: slotDate.toISOString(),
             duration_minutes: rule.duration_minutes,
-            capacity: rule.capacity,
+            capacity: 999, // unlimited — admin manually splits into groups
             status: 'open',
           });
         }
@@ -154,7 +158,6 @@ const AdminActivityDetail = () => {
       return;
     }
 
-    // Insert with onConflict (unique on activity_id+area_name+start_time)
     const { error } = await supabase.from('activity_slots').upsert(newRows, {
       onConflict: 'activity_id,area_name,start_time',
       ignoreDuplicates: true,
@@ -186,6 +189,20 @@ const AdminActivityDetail = () => {
 
   const upcomingSlots = slots.filter((s) => new Date(s.start_time) > new Date());
 
+  // Group upcoming slots by area then sort, marking the first N per area as user-visible
+  const slotsByArea = upcomingSlots.reduce<Record<string, any[]>>((acc, s) => {
+    (acc[s.area_name] = acc[s.area_name] || []).push(s);
+    return acc;
+  }, {});
+  const visibleSlotIds = new Set<string>();
+  Object.values(slotsByArea).forEach((arr) => {
+    arr
+      .filter((s) => s.status === 'open')
+      .sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime())
+      .slice(0, VISIBLE_SLOTS_PER_AREA)
+      .forEach((s) => visibleSlotIds.add(s.id));
+  });
+
   return (
     <AdminLayout>
       <div className="flex items-center gap-3 mb-6">
@@ -204,7 +221,7 @@ const AdminActivityDetail = () => {
         </TabsList>
 
         {/* Details */}
-        <TabsContent value="details" className="space-y-4 max-w-xl">
+        <TabsContent value="details" className="space-y-6 max-w-2xl">
           <div>
             <Label>Name</Label>
             <Input value={activity.name} onChange={(e) => setActivity({ ...activity, name: e.target.value })} />
@@ -213,16 +230,26 @@ const AdminActivityDetail = () => {
             <Label>Description</Label>
             <Textarea rows={5} value={activity.description || ''} onChange={(e) => setActivity({ ...activity, description: e.target.value })} />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>Icon emoji</Label>
-              <Input value={activity.icon_emoji || ''} onChange={(e) => setActivity({ ...activity, icon_emoji: e.target.value })} maxLength={4} />
-            </div>
-            <div>
-              <Label>Cover image URL</Label>
-              <Input value={activity.cover_image_url || ''} onChange={(e) => setActivity({ ...activity, cover_image_url: e.target.value })} />
-            </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <ImageUploadField
+              bucket="activity-mascots"
+              value={activity.artwork_url}
+              onChange={(url) => setActivity({ ...activity, artwork_url: url })}
+              label="Mascot artwork"
+              hint="Loam mascot doing the activity. Shown on the home screen and activity card."
+              aspect="aspect-square"
+            />
+            <ImageUploadField
+              bucket="activity-covers"
+              value={activity.cover_image_url}
+              onChange={(url) => setActivity({ ...activity, cover_image_url: url })}
+              label="Cover image"
+              hint="Hero image at the top of the activity detail page."
+              aspect="aspect-video"
+            />
           </div>
+
           <div className="flex items-center justify-between p-4 border border-border rounded-lg">
             <div>
               <p className="font-medium">Active</p>
@@ -260,14 +287,16 @@ const AdminActivityDetail = () => {
 
         {/* Schedule */}
         <TabsContent value="schedule" className="space-y-4 max-w-2xl">
-          <p className="text-sm text-muted-foreground">Recurring weekly slots. e.g. "Every Wednesday at 7:30pm". Slots are generated from these rules.</p>
+          <p className="text-sm text-muted-foreground">
+            Recurring weekly slots. e.g. "Every Wednesday at 7:30pm". Slots are generated from these rules. Group sizes are managed manually per slot — there is no booking cap.
+          </p>
           <div className="space-y-2">
             {rules.length === 0 && <p className="text-sm text-muted-foreground">No schedule rules yet.</p>}
             {rules.map((r) => (
               <div key={r.id} className="flex items-center justify-between bg-card border border-border rounded-lg p-3">
                 <div>
                   <p className="font-medium">{DAYS_OF_WEEK[r.day_of_week].label} at {r.start_time.slice(0, 5)}</p>
-                  <p className="text-sm text-muted-foreground">{r.duration_minutes} min · capacity {r.capacity}</p>
+                  <p className="text-sm text-muted-foreground">{r.duration_minutes} min</p>
                 </div>
                 <Button variant="ghost" size="icon" onClick={() => removeRule(r.id)}><Trash2 className="w-4 h-4" /></Button>
               </div>
@@ -275,7 +304,7 @@ const AdminActivityDetail = () => {
           </div>
           <div className="border border-dashed border-border rounded-lg p-4 space-y-3">
             <Label>Add a recurring slot</Label>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <div>
                 <Label className="text-xs">Day</Label>
                 <select className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm" value={newRule.day_of_week} onChange={(e) => setNewRule({ ...newRule, day_of_week: Number(e.target.value) })}>
@@ -290,10 +319,6 @@ const AdminActivityDetail = () => {
                 <Label className="text-xs">Duration (min)</Label>
                 <Input type="number" min={15} value={newRule.duration_minutes} onChange={(e) => setNewRule({ ...newRule, duration_minutes: Number(e.target.value) })} />
               </div>
-              <div>
-                <Label className="text-xs">Capacity</Label>
-                <Input type="number" min={1} value={newRule.capacity} onChange={(e) => setNewRule({ ...newRule, capacity: Number(e.target.value) })} />
-              </div>
             </div>
             <Button onClick={addRule}><Plus className="w-4 h-4 mr-1" /> Add rule</Button>
           </div>
@@ -301,7 +326,9 @@ const AdminActivityDetail = () => {
           <div className="border border-border rounded-lg p-4 bg-secondary/20 space-y-3">
             <div>
               <p className="font-medium flex items-center gap-2"><Calendar className="w-4 h-4" /> Generate slots</p>
-              <p className="text-sm text-muted-foreground">Create concrete dated slots for the next N weeks based on the rules above. Safe to re-run — duplicates are skipped.</p>
+              <p className="text-sm text-muted-foreground">
+                Create concrete dated slots for the next N weeks based on the rules above. Safe to re-run — duplicates are skipped. Users will only ever see the next {VISIBLE_SLOTS_PER_AREA} upcoming slots per area; the rest stay queued for when nearer dates fill up.
+              </p>
             </div>
             <div className="flex items-end gap-3">
               <div>
@@ -318,25 +345,40 @@ const AdminActivityDetail = () => {
         {/* Slots */}
         <TabsContent value="slots" className="space-y-3">
           <div className="flex items-center justify-between flex-wrap gap-2">
-            <p className="text-sm text-muted-foreground">All upcoming dated slots, with bookings.</p>
+            <p className="text-sm text-muted-foreground">
+              All upcoming dated slots. <span className="inline-flex items-center gap-1 text-foreground"><Eye className="w-3 h-3" /> badge</span> = currently visible to users.
+            </p>
             <Button variant="outline" size="sm" onClick={() => navigate('/admin/bookings')}>
-              <Users className="w-4 h-4 mr-1" /> Manage attendees
+              <Users className="w-4 h-4 mr-1" /> All bookings
             </Button>
           </div>
           {upcomingSlots.length === 0 ? (
             <p className="text-muted-foreground">No upcoming slots. Add areas + rules, then click "Generate slots" in the Schedule tab.</p>
           ) : (
             <div className="space-y-2">
-              {upcomingSlots.map((s) => (
-                <div key={s.id} className="bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium">{formatSlotDate(s.start_time)} · {formatSlotTime(s.start_time)}</p>
-                    <p className="text-sm text-muted-foreground">{s.area_name} · {bookingCounts[s.id] || 0}/{s.capacity} booked · {s.status}</p>
+              {upcomingSlots.map((s) => {
+                const isVisible = visibleSlotIds.has(s.id);
+                return (
+                  <div key={s.id} className="bg-card border border-border rounded-lg p-3 flex items-center justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{formatSlotDate(s.start_time)} · {formatSlotTime(s.start_time)}</p>
+                        {isVisible && (
+                          <span className="text-[10px] uppercase tracking-wide bg-primary/10 text-primary px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                            <Eye className="w-3 h-3" /> Live
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground">{s.area_name} · {bookingCounts[s.id] || 0} booked · {s.status}</p>
+                    </div>
+                    <Button size="sm" variant="default" onClick={() => navigate(`/admin/slots/${s.id}`)}>
+                      <Users className="w-4 h-4 mr-1" /> Manage
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => cancelSlot(s.id)} disabled={s.status === 'cancelled'}>Cancel</Button>
+                    <Button variant="ghost" size="icon" onClick={() => deleteSlot(s.id)}><Trash2 className="w-4 h-4" /></Button>
                   </div>
-                  <Button variant="outline" size="sm" onClick={() => cancelSlot(s.id)} disabled={s.status === 'cancelled'}>Cancel</Button>
-                  <Button variant="ghost" size="icon" onClick={() => deleteSlot(s.id)}><Trash2 className="w-4 h-4" /></Button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </TabsContent>

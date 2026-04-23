@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       activities: {
         Row: {
+          artwork_url: string | null
           cover_image_url: string | null
           created_at: string
           description: string | null
@@ -27,6 +28,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          artwork_url?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -38,6 +40,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          artwork_url?: string | null
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
@@ -85,6 +88,7 @@ export type Database = {
       activity_bookings: {
         Row: {
           created_at: string
+          group_id: string | null
           id: string
           slot_id: string
           status: string
@@ -93,6 +97,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          group_id?: string | null
           id?: string
           slot_id: string
           status?: string
@@ -101,6 +106,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          group_id?: string | null
           id?: string
           slot_id?: string
           status?: string
@@ -108,6 +114,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "activity_bookings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "activity_groups"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "activity_bookings_slot_id_fkey"
             columns: ["slot_id"]
@@ -146,6 +159,41 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      activity_groups: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          name: string
+          slot_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          slot_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          name?: string
+          slot_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_groups_slot_id_fkey"
+            columns: ["slot_id"]
+            isOneToOne: false
+            referencedRelation: "activity_slots"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       activity_schedule_rules: {
         Row: {

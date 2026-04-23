@@ -50,6 +50,7 @@ import SubscriptionPaywall from "./pages/SubscriptionPaywall";
 import SubscriptionManage from "./pages/SubscriptionManage";
 import AdminActivities from "./pages/admin/AdminActivities";
 import AdminActivityDetail from "./pages/admin/AdminActivityDetail";
+import AdminSlotManager from "./pages/admin/AdminSlotManager";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
 const queryClient = new QueryClient();
 
@@ -314,6 +315,7 @@ const AppRoutes = () => (
     <Route path="/admin/game" element={<AdminGame />} />
     <Route path="/admin/activities" element={<AdminActivities />} />
     <Route path="/admin/activities/:id" element={<AdminActivityDetail />} />
+    <Route path="/admin/slots/:slotId" element={<AdminSlotManager />} />
     <Route path="/admin/bookings" element={<AdminBookings />} />
     <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
     <Route path="/admin/reports" element={<AdminReports />} />

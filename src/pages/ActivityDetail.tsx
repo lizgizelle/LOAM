@@ -8,7 +8,7 @@ interface Activity {
   name: string;
   description: string | null;
   cover_image_url: string | null;
-  icon_emoji: string | null;
+  artwork_url: string | null;
 }
 
 const ActivityDetail = () => {
@@ -22,7 +22,7 @@ const ActivityDetail = () => {
       if (!id) return;
       const { data } = await supabase
         .from('activities')
-        .select('id, name, description, cover_image_url, icon_emoji')
+        .select('id, name, description, cover_image_url, artwork_url')
         .eq('id', id)
         .maybeSingle();
       setActivity(data);
@@ -56,10 +56,12 @@ const ActivityDetail = () => {
       <div className="relative h-64 bg-gradient-to-br from-primary/20 to-primary/5">
         {activity.cover_image_url ? (
           <img src={activity.cover_image_url} alt={activity.name} className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-7xl">
-            {activity.icon_emoji || '✨'}
+        ) : activity.artwork_url ? (
+          <div className="w-full h-full flex items-center justify-center p-6">
+            <img src={activity.artwork_url} alt={activity.name} className="max-h-full max-w-full object-contain" />
           </div>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center text-7xl">✨</div>
         )}
         <button
           onClick={() => navigate('/home')}

@@ -7,16 +7,17 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus, Loader2, ImageIcon } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { toast } from 'sonner';
+import ImageUploadField from '@/components/admin/ImageUploadField';
 
 interface Activity {
   id: string;
   name: string;
   description: string | null;
   cover_image_url: string | null;
-  icon_emoji: string | null;
+  artwork_url: string | null;
   is_active: boolean;
   display_order: number;
 }
@@ -27,15 +28,15 @@ const AdminActivities = () => {
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState({ name: '', description: '', icon_emoji: '✨', cover_image_url: '' });
+  const [form, setForm] = useState<{ name: string; description: string; artwork_url: string | null; cover_image_url: string | null }>({ name: '', description: '', artwork_url: null, cover_image_url: null });
 
   const load = async () => {
     setLoading(true);
     const { data } = await supabase
       .from('activities')
-      .select('*')
+      .select('id, name, description, cover_image_url, artwork_url, is_active, display_order')
       .order('display_order', { ascending: true });
-    setActivities(data || []);
+    setActivities((data as any) || []);
     setLoading(false);
   };
 
@@ -54,8 +55,8 @@ const AdminActivities = () => {
       .insert({
         name: form.name.trim(),
         description: form.description.trim() || null,
-        icon_emoji: form.icon_emoji || '✨',
-        cover_image_url: form.cover_image_url.trim() || null,
+        artwork_url: form.artwork_url,
+        cover_image_url: form.cover_image_url,
         display_order: activities.length + 1,
       })
       .select()
@@ -67,7 +68,7 @@ const AdminActivities = () => {
     }
     toast.success('Activity created');
     setOpen(false);
-    setForm({ name: '', description: '', icon_emoji: '✨', cover_image_url: '' });
+    setForm({ name: '', description: '', artwork_url: null, cover_image_url: null });
     if (data) navigate(`/admin/activities/${data.id}`);
   };
 
@@ -91,7 +92,7 @@ const AdminActivities = () => {
           <DialogTrigger asChild>
             <Button><Plus className="w-4 h-4 mr-2" /> New activity</Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Create activity</DialogTitle>
             </DialogHeader>
@@ -104,15 +105,23 @@ const AdminActivities = () => {
                 <Label>Description</Label>
                 <Textarea value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="What is this activity about?" rows={4} />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label>Icon (emoji)</Label>
-                  <Input value={form.icon_emoji} onChange={(e) => setForm({ ...form, icon_emoji: e.target.value })} placeholder="✨" maxLength={4} />
-                </div>
-                <div>
-                  <Label>Cover image URL (optional)</Label>
-                  <Input value={form.cover_image_url} onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })} placeholder="https://..." />
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <ImageUploadField
+                  bucket="activity-mascots"
+                  value={form.artwork_url}
+                  onChange={(url) => setForm({ ...form, artwork_url: url })}
+                  label="Mascot artwork"
+                  hint="Loam mascot doing the activity"
+                  aspect="aspect-square"
+                />
+                <ImageUploadField
+                  bucket="activity-covers"
+                  value={form.cover_image_url}
+                  onChange={(url) => setForm({ ...form, cover_image_url: url })}
+                  label="Cover image"
+                  hint="Hero image on the detail page"
+                  aspect="aspect-video"
+                />
               </div>
             </div>
             <DialogFooter>
@@ -131,8 +140,12 @@ const AdminActivities = () => {
         <div className="space-y-3">
           {activities.map((a) => (
             <div key={a.id} className="bg-card border border-border rounded-lg p-4 flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl">
-                {a.icon_emoji || '✨'}
+              <div className="w-14 h-14 rounded-xl bg-primary/5 flex items-center justify-center overflow-hidden shrink-0">
+                {a.artwork_url ? (
+                  <img src={a.artwork_url} alt={a.name} className="w-full h-full object-contain" loading="lazy" />
+                ) : (
+                  <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                )}
               </div>
               <div className="flex-1 min-w-0 cursor-pointer" onClick={() => navigate(`/admin/activities/${a.id}`)}>
                 <p className="font-semibold">{a.name}</p>
