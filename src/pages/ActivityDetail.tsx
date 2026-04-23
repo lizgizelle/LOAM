@@ -102,7 +102,7 @@ const ActivityDetail = () => {
             </div>
             <div>
               <p className="text-sm font-semibold text-foreground">Flexible schedule</p>
-              <p className="text-xs text-muted-foreground">Wed & Thu evenings, Sat afternoon</p>
+              <p className="text-xs text-muted-foreground">Wed & Thursday evenings</p>
             </div>
           </div>
         </div>
