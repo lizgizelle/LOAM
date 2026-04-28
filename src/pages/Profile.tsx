@@ -91,34 +91,39 @@ const Profile = () => {
         <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
           Membership
         </h3>
-        <div className="bg-popover rounded-2xl shadow-loam overflow-hidden">
-          <button
-            onClick={() => navigate('/profile/subscription')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-secondary/50 transition-colors border-b border-border"
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Sparkles className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-foreground">Subscription</p>
-              <p className="text-sm text-muted-foreground">Manage your plan</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
-          <button
-            onClick={() => navigate('/report')}
-            className="w-full flex items-center gap-4 p-4 text-left hover:bg-secondary/50 transition-colors"
-          >
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Flag className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1">
-              <p className="font-medium text-foreground">Report a concern</p>
-              <p className="text-sm text-muted-foreground">Tell us privately</p>
-            </div>
-            <ChevronRight className="w-5 h-5 text-muted-foreground" />
-          </button>
-        </div>
+        <button
+          onClick={() => navigate('/profile/subscription')}
+          className="w-full flex items-center gap-4 p-4 bg-popover rounded-2xl shadow-loam text-left hover:bg-secondary/50 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-foreground">Subscription</p>
+            <p className="text-sm text-muted-foreground">Manage your plan</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </button>
+      </div>
+
+      {/* Report */}
+      <div className="px-6 mb-6">
+        <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wide mb-3">
+          Report
+        </h3>
+        <button
+          onClick={() => navigate('/report')}
+          className="w-full flex items-center gap-4 p-4 bg-popover rounded-2xl shadow-loam text-left hover:bg-secondary/50 transition-colors"
+        >
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Flag className="w-5 h-5 text-primary" />
+          </div>
+          <div className="flex-1">
+            <p className="font-medium text-foreground">Report a concern</p>
+            <p className="text-sm text-muted-foreground">Tell us privately</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        </button>
       </div>
 
       {/* Settings */}
