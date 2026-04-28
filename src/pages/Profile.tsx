@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BottomNav from '@/components/BottomNav';
 import { useAppStore } from '@/store/appStore';
 import { useAuth } from '@/hooks/useAuth';
-import { ChevronRight, Bell, Globe, MapPin, LogOut, Shield, Sparkles } from 'lucide-react';
+import { ChevronRight, Bell, Globe, MapPin, LogOut, Shield, Sparkles, Flag } from 'lucide-react';
 import { getDefaultAvatar } from '@/lib/avatars';
 import {
   DropdownMenu,
