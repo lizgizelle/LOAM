@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
@@ -41,6 +42,7 @@ interface ActivityOption {
 
 const ReportConcern = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activities, setActivities] = useState<ActivityOption[]>([]);
@@ -161,8 +163,12 @@ const ReportConcern = () => {
       {/* Header */}
       <div className="px-6 pt-14 pb-4 safe-area-top">
         <div className="flex items-center gap-3">
-          {step > 1 && step < 4 && (
-            <button onClick={() => setStep(step - 1)} className="text-muted-foreground">
+          {step < 4 && (
+            <button
+              onClick={() => (step > 1 ? setStep(step - 1) : navigate('/profile'))}
+              className="text-muted-foreground -ml-1 p-1"
+              aria-label="Back"
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
           )}
