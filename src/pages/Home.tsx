@@ -55,7 +55,7 @@ const Home = () => {
       start.setHours(19, 30, 0, 0); // default 7:30 PM
       start.setDate(start.getDate() + 1); // start from tomorrow
       const cursor = new Date(start);
-      while (upcomingDates.length < 12) {
+      while (upcomingDates.length < 24) {
         const day = cursor.getDay(); // 3 = Wed, 4 = Thu
         if (day === 3 || day === 4) {
           upcomingDates.push(new Date(cursor));
@@ -63,12 +63,18 @@ const Home = () => {
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      const enriched = (acts || []).map((a, i) => ({
-        id: a.id,
-        name: a.name,
-        artwork_url: (a as any).artwork_url ?? null,
-        next_slot: upcomingDates[i % upcomingDates.length].toISOString(),
-      }));
+      const baseActs = acts || [];
+      const enriched = baseActs.length
+        ? upcomingDates.map((date, i) => {
+            const a = baseActs[i % baseActs.length];
+            return {
+              id: `${a.id}-${i}`,
+              name: a.name,
+              artwork_url: (a as any).artwork_url ?? null,
+              next_slot: date.toISOString(),
+            };
+          })
+        : [];
       setActivities(enriched);
       setLoading(false);
     };
@@ -126,7 +132,7 @@ const Home = () => {
           activities.map((a, i) => (
             <button
               key={a.id}
-              onClick={() => navigate(`/activities/${a.id}`)}
+              onClick={() => navigate(`/activities/${a.id.replace(/-\d+$/, '')}`)}
               className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all border border-border/40"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
