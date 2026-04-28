@@ -63,12 +63,18 @@ const Home = () => {
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      const enriched = (acts || []).map((a, i) => ({
-        id: a.id,
-        name: a.name,
-        artwork_url: (a as any).artwork_url ?? null,
-        next_slot: upcomingDates[i % upcomingDates.length].toISOString(),
-      }));
+      const baseActs = acts || [];
+      const enriched = baseActs.length
+        ? upcomingDates.map((date, i) => {
+            const a = baseActs[i % baseActs.length];
+            return {
+              id: `${a.id}-${i}`,
+              name: a.name,
+              artwork_url: (a as any).artwork_url ?? null,
+              next_slot: date.toISOString(),
+            };
+          })
+        : [];
       setActivities(enriched);
       setLoading(false);
     };
