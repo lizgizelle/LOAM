@@ -55,7 +55,7 @@ const Home = () => {
       start.setHours(19, 30, 0, 0); // default 7:30 PM
       start.setDate(start.getDate() + 1); // start from tomorrow
       const cursor = new Date(start);
-      while (upcomingDates.length < 24) {
+      while (upcomingDates.length < 18) {
         const day = cursor.getDay(); // 3 = Wed, 4 = Thu
         if (day === 3 || day === 4) {
           upcomingDates.push(new Date(cursor));
