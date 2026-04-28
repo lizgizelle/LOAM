@@ -25,7 +25,9 @@ const BottomNav = () => {
                 isActive ? 'text-primary' : 'text-muted-foreground'
               }`}
             >
-              <Icon className="w-6 h-6" strokeWidth={isActive ? 2.5 : 2} />
+              <div className="w-6 h-6 flex items-center justify-center">
+                <Icon className="w-[22px] h-[22px]" strokeWidth={2} />
+              </div>
               <span className="text-xs mt-1 font-medium">{label}</span>
             </NavLink>
           );
