@@ -42,6 +42,7 @@ interface ActivityOption {
 
 const ReportConcern = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activities, setActivities] = useState<ActivityOption[]>([]);
