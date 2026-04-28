@@ -55,7 +55,10 @@ const Home = () => {
       start.setHours(19, 30, 0, 0); // default 7:30 PM
       start.setDate(start.getDate() + 1); // start from tomorrow
       const cursor = new Date(start);
-      while (upcomingDates.length < 18) {
+      const baseActs = acts || [];
+      // Need enough dates so that dates × activities >= 18
+      const datesNeeded = baseActs.length ? Math.ceil(18 / baseActs.length) : 0;
+      while (upcomingDates.length < datesNeeded) {
         const day = cursor.getDay(); // 3 = Wed, 4 = Thu
         if (day === 3 || day === 4) {
           upcomingDates.push(new Date(cursor));
@@ -63,18 +66,19 @@ const Home = () => {
         cursor.setDate(cursor.getDate() + 1);
       }
 
-      const baseActs = acts || [];
-      const enriched = baseActs.length
-        ? upcomingDates.map((date, i) => {
-            const a = baseActs[i % baseActs.length];
-            return {
-              id: `${a.id}-${i}`,
-              name: a.name,
-              artwork_url: (a as any).artwork_url ?? null,
-              next_slot: date.toISOString(),
-            };
-          })
-        : [];
+      // Group by date: all activities for Wed, then all activities for Thu, ...
+      const enriched: ActivityCard[] = [];
+      for (let d = 0; d < upcomingDates.length && enriched.length < 18; d++) {
+        for (let j = 0; j < baseActs.length && enriched.length < 18; j++) {
+          const a = baseActs[j];
+          enriched.push({
+            id: `${a.id}-${d}-${j}`,
+            name: a.name,
+            artwork_url: (a as any).artwork_url ?? null,
+            next_slot: upcomingDates[d].toISOString(),
+          });
+        }
+      }
       setActivities(enriched);
       setLoading(false);
     };
