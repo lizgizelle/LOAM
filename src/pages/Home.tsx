@@ -136,7 +136,7 @@ const Home = () => {
           activities.map((a, i) => (
             <button
               key={a.id}
-              onClick={() => navigate(`/activities/${a.id.replace(/-\d+$/, '')}`)}
+              onClick={() => navigate(`/activities/${a.id.replace(/-\d+-\d+$/, '')}`)}
               className="w-full text-left bg-popover rounded-2xl shadow-loam p-4 flex items-center gap-4 hover:shadow-loam-lg transition-all border border-border/40"
             >
               <div className={`w-14 h-14 rounded-2xl flex items-center justify-center overflow-hidden shrink-0 ${ICON_BG[i % ICON_BG.length]}`}>
