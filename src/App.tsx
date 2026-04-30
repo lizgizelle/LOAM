@@ -15,7 +15,6 @@ import VerifyEmail from "./pages/VerifyEmail";
 import AlphacodeVerify from "./pages/AlphacodeVerify";
 import Onboarding from "./pages/Onboarding";
 import Home from "./pages/Home";
-import Chat from "./pages/Chat";
 import ReportConcern from "./pages/ReportConcern";
 import MyEvents from "./pages/MyEvents";
 import Profile from "./pages/Profile";
@@ -51,7 +50,6 @@ import AdminActivities from "./pages/admin/AdminActivities";
 import AdminActivityDetail from "./pages/admin/AdminActivityDetail";
 import AdminSlotManager from "./pages/admin/AdminSlotManager";
 import AdminSubscriptions from "./pages/admin/AdminSubscriptions";
-import AdminChat from "./pages/admin/AdminChat";
 import AdminFeedback from "./pages/admin/AdminFeedback";
 import Feedback from "./pages/Feedback";
 const queryClient = new QueryClient();
@@ -170,13 +168,6 @@ const AppRoutes = () => (
       <ProtectedRoute>
         <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
           <Home />
-        </div>
-      </ProtectedRoute>
-    } />
-    <Route path="/chat" element={
-      <ProtectedRoute>
-        <div className="max-w-md mx-auto min-h-screen bg-background relative shadow-xl">
-          <Chat />
         </div>
       </ProtectedRoute>
     } />
@@ -325,7 +316,6 @@ const AppRoutes = () => (
     <Route path="/admin/activities/:id" element={<AdminActivityDetail />} />
     <Route path="/admin/slots/:slotId" element={<AdminSlotManager />} />
     <Route path="/admin/bookings" element={<AdminBookings />} />
-    <Route path="/admin/chat" element={<AdminChat />} />
     <Route path="/admin/feedback" element={<AdminFeedback />} />
     <Route path="/admin/subscriptions" element={<AdminSubscriptions />} />
     <Route path="/admin/reports" element={<AdminReports />} />

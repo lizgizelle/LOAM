@@ -177,7 +177,7 @@ export default function AdminFeedback() {
         <div>
           <h1 className="text-2xl font-semibold">Feedback</h1>
           <p className="text-muted-foreground text-sm">
-            Configure post-activity questions and review user responses. Invites are sent in chat 3 hours after each activity.
+            Configure post-activity questions and review user responses. Invites are sent on WhatsApp 3 hours after each activity.
           </p>
         </div>
         <div className="flex gap-2">
