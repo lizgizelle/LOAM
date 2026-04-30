@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, Calendar, User, Gamepad2 } from 'lucide-react';
+import { Home, Calendar, User, Gamepad2 } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -8,7 +8,6 @@ const BottomNav = () => {
     { path: '/home', icon: Home, label: 'Home' },
     { path: '/my-events', icon: Calendar, label: 'My Activities' },
     { path: '/game', icon: Gamepad2, label: 'Game' },
-    { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/profile', icon: User, label: 'Profile' },
   ];
 
@@ -19,6 +18,7 @@ const BottomNav = () => {
           const isActive = location.pathname === path;
           const iconSize =
             label === 'Game' ? 24 : label === 'My Activities' ? 20 : 22;
+          // (Chat tab removed)
           return (
             <NavLink
               key={path}

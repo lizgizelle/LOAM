@@ -251,12 +251,7 @@ const EventDetail = () => {
   };
 
   const handleContact = () => {
-    // Navigate to chat with event host
-    if (supabaseEvent?.host_id) {
-      navigate(`/chat?eventId=${id}&hostId=${supabaseEvent.host_id}`);
-    } else {
-      toast.info('Chat with organiser coming soon');
-    }
+    toast.info("We'll be in touch on WhatsApp shortly.");
   };
 
   const handleOpenInBrowser = () => {

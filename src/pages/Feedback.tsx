@@ -42,7 +42,7 @@ const Feedback = () => {
 
       if (!booking || booking.user_id !== user.id) {
         toast.error('Booking not found');
-        navigate('/chat');
+        navigate('/my-events');
         return;
       }
       const slot: any = (booking as any).activity_slots;
@@ -189,7 +189,7 @@ const Feedback = () => {
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">Thank you</h1>
           <p className="text-muted-foreground mb-8">Your feedback helps us host better activities.</p>
-          <Button onClick={() => navigate('/chat')} className="w-full">Back to chat</Button>
+          <Button onClick={() => navigate('/my-events')} className="w-full">Back to my activities</Button>
         </div>
       </div>
     );

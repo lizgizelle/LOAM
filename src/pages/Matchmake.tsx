@@ -128,10 +128,10 @@ const Matchmake = () => {
                 variant="loam"
                 size="lg"
                 className="w-full"
-                onClick={() => navigate('/chat')}
+                onClick={() => navigate('/home')}
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
-                Start chatting
+                Back to Home
               </Button>
             </CardContent>
           </Card>

@@ -29,7 +29,6 @@ const navItems = [
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: Sparkles, label: 'Activities', path: '/admin/activities' },
   { icon: Ticket, label: 'Bookings', path: '/admin/bookings' },
-  { icon: MessageSquare, label: 'Chat', path: '/admin/chat' },
   { icon: Star, label: 'Feedback', path: '/admin/feedback' },
   { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },

@@ -1,6 +1,6 @@
 // Cron-driven dispatch: for any confirmed booking whose slot ended 3+ hours ago,
-// create a feedback_invite (if missing) and post a chat system message
-// linking the user to the feedback form. Marks invite as 'sent'.
+// create a feedback_invite (if missing) and mark it as 'sent'. Delivery to users
+// happens via WhatsApp (handled outside this function).
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -24,12 +24,7 @@ Deno.serve(async (req) => {
     );
 
     const now = new Date();
-    const cutoff = new Date(
-      now.getTime() - FEEDBACK_DELAY_HOURS * 60 * 60 * 1000
-    ).toISOString();
 
-    // Pull confirmed bookings whose slot's start_time + duration <= cutoff
-    // We approximate by joining slot start_time and computing end_time client-side.
     const { data: bookings, error: bErr } = await supabase
       .from("activity_bookings")
       .select(
@@ -40,7 +35,7 @@ Deno.serve(async (req) => {
     if (bErr) throw bErr;
 
     let created = 0;
-    let messaged = 0;
+    let marked = 0;
 
     for (const b of bookings || []) {
       const slot: any = (b as any).activity_slots;
@@ -54,9 +49,8 @@ Deno.serve(async (req) => {
         endsAt.getTime() + FEEDBACK_DELAY_HOURS * 60 * 60 * 1000
       );
 
-      if (dueAt > now) continue; // not due yet
+      if (dueAt > now) continue;
 
-      // Check existing invite
       const { data: existing } = await supabase
         .from("feedback_invites")
         .select("id, status")
@@ -87,55 +81,16 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Ensure thread exists
-      let threadId: string | null = null;
-      const { data: t } = await supabase
-        .from("chat_threads")
-        .select("id")
-        .eq("user_id", b.user_id)
-        .maybeSingle();
-      if (t) threadId = t.id;
-      if (!threadId) {
-        const { data: nt } = await supabase
-          .from("chat_threads")
-          .insert({ user_id: b.user_id })
-          .select("id")
-          .single();
-        threadId = nt?.id || null;
-      }
-      if (!threadId) continue;
-
-      // Activity name (best effort)
-      const { data: act } = await supabase
-        .from("activities")
-        .select("name")
-        .eq("id", slot.activity_id)
-        .maybeSingle();
-      const actName = act?.name || "your activity";
-
-      const link = `/my-events/activity/${b.id}/feedback`;
-      const body = `Hi! How was ${actName}? We'd love your quick feedback — it helps us shape future sessions.\n\nTap to share: ${link}`;
-
-      const { error: mErr } = await supabase.from("chat_messages").insert({
-        thread_id: threadId,
-        sender_type: "system",
-        body,
-      });
-      if (mErr) {
-        console.error("message insert", mErr);
-        continue;
-      }
-
       await supabase
         .from("feedback_invites")
         .update({ sent_at: now.toISOString(), status: "sent" })
         .eq("id", inviteId);
 
-      messaged++;
+      marked++;
     }
 
     return new Response(
-      JSON.stringify({ ok: true, created, messaged, ranAt: now.toISOString() }),
+      JSON.stringify({ ok: true, created, marked, ranAt: now.toISOString() }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (e: any) {
