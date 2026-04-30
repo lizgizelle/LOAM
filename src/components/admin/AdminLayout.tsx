@@ -14,7 +14,6 @@ import {
   Sparkles,
   CreditCard,
   Ticket,
-  Star
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/hooks/useAuth';
@@ -29,7 +28,6 @@ const navItems = [
   { icon: Users, label: 'Users', path: '/admin/users' },
   { icon: Sparkles, label: 'Activities', path: '/admin/activities' },
   { icon: Ticket, label: 'Bookings', path: '/admin/bookings' },
-  { icon: Star, label: 'Feedback', path: '/admin/feedback' },
   { icon: CreditCard, label: 'Subscriptions', path: '/admin/subscriptions' },
   { icon: FileQuestion, label: 'Quiz Builder', path: '/admin/quiz-builder' },
   { icon: MessageSquare, label: 'Quiz Responses', path: '/admin/quiz-responses' },
