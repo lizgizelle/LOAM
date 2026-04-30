@@ -85,9 +85,7 @@ export default function AdminUsers() {
   const [feedbackResponses, setFeedbackResponses] = useState<FeedbackResponseRow[]>([]);
   const [loadingFeedback, setLoadingFeedback] = useState(false);
 
-  const openChatWith = (userId: string) => {
-    navigate(`/admin/chat?user=${userId}`);
-  };
+  // Chat removed — communication moved to WhatsApp.
 
   useEffect(() => {
     fetchUsers();
@@ -350,10 +348,6 @@ export default function AdminUsers() {
                             <Eye className="h-4 w-4 mr-2" />
                             View profile
                           </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => openChatWith(user.id)}>
-                            <MessageCircle className="h-4 w-4 mr-2" />
-                            Chat
-                          </DropdownMenuItem>
                           <DropdownMenuItem 
                             onClick={() => toggleShadowBlock(user.id, user.is_shadow_blocked)}
                           >
@@ -507,17 +501,6 @@ export default function AdminUsers() {
                 </div>
 
                 <div className="pt-4 border-t space-y-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setShowProfileDialog(false);
-                      openChatWith(selectedUser.id);
-                    }}
-                    className="w-full gap-2"
-                  >
-                    <MessageCircle className="h-4 w-4" />
-                    Chat with {selectedUser.first_name || 'user'}
-                  </Button>
                   <Button
                     variant={selectedUser.is_shadow_blocked ? 'outline' : 'destructive'}
                     onClick={() => {
